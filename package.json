@@ -1,0 +1,35 @@
+{
+  "name": "sbqc",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WindriderQc/SBQC.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/WindriderQc/SBQC/issues"
+  },
+  "homepage": "https://github.com/WindriderQc/SBQC#readme",
+  "dependencies": {
+    "@types/p5": "^0.9.1",
+    "colors": "^1.4.0",
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "ejs": "^2.7.4",
+    "express": "^4.17.1",
+    "express-session": "^1.17.1",
+    "git": "^0.1.5",
+    "moment": "^2.29.1",
+    "nedb": "^1.8.0",
+    "node-fetch": "^2.6.1",
+    "nodemailer": "^6.4.16",
+    "nodemon": "^2.0.6"
+  }
+}

@@ -1,0 +1,87 @@
+<!--LOGIN PAGE-->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  
+    <% include head %> 
+
+  <link rel="stylesheet" href="css/login.css">
+
+</head>
+
+
+
+<script>  // Disable submit button until all form inputs have data
+
+$(document).ready(function() {
+  validate();
+  $('input').on('keyup', validate);
+});
+
+function validate() {
+  var inputsWithValues = 0;
+
+  // get all input fields except for type='submit'
+  var myInputs = $("input:not([type='submit'])");
+
+  myInputs.each(function(e) {
+    // if it has a value, increment the counter
+    if ($(this).val()) {
+      inputsWithValues += 1;
+    }
+  });
+
+  if (inputsWithValues == myInputs.length) {
+    $("input[type=submit]").prop("disabled", false);
+  } else {
+    $("input[type=submit]").prop("disabled", true);
+  }
+}
+</script>
+
+
+<body class="bg-light">
+<div class="container">
+
+    <div class="row">
+      <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
+        <div class="card card-signin my-5">
+          <div class="card-body">
+            <h5 class="card-title text-center">Register</h5>
+            <form class="form-signin" action =/register method="post" >
+
+              <div class="form-label-group">
+                <input type="text" id="name_id" name="name" class="form-control" placeholder="User name" required autofocus>
+                <label for="name_id">User name</label>
+              </div>
+
+              <div class="form-label-group">
+                <input type="email" id="email_id" name="email" class="form-control" placeholder="Email address" required >
+                <label for="email_id">Email address</label>
+              </div>
+
+              <div class="form-label-group">
+                <input type="password" id="password_id" name="password" class="form-control" placeholder="Password" required>
+                <label for="password_id">Password</label>
+              </div>
+
+              <button class="btn btn-lg btn-warning btn-block text-uppercase" type="submit" value="Login">Register</button>
+            </form>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="text-center">
+      <p><small>SpecialBlend Production</small></p>
+    </div>
+
+</div>
+
+<%include bodyScripts %>
+
+</body>
+
+</html>

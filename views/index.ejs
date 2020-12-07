@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- <meta name="google-site-verification" content="ZxzvcpuiKsVz7ls-msP04CTmjAzew6l8TzIwLERDP0Q" /> -->
+  
+ <% include partials/head %> 
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script> -->
+
+  <!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/paho-mqtt.min.js" /></script> -->
+
+  <script type="text/javascript" src="https://unpkg.com/mqtt/dist/mqtt.min.js" /></script>
+ 
+
+
+</head>
+
+
+<body class="fixed-nav sticky-footer bg-light " id="page-top">
+  
+  <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top" id="mainNav">  <!-- sidenav-toggled -->
+      <% include partials/nav%>
+  </nav>
+
+  <div class="content-wrapper">
+    <div class="container-fluid bg-3 text-center">  
+
+      <h3><%= page %></h3><br>
+
+        <div class="row">
+          <p id='stream_id'>To be or not to be</p>
+
+          <div class="row">
+
+            <div class="col-sm-4">
+              <p>To be or not to be</p>
+             
+            </div>
+            
+            <div class="col-sm-4"> 
+              <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+            </div>
+            
+            <div class="col-sm-4"> 
+              <div id=screen_id></div>
+              <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <p id='devicesList'>To be or not to be</p>
+        <select id="devices_id">  </select>
+
+  </div>
+</div>
+<!-- /.content-wrapper-->
+
+
+
+
+
+<!-- <script src="./browserMqtt.js"></script> -->
+<script>
+  var options = {
+    port: 9001,
+    rejectUnauthorized: false, 
+    username: 'yb',    //process.env.MQTT_USER,
+    password: 'zigzag' //process.env.MQTT_PASS
+    
+    /*key: fs.readFileSync('ssl/privkey.pem'),
+    cert: fs.readFileSync('ssl/fullchain.pem')*/
+    
+  };
+  var client = mqtt.connect('wss://specialblend.xyz', options) // you add a ws:// url here
+
+  console.log(client)
+  client.subscribe("esp32/#")
+
+  client.on("message", (topic, payload) => {
+    //console.log('got a message: ' + [topic, payload].join(": ") )
+    //alert([topic, payload].join(": "))
+    
+    if(topic == 'esp32/ios') {
+      
+          var msg = JSON.parse(payload)
+          console.log(msg)
+          document.getElementById('stream_id').innerHTML = payload
+    }
+  
+  })
+
+
+  client.publish("esp32", "hello world from UGFlyin!")
+
+
+
+  
+async function getDeviceList()
+{
+   const data = await fetch('/devicesList')
+   const list = await data.json()
+   console.log(list)
+   document.getElementById('devicesList').innerHTML = list
+
+
+   var myobject = {
+    ValueA : 'Text A',
+    ValueB : 'Text B',
+    ValueC : 'Text C'
+  };
+  var select = document.getElementById("devices_id");
+  for(index in list) {
+      select.options[select.options.length] = new Option(list[index], index);
+  }
+
+
+
+}
+getDeviceList()
+
+
+
+</script>
+
+
+
+
+<!-- Scroll to Top Button-->
+<a class="scroll-to-top rounded" href="#page-top">
+    <i class="fa fa-angle-up"></i>
+</a>
+
+<%include partials/logout %>
+<%include partials/bodyScripts %>
+</body>
+</html>

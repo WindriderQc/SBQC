@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Nestor</title>
+    
+<link rel="stylesheet" type="text/css" href="style1.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/p5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/addons/p5.dom.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.js"></script>
+</head>
+ 
+<body style="background-image:url(bckgnd.jpg);  background-size: auto;">
+
+    <ul>
+        <li><a  href="index.html">Home</a></li>
+        <li><a  href="Plant.html">Plant</a></li>
+        <li class="dropdown"><a  href="javascript:void(0)" class="dropbtn">Lines</a>
+          <div class="dropdown-content">
+            <a href="Line1.html">Line 1</a>
+            <a href="Empty.html">Line 2</a>
+            <a href="Empty.html">Line 3</a>
+          </div>
+        </li>
+        <li><a href="PPM.html">PPM Viewer</a></li>
+        <li class="dropdown"><a class="active" href="javascript:void(0)" class="dropbtn">Extras</a>
+          <div class="dropdown-content">
+            <a href="WorldTemp.html">World Temperature evolution</a>
+            <a href="EarthQ.html">World Explorer</a>
+          </div>
+        </li>
+        <li style="float:right;"><a href="https://www.optelgroup.com">About</a>
+        </li>
+      </ul>
+  
+        <canvas id="chart" width="800" height="400"></canvas>
+
+        <script>
+ 
+        async function getData() {
+            const xs = [];
+            const ys = [];
+            const response = await fetch('ZonAnn.csv'); // https://data.giss.nasa.gov/gistemp/tabledata_v4/ZonAnn.Ts+dSST.csv
+            const data = await response.text();
+            const table = data.split('\n').slice(1);
+            table.forEach(row => {
+                const cols = row.split(',');
+                const year = cols[0];
+                xs.push(year);
+                const temp = cols[1];
+                ys.push(parseFloat(temp) + 14); // 14 deg is global avevage (mean) temperature
+                //console.log(year, temp);
+            });
+            return {xs,ys};
+        }
+        async function createChart() {
+                const data = await getData().catch(error => {	console.error(error);	});
+                const ctx = document.getElementById('chart').getContext('2d');
+
+                const myChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                    labels: data.xs,
+                    datasets: [{
+                        label: 'Combined Land-Surface Air and Sea-Surface Water Temperature ',
+                        data: data.ys,
+                        fill: false,
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }]
+                    },
+                        options: {
+                        scales: {
+                            yAxes: [{
+                            ticks: {
+                                beginAtZero: false,
+                                callback: function(value, index, values) {
+                                return value + '°';
+                                }
+                            }
+                            }]
+                        }
+                        }
+                    });	
+                }
+          
+                createChart();
+  </script>
+    </body>
+</html>

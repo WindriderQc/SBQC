@@ -1,0 +1,45 @@
+<div class="sliderContainer">
+    <div class="red">Red</div>
+    <label for="red" class=" ">
+      <input class="slider" id="red" type="range" min="0" max="255" step="1" value="0">
+    </label>
+  </div>
+
+  <div class="sliderContainer">
+    <div class="green" >Green</div>
+    <label for="green" class="">
+      <input class="slider" id="green" type="range" min="0" max="255" step="1" value="0">
+    </label>
+  </div>
+
+  <div class="sliderContainer">
+    <div class="blue">Blue</div>
+    <label for="blue" class=" ">
+      <input class="slider" id="blue" type="range" min="0" max="255" step="1" value="0">
+    </label> 
+  </div>
+
+
+  
+  <p>Value: <span id="rgb"></span></p>
+             
+  
+
+  <script>
+    var sliderR = document.getElementById("red");
+    var sliderG = document.getElementById("green");
+    var sliderB = document.getElementById("blue");
+
+    var output = document.getElementById("rgb");
+      
+    var brightness = {r: 0, g: 0, b: 0};   // useless - code reminder
+
+    function updateOutput() {
+      output.innerHTML = sliderR.value + ',' + sliderG.value +',' + sliderB.value;
+    }
+    updateOutput()
+    
+    sliderR.oninput = updateOutput
+    sliderG.oninput = updateOutput
+    sliderB.oninput = updateOutput
+  </script>

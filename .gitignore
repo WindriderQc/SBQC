@@ -5,6 +5,12 @@ logs
 # Dependency directories
 node_modules/
 
+*.rest
+
+*.db
+*.pem
+
+
 # Optional npm cache directory
 .npm
 
@@ -14,3 +20,4 @@ node_modules/
 # dotenv environment variables file
 .env
 .env.test
+

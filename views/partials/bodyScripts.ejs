@@ -1,0 +1,32 @@
+
+
+
+
+
+<!-- script for all pages -->
+<script src="js/sb-admin.min.js"></script>
+
+<!-- Tools -->
+
+
+<script>
+function formatTime(timestamp)
+{
+    // Create a new JavaScript Date object based on the timestamp and retreive time value from it
+    var date = new Date(timestamp);
+    var hours = date.getHours();
+    var minutes =  date.getMinutes();
+    var seconds = date.getSeconds();
+
+    // Will display time in 10:30:23 format
+    var formattedTime = hours.toString().padStart(2, '0') + ':' +  
+    minutes.toString().padStart(2, '0') + ':' +  
+    seconds.toString().padStart(2, '0'); 
+
+    return(formattedTime)
+}
+
+
+
+</script>
+
