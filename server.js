@@ -1,7 +1,5 @@
 const express = require('express')
 const session = require('express-session')
-const colors = require('colors');
-
 
 const {
     NODE_ENV = 'development',
@@ -22,14 +20,12 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     secret: SESS_SECRET,
-    //rolling: true,   // force identifier cookie to be set on every response.
     cookie: {
         secure: IN_PROD,
         maxAge: SESS_LIFETIME,
         sameSite: true
     }
 }))
-
 
 
 
@@ -40,28 +36,11 @@ const routes = require('./routes/routes')
 app.use('/', routes)
 
 
-
-
-/*// we will pass our 'app' to 'https' server
-const httpsServ = https.createServer({
-    key: fs.readFileSync('./key.pem'),
-    cert: fs.readFileSync('./certificate.pem'),
-    passphrase: 'YOUR PASSPHRASE HERE'
-}, app)*/
-//const server = httpsServ.listen(3000, '0.0.0.0', () =>{
-    
-
-
 const server = app.listen(PORT, '0.0.0.0', () =>{
     var port = server.address().port
     console.log('\n\n')
-    console.log('----------------------'.rainbow.bold);
-    console.log('app listening at http://0.0.0.0:%s'.green.bold.underline, port)
-    console.log('SERVER CURRENTLY RUNNING..............'.green.bold.underline)
-    console.log(`Express is running on port ${port}`.green.bold);
-    console.log('Press Ctrl + C to exit')
-    console.log('----------------------'.rainbow.bold);
-    console.log()
-   // console.log(process.env)
+    console.log('app listening at http://0.0.0.0:%s', port)
+    console.log(`Express is running on port ${port}`);
+    console.log('Press Ctrl + C to exit\n')
  })
 
