@@ -1,0 +1,106 @@
+    <html>
+        <head>
+        <title>System Information for UGServer</title>
+        </head>
+        <body>
+        <h1>System Information for UGServer</h1>
+        <p>Updated on 2020-12-18 12:57:52 PM EST by yb</p>
+        <h2>System release info</h2>
+<pre>
+DISTRIB_ID=LinuxMint
+NAME="Linux Mint"
+5.4.0-58-generic x86_64 GNU/Linux
+</pre>
+        <h2>System uptime</h2>
+<pre>
+ 12:57:52 up 5 days, 13:25,  1 user,  load average: 0.34, 0.11, 0.10
+</pre>
+        <h2>Filesystem space</h2>
+<pre>
+Filesystem     1K-blocks     Used Available Use% Mounted on
+udev             8161208        0   8161208   0% /dev
+tmpfs            1639812     2568   1637244   1% /run
+/dev/sda1      479668904 46050568 409182740  11% /
+tmpfs            8199048     5508   8193540   1% /dev/shm
+tmpfs               5120        4      5116   1% /run/lock
+tmpfs            8199048        0   8199048   0% /sys/fs/cgroup
+tmpfs            1639808       36   1639772   1% /run/user/1000
+</pre>
+        <h2>Home directory space by user</h2>
+<pre>
+    Dirs    Files     Blocks   Directory
+    ----   -------    ------   ---------
+   29713   154670 28281036	/home/yb   
+</pre>
+        <h2>Hardware Details  (inxi -Fxz) </h2>
+<pre>
+System:    Host: UGServer Kernel: 5.4.0-58-generic x86_64 bits: 64 compiler: gcc v: 7.5.0 
+           Console: tty 3 dm: LightDM 1.26.0 Distro: Linux Mint 19.3 Tricia 
+           base: Ubuntu 18.04 bionic 
+Machine:   Type: Virtualbox System: innotek product: VirtualBox v: 1.2 serial: <filter> 
+           Chassis: Oracle Corporation type: 1 serial: <filter> 
+           Mobo: Oracle model: VirtualBox v: 1.2 serial: <filter> BIOS: innotek v: VirtualBox 
+           date: 12/01/2006 
+Memory:    RAM: total: 15.64 GiB used: 4.21 GiB (26.9%) 
+           RAM Report: permissions: Unable to run dmidecode. Root privileges required. 
+CPU:       Topology: Quad Core model: AMD Ryzen 7 3700X bits: 64 type: MCP arch: Zen 
+           L2 cache: 2048 KiB 
+           flags: lm nx pae sse sse2 sse3 sse4_1 sse4_2 sse4a ssse3 bogomips: 28799 
+           Speed: 3600 MHz min/max: N/A Core speeds (MHz): 1: 3600 2: 3600 3: 3600 4: 3600 
+Graphics:  Device-1: VMware SVGA II Adapter driver: vmwgfx v: 2.15.0.0 bus ID: 00:02.0 
+           chip ID: 15ad:0405 
+           Display: server: X.org 1.20.8 driver: vmware unloaded: fbdev,modesetting,vesa 
+           tty: 186x11 
+           Message: Advanced graphics data unavailable in console. Try -G --display 
+Audio:     Device-1: Intel 82801AA AC97 Audio vendor: Dell driver: snd_intel8x0 v: kernel 
+           bus ID: 00:05.0 chip ID: 8086:2415 
+           Sound Server: ALSA v: k5.4.0-58-generic 
+Network:   Device-1: Intel 82540EM Gigabit Ethernet driver: e1000 v: 7.3.21-k8-NAPI port: d020 
+           bus ID: 00:03.0 chip ID: 8086:100e 
+           IF: enp0s3 state: up speed: 1000 Mbps duplex: full mac: <filter> 
+           IP v4: <filter> type: noprefixroute scope: global broadcast: <filter> 
+           IP v6: <filter> type: noprefixroute scope: link 
+           Device-2: Intel 82371AB/EB/MB PIIX4 ACPI type: network bridge driver: piix4_smbus 
+           v: N/A port: d200 bus ID: 00:07.0 chip ID: 8086:7113 
+           WAN IP: <filter> 
+Drives:    Local Storage: total: 513.74 GiB used: 43.92 GiB (8.5%) 
+           ID-1: /dev/sda vendor: VirtualBox model: VBOX HARDDISK size: 513.74 GiB speed: 3.0 Gb/s 
+           serial: <filter> rev: 1.0 scheme: MBR 
+Partition: ID-1: / size: 457.45 GiB used: 43.92 GiB (9.6%) fs: ext4 dev: /dev/sda1 
+           uuid: a5a9a445-e30d-4fb1-9798-7848815a29b5 
+Sensors:   Message: No sensors data was found. Is sensors configured? 
+Repos:     No active apt repos in: /etc/apt/sources.list 
+           Active apt repos in: /etc/apt/sources.list.d/mongodb-org-4.2.list 
+           1: deb [ arch=amd64,arm64 ] https: //repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.2 multiverse
+           Active apt repos in: /etc/apt/sources.list.d/mongodb-org-4.4.list 
+           1: deb [ arch=amd64,arm64 ] https: //repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.4 multiverse
+           Active apt repos in: /etc/apt/sources.list.d/nodesource.list 
+           1: deb https: //deb.nodesource.com/node_14.x bionic main
+           2: deb-src https: //deb.nodesource.com/node_14.x bionic main
+           Active apt repos in: /etc/apt/sources.list.d/official-package-repositories.list 
+           1: deb http: //mirrors.evowise.com/linuxmint/packages tricia main upstream import backport
+           2: deb http: //la-mirrors.evowise.com/ubuntu bionic main restricted universe multiverse
+           3: deb http: //la-mirrors.evowise.com/ubuntu bionic-updates main restricted universe multiverse
+           4: deb http: //la-mirrors.evowise.com/ubuntu bionic-backports main restricted universe multiverse
+           5: deb http: //security.ubuntu.com/ubuntu/ bionic-security main restricted universe multiverse
+           6: deb http: //archive.canonical.com/ubuntu/ bionic partner
+           No active apt repos in: /etc/apt/sources.list.d/spotify.list 
+           Active apt repos in: /etc/apt/sources.list.d/vscode.list 
+           1: deb [arch=amd64 signed-by=/usr/share/keyrings/packages.microsoft.gpg] https: //packages.microsoft.com/repos/vscode stable main
+Processes: CPU top: 5 
+           1: cpu: 13.0% command: node pid: 3418 mem: 42.8 MiB (0.2%) 
+           2: cpu: 2.3% command: mongodb pid: 28268 mem: 331.8 MiB (2.0%) 
+           3: cpu: 0.9% command: bootstrap-fork started by: node pid: 6261 mem: 119.3 MiB (0.7%) 
+           4: cpu: 0.9% command: bootstrap-fork started by: node pid: 18206 mem: 141.5 MiB (0.8%) 
+           5: cpu: 0.9% command: mongodb pid: 28259 mem: 97.7 MiB (0.6%) 
+           Memory top: 5 
+           1: mem: 489.2 MiB (3.0%) command: htmlservermain started by: node pid: 319 cpu: 0.0% 
+           2: mem: 408.6 MiB (2.5%) command: node pid: 6905 cpu: 0.1% 
+           3: mem: 342.2 MiB (2.1%) command: mongod pid: 1809 cpu: 0.4% 
+           4: mem: 331.8 MiB (2.0%) command: mongodb pid: 28268 cpu: 2.3% 
+           5: mem: 327.8 MiB (2.0%) command: node pid: 18367 cpu: 0.0% 
+Info:      Processes: 298 Uptime: 5d 13h 25m Init: systemd v: 237 runlevel: 5 Compilers: 
+           gcc: 7.5.0 alt: 7 Client: shell wrapper v: 4.4.20-release inxi: 3.0.32 
+</pre>
+        </body>
+    </html>

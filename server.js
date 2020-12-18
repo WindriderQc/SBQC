@@ -44,3 +44,7 @@ const server = app.listen(PORT, '0.0.0.0', () =>{
     console.log('Press Ctrl + C to exit\n')
  })
 
+
+
+console.log('Launching automation scripts')
+require('./serverScripts.js')

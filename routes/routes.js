@@ -12,55 +12,17 @@ router.use(bodyParser.urlencoded({ extended: true }));
 
 
 
-const TimeDiff = (startTime, endTime, format) => {
-
-    startTime = moment(startTime, 'YYYY-MM-DD HH:mm:ss');
-    endTime = moment(endTime, 'YYYY-MM-DD HH:mm:ss');
-    return endTime.diff(startTime, format);
-}
-
-function test() {
-    let startTime = new Date('2019-11-18 16:37:18');
-    //let endTime = new Date('2014-5-11 10:37:18');
-    var now = moment().format('YYYY-MM-DD HH:mm:ss')
-    console.log(TimeDiff(now, startTime, 'seconds'));
-}
-
-var t = setTimeout(test, 500);
-
-
-const redirectLogin = (req, res, next) => {
-    console.log(req.session)
-    if (!req.session.userToken) {
-        res.redirect('/login')
-    } else {
-        next()
-    }
-}
-/*
-router.use((req,res,netx) =>{
-    const {}
-})
-
-*/
-
-
-
-
 
 router.get("/", (req, res) => {
     res.render('index', { page: 'Home', menuId: 'home' });
 })
-router.get("/login", (req, res) => {
-    res.render('partials/login');
+
+router.get('/index', (req, res) => {
+    res.render('index', { page: 'Home', menuId: 'home' })
 })
 
 router.get("/iGrow", (req, res) => {
     res.send('Hello')
-})
-
-router.get('/index', (req, res) => {
-    res.render('index', { page: 'Home', menuId: 'home' })
 })
 
 router.get('/earth', (req, res) => {
@@ -75,12 +37,20 @@ router.get('/legacy', (req, res) => {
     res.render('legacy')
 })
 
+router.get('/live', (req, res) => {
+    res.render('live')
+})
+
 router.get('/empty', (req, res) => {
     res.render('empty')
 })
 
 router.get('/cv', (req, res) => {
     res.render('cv')
+})
+
+router.get('/specs', (req, res) => {
+    res.render('specs')
 })
 
 

@@ -1,0 +1,58 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/p5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/addons/p5.dom.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.js"></script>
+
+<canvas id="chart" width="800" height="400"></canvas>
+
+<script>
+
+async function getData() {
+    const xs = [];
+    const ys = [];
+    const response = await fetch('ZonAnn.Ts+dSST.csv'); // https://data.giss.nasa.gov/gistemp/tabledata_v4/ZonAnn.Ts+dSST.csv
+    const data = await response.text();
+    const table = data.split('\n').slice(1);
+    table.forEach(row => {
+        const cols = row.split(',');
+        const year = cols[0];
+        xs.push(year);
+        const temp = cols[1];
+        ys.push(parseFloat(temp) + 14); // 14 deg is global avevage (mean) temperature
+        //console.log(year, temp);
+    });
+    return {xs,ys};
+}
+async function createChart() {
+        const data = await getData().catch(error => {	console.error(error);	});
+        const ctx = document.getElementById('chart').getContext('2d');
+
+        const myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+            labels: data.xs,
+            datasets: [{
+                label: 'Combined Land-Surface Air and Sea-Surface Water Temperature ',
+                data: data.ys,
+                fill: false,
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1
+            }]
+            },
+                options: {
+                scales: {
+                    yAxes: [{
+                    ticks: {
+                        beginAtZero: false,
+                        callback: function(value, index, values) {
+                        return value + '°';
+                        }
+                    }
+                    }]
+                }
+                }
+            });	
+        }
+  
+        createChart();
+</script>

@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
- <% include partials/head %> 
+ <%- include('partials/head') %> 
 
  
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
@@ -12,17 +12,12 @@
     integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
     crossorigin=""></script>
 
-
- 
-
 </head>
 
 
 <body class="fixed-nav sticky-footer bg-light" id="page-top">
   
-  <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top" id="mainNav">
-      <% include partials/nav%>
-  </nav>
+<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top" id="mainNav">    <%- include('partials/nav') %>  </nav>
 
 <div class="content-wrapper">
     <div class="container-fluid bg-3 text-center">  
@@ -41,24 +36,14 @@
                             <script src="earthExplorer.js"></script>
 
                     </div>
-                    <div class="card-footer small text-muted">
-                
-                </div>
+                    <div class="card-footer small text-muted">   </div>
             </div>
-                   
-
-
-    
+   
+            
+<!-- End Container  -->
 </div>
 </div>
-<!-- /.content-wrapper & Container-fluid-->        
 
-<!-- Scroll to Top Button-->
-<a class="scroll-to-top rounded" href="#page-top">
-    <i class="fa fa-angle-up"></i>
-</a>
-
-<%include partials/logout %>
-<%include partials/bodyScripts %>
+<%- include('partials/footer') %>
 </body>
 </html>
