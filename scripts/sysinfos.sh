@@ -9,7 +9,7 @@
 echo "sysinfo script - creating html info page"
 
 
-if [ -f .bash_profile ]; then
+if [ -f ../../.bash_profile ]; then
     echo "You have a .bash_profile. Things are fine."
 else
     echo "Yikes! You have no .bash_profile!"
@@ -101,6 +101,9 @@ hw_detail()
 {
     echo "<h2>Hardware Details  (inxi -Fxz) </h2>"
     echo "<pre>"
+    nmap -sn 192.168.0.0/24
+    echo
+    echo
     inxi -Fxxxmipr -tc5 -tm5 -usb  -c0  # inxi -Fxpmrz
     echo "</pre>"
 }
