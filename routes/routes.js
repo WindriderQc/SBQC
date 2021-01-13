@@ -1,16 +1,9 @@
-const express = require('express')
-const router = express.Router()
-const bodyParser = require('body-parser')
-const moment = require('moment')
-const fetch = require('node-fetch')
 require('dotenv').config();
+const router = require('express').Router()
+const bodyParser = require('body-parser')
+const fetch = require('node-fetch')
 
-const mailman = require('./mailman')
-
-router.use(bodyParser.json({ limit: '10mb', extended: true }));
 router.use(bodyParser.urlencoded({ extended: true }));
-
-
 
 
 router.get("/", (req, res) => {
@@ -55,101 +48,36 @@ router.get('/specs', (req, res) => {
 
 
 router.get('/weather/:latlon', async (req, res) => {
-    /* const latlon = req.params.latlon.split(',')
-     const lat = latlon[0]
-     const lon = latlon[1]
-     const sky_url = `https://api.darksky.net/forecast/7d6708021ee4840eb38d457423ab8a9a/${lat},${lon}`
-     //const sky_url = 'https://api.darksky.net/forecast/7d6708021ee4840eb38d457423ab8a9a/0,0'
-                   console.log(sky_url)             
-     const fetch_response = await fetch(sky_url)
-     const data = await fetch_response.json() 
-     //console.log(data)
-     res.json(data)*/
 
     const latlon = req.params.latlon.split(',');
     const lat = latlon[0];
     const lon = latlon[1];
-    console.log(lat, lon);
-    const api_key = process.env.API_KEY;
-    console.log(api_key)
-    const weather_url = `https://api.darksky.net/forecast/${api_key}/${lat},${lon}/?units=si`;
-    const weather_response = await fetch(weather_url);
-    const weather_data = await weather_response.json();
+   // console.log(lat, lon);
 
-    const aq_url = `https://api.openaq.org/v1/latest?has_geo=true&coordinates=${lat},${lon}&radius=100000&order_by=distance`;
+    const options = {
+        "method": "GET",
+        "headers": {    "x-rapidapi-key": process.env.WEATHER_API        }
+    }
 
-    //const aq_url = `https://api.openaq.org/v1/latest?coordinates=0,0`;
+    const weather_response = await fetch(`https://community-open-weather-map.p.rapidapi.com/weather?lat=${lat}&lon=${lon}&units=metric`, options);
+    const weather = await weather_response.json()
+    console.log(weather)
+
+    const aq_url = `https://api.openaq.org/v1/latest?has_geo=true&coordinates=${lat},${lon}&radius=100000&order_by[]=date&order_by[]=distance`;
     const aq_response = await fetch(aq_url);
     const aq_data = await aq_response.json();
 
     console.log(aq_url)
-    console.log(aq_data)
+    console.log(aq_data.results[aq_data.results.length -1])
 
     const data = {
-        weather: weather_data,
+        weather: weather,
         air_quality: aq_data
     };
     res.json(data);
 
 
 })
-
-
-
-
-
-
-
-
-
-
-
-const Datastore = require('nedb')
-const picDb = new Datastore('pics.db');
-picDb.loadDatabase();
-
-router.get('/api', (request, response) => {
-    picDb.find({}, (err, data) => {
-        if (err) { response.end(); return; }
-        response.json(data);
-    });
-});
-
-router.post('/api', bodyParser.json(), (req, res) => {  //  TODO : je crois que bodyparser n'est plus requis... bug corrigé
-
-    console.log('post to /api:')
-    const data = req.body
-    const timestamp = Date.now()
-    data.timestamp = timestamp
-    picDb.insert(data)
-    res.json(data)
-
-});
-
-router.post('/alert', bodyParser.json(), async (req, res) => {
-
-    console.log('post to Alert:')
-
-    const alert = req.body
-    const dest = alert.dest
-    const msg = alert.msg
-    const image64 = alert.image64
-    //console.log(alert)
-
-    console.log(dest, msg);
-
-    const answer = await mailman.sendEmail(dest, msg, image64)
-    console.log()
-
-})
-
-
-
-
-
-
-
-
 
 
 module.exports = router;

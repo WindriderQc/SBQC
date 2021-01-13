@@ -4,7 +4,7 @@
         </head>
         <body>
         <h1>System Information for flyinghq</h1>
-        <p>Updated on 12/18/2020 01:14:55 PM EST by root</p>
+        <p>Updated on 12/29/2020 01:48:24 AM EST by yb</p>
         <h2>System release info</h2>
 <pre>
 DISTRIB_ID=Ubuntu
@@ -13,14 +13,14 @@ NAME="Ubuntu"
 </pre>
         <h2>System uptime</h2>
 <pre>
- 13:14:55 up 36 days, 13:51,  0 users,  load average: 0.07, 0.04, 0.00
+ 01:48:24 up 47 days,  2:25,  0 users,  load average: 0.23, 0.37, 0.29
 </pre>
         <h2>Filesystem space</h2>
 <pre>
 Filesystem     1K-blocks    Used Available Use% Mounted on
 udev              473972       0    473972   0% /dev
-tmpfs             100932    7396     93536   8% /run
-/dev/sda3       20389272 6479632  12854520  34% /
+tmpfs             100932    7344     93588   8% /run
+/dev/sda3       20389272 6539100  12795052  34% /
 tmpfs             504648       0    504648   0% /dev/shm
 tmpfs               5120       0      5120   0% /run/lock
 tmpfs             504648       0    504648   0% /sys/fs/cgroup
@@ -30,10 +30,12 @@ tmpfs             100928       0    100928   0% /run/user/1000
 <pre>
     Dirs    Files     Blocks   Directory
     ----   -------    ------   ---------
-   10524    28333 1021484	/home/yb   
+   10484    27853 1018436	/home/yb   
 </pre>
         <h2>Hardware Details  (inxi -Fxz) </h2>
 <pre>
+
+
 System:    Host: flyinghq Kernel: 4.15.0-122-generic x86_64 bits: 64 gcc: 7.5.0 Console: tty
            Distro: Ubuntu 18.04.5 LTS
 Machine:   Device: vmware System: VMware product: VMware Virtual Platform serial: N/A
@@ -50,11 +52,11 @@ Network:   Card: VMware VMXNET3 Ethernet Controller
            IF: eth0 state: up speed: 10000 Mbps duplex: full mac: <filter>
            WAN IP: <filter>
            IF: eth0 ip-v4: <filter> ip-v6-link: <filter>
-Drives:    HDD Total Size: 21.5GB (31.8% used)
+Drives:    HDD Total Size: 21.5GB (32.1% used)
            ID-1: /dev/sda model: Virtual_disk size: 21.5GB serial: N/A
-Partition: ID-1: / size: 20G used: 6.2G (34%) fs: ext4 dev: /dev/sda3
+Partition: ID-1: / size: 20G used: 6.3G (34%) fs: ext4 dev: /dev/sda3
            uuid: c837ed13-738e-11e8-9c98-00505607b87c
-           ID-2: swap-1 size: 0.20GB used: 0.03GB (15%) fs: swap dev: /dev/sda2
+           ID-2: swap-1 size: 0.20GB used: 0.20GB (99%) fs: swap dev: /dev/sda2
            uuid: c837ed12-738e-11e8-9c98-00505607b87c
 RAID:      System: supported: linear multipath raid0 raid1 raid6 raid5 raid4 raid10
            No RAID devices: /proc/mdstat, md_mod kernel module present
@@ -101,18 +103,18 @@ Repos:     Active apt sources in file: /etc/apt/sources.list
            deb https: //deb.nodesource.com/node_13.x bionic main
            deb-src https: //deb.nodesource.com/node_13.x bionic main
 Processes: CPU: % used - Memory: MB / % used - top 5 active
-           1: cpu: 11.5% command: server.js (started by: node) pid: 5221 mem: 46.47MB (4.7%)
-           2: cpu: 0.4% command: bootstrap-fork (started by: node) pid: 32693 mem: 81.36MB (8.2%)
-           3: cpu: 0.2% command: htmlServerMain (started by: node) pid: 3867 mem: 70.57MB (7.1%)
-           4: cpu: 0.2% daemon: ~rcu_sched~ pid: 8 mem: 0.00MB (0.0%)
-           5: cpu: 0.1% command: main.js (started by: node) pid: 32613 mem: 55.86MB (5.6%)
+           1: cpu: 7.0% command: node pid: 13782 mem: 41.24MB (4.1%)
+           2: cpu: 3.7% command: node pid: 10248 mem: 184.07MB (18.6%)
+           3: cpu: 1.0% command: node pid: 10247 mem: 108.16MB (10.9%)
+           4: cpu: 0.9% command: bootstrap-fork (started by: node) pid: 12442 mem: 80.52MB (8.1%)
+           5: cpu: 0.6% command: pm2 (started by: node) pid: 13166 mem: 0.00MB (0.0%)
            Memory: MB / % used - CPU: % used - top 5 active
-           1: mem: 226.64MB (22.9%) command: systemd-journald pid: 30219 cpu: 0.0%
-           2: mem: 81.36MB (8.2%) command: bootstrap-fork (started by: node) pid: 32693 cpu: 0.4%
-           3: mem: 70.57MB (7.1%) command: htmlServerMain (started by: node) pid: 3867 cpu: 0.2%
-           4: mem: 55.86MB (5.6%) command: main.js (started by: node) pid: 32613 cpu: 0.1%
-           5: mem: 46.47MB (4.7%) command: server.js (started by: node) pid: 5221 cpu: 11.5%
-Info:      Processes: 97 Uptime: 36 days Memory: 392.1/985.6MB
+           1: mem: 184.07MB (18.6%) command: node pid: 10248 cpu: 3.7%
+           2: mem: 108.16MB (10.9%) command: node pid: 10247 cpu: 1.0%
+           3: mem: 80.52MB (8.1%) command: bootstrap-fork (started by: node) pid: 12442 cpu: 0.9%
+           4: mem: 64.14MB (6.5%) command: typingsInstaller.js (started by: node) pid: 10297 cpu: 0.4%
+           5: mem: 41.24MB (4.1%) command: node pid: 13782 cpu: 7.0%
+Info:      Processes: 105 Uptime: 47 days Memory: 610.3/985.6MB
            Init: systemd v: 237 runlevel: 5 Gcc sys: 7.5.0 Client: Shell wrapper inxi: 2.3.56
 </pre>
         </body>

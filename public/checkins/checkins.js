@@ -12,14 +12,15 @@ if ('geolocation' in navigator) {
       const api_url = `/weather/${lat},${lon}`;
       const response = await fetch(api_url);
       const json = await response.json();
-      weather = json.weather.currently;
-      air = json.air_quality.results[0].measurements[0];
-      document.getElementById('summary').textContent = weather.summary;
-      document.getElementById('temp').textContent = weather.temperature;
+      console.log(json)
+      weather = json.weather;
+      air = json.air_quality.results[json.air_quality.results.length -1].measurements[0];
+      document.getElementById('summary').textContent = weather.weather[0].description;
+      document.getElementById('temp').textContent = weather.main.temp;
       document.getElementById('aq_parameter').textContent = air.parameter;
       document.getElementById('aq_value').textContent = air.value;
       document.getElementById('aq_units').textContent = air.unit;
-      document.getElementById('aq_date').textContent = air.lastUpdated;
+      document.getElementById('aq_date').textContent = moment(air.lastUpdated).format('YYYY-MM-DD');
     } 
     catch (error) {
         console.error(error);
@@ -35,7 +36,7 @@ if ('geolocation' in navigator) {
       },
       body: JSON.stringify(data)
     };
-    const db_response = await fetch('/api', options);
+    const db_response = await fetch('/checkins/api', options);
     const db_json = await db_response.json();
     console.log(db_json);
   });

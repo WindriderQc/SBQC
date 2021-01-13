@@ -1,30 +1,10 @@
 server:   ssh yb@104.129.129.22
 
-editing ~/.ssh/config to add an entry to make this work for anything that uses SSH with your account (including scp, sftp, and rsync among others).
-
-Host specialblend
-  Hostname 104.129.129.22
-  User yb
-
-
-
-
-
- const sky_url = `https://api.darksky.net/forecast/7d6708021ee4840eb38d457423ab8a9a/${lat},${lon}`
-API_KEY=7d6708021ee4840eb38d457423ab8a9a
-
-
-
-
-
 
 
 https://myaccount.google.com/lesssecureapps
 
 Must be on to allow using the gmail api from unsecure app.    should get back to https or remember to activate this.
-
-
-
 
 
 
@@ -42,7 +22,7 @@ node -v
 
 
 
-sudo apt-get install preload
+
 
 
 
@@ -111,43 +91,15 @@ sudo apt install nodejs
 
 
 
-/* Install VS Code   */
-
-curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
-sudo install -o root -g root -m 644 packages.microsoft.gpg /usr/share/keyrings/
-sudo sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list'
-
-sudo apt-get install apt-transport-https
-sudo apt-get update
-sudo apt-get install code # or code-insiders
-
-
-
 
 chrome://flags/#unsafely-treat-insecure-origin-as-secure
 
-
-
-/* virtual terminal */
-
-$ tmux
-......
-Connection fails for some reason
-Reconect
-
-$ tmux ls
-0: 1 windows (created Tue Aug 23 12:39:52 2011) [103x30]
-
-$ tmux attach -t 0
 
 
 
 
 ps -ef | grep node       //  list all node process running
 
-
-
-git commit -am "test" && git push
 
 
 
@@ -201,19 +153,6 @@ require('crypto').randomBytes(64).toString('hex')
 
 
 
-// Stats de l'Ordi
-
-inxi -Fxz
-
-
-
-// nvidia fix
-sudo xed /etc/default/grub
-GRUB_CMDLINE_LINUX_DEFAULT="quiet splash rcutree.rcu_idle_gp_delay=1 acpi_osi=! acpi_osi='Linux'"
-save and
-sudo update-grub 
-
-
 
 
 
@@ -225,12 +164,39 @@ exit and login with sammy... :)
 
 
 
-
+ 
 
 sudo apt install mosquitto
 mosquitto -d
 yb@flyinghq:~$ mosquitto_sub -t "test"
 mosquitto_pub -m "message from mosquitto_pub client" -t "test"
+
+edit /etc/mosquitto/mosquitto.conf   
+ex:
+      pid_file /var/run/mosquitto.pid
+
+      allow_anonymous false
+      password_file /etc/mosquitto/passwordfile
+
+      listener 1883
+
+      listener 9001
+      protocol websockets
+
+      persistence false
+
+      log_dest file /var/log/mosquitto/mosquitto.log
+
+
+Create passwordfile and add user:
+sudo mosquitto_passwd -c passwordfile user
+
+Add additionnal users:
+mosquitto_passwd -b passwordfile user password
+
+Delete users:
+mosquitto_passwd -D passwordfile user
+
 
 
 
@@ -274,3 +240,31 @@ UUID=14D82C19D82BF81E /hdd/nomdudisk    auto nosuid,nodev,nofail,x-gvfs-show 0 0
 
 Pour tester: (ou reboot)
 sudo mount -a
+
+
+
+
+
+
+
+Install MongoDB
+---------------
+
+Import the public key used by the package management system:
+wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | sudo apt-key add -
+
+Create the /etc/apt/sources.list.d/mongodb-org-4.4.list file for Ubuntu 20.04 (Focal):
+echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.4.list
+
+Install:
+sudo apt-get install -y mongodb-orgzigzag
+
+Start MongoDB:
+sudo systemctl start mongod
+
+
+Download and install MongoDB Compass:
+https://downloads.mongodb.com/compass/mongodb-compass_1.24.6_amd64.deb
+
+Link to connect to local DB in Compass:
+mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&ssl=false
