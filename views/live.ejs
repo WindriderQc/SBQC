@@ -149,11 +149,93 @@
           
          </div>
 
-<script src="js/locateData.js"></script>
 <script src="js/motionCam.js"></script>
 
 <script>
   
+  
+let lat, lon;
+
+async function gotLocation(pos)
+{
+    let lat, lon, accuracy, weather, air
+  
+    lat = pos.coords.latitude
+    lon = pos.coords.longitude
+    accuracy = pos.coords.accuracy
+    console.log('Your current position is:');
+    console.log(`Latitude : ${lat}`);
+    console.log(`Longitude: ${lon}`);
+    console.log(`More or less ${accuracy} meters.`);
+
+    document.getElementById('lat_id').textContent = lat.toFixed(2)
+    document.getElementById('lon_id').textContent = lon.toFixed(2)
+    
+
+
+    try {
+      const api_url = `weather/${lat},${lon}`
+      const response = await fetch(api_url)
+      const data = await response.json()
+      console.log(data)
+      
+
+      for(measure of data.air_quality.results[0].measurements) {
+        if(measure["parameter"] == "um010") 
+          air = measure
+      } 
+ 
+     // air = data.air_quality.results[0].measurements[0]
+      document.getElementById('summary').textContent = data.weather.weather[0].description
+      document.getElementById('temp').textContent = data.weather.main.feels_like
+      document.getElementById('aq_parameter').textContent = air.parameter
+      document.getElementById('aq_value').textContent = air.value
+      document.getElementById('aq_units').textContent = air.unit
+      document.getElementById('aq_date').textContent = air.lastUpdated
+    } 
+    catch (error) {
+      cliError(error)
+      air = { value: -1 };
+      document.getElementById('aq_value').textContent = 'NO READING'
+    }
+
+
+    
+  /**  const options = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ lat, lon, weather, air })
+    };
+
+    const db_response = await fetch('/api', options)
+    const db_json = await db_response.json()
+    console.log(db_json)*/
+}  
+
+
+
+function cliWarning(warn) {
+    console.warn(`WARNING(${warn.code}): ${warn.message}`)
+    //console.log(warn)
+}
+function cliError(err) {
+   console.error(`ERROR(${err.code}): ${err.message}`)
+   //console.log(err)
+}
+
+
+
+const options = {
+    enableHighAccuracy: true,
+   // timeout: 5000,
+    maximumAge: 0
+}
+
+
+
+
 // Geo Locate
 
 if ('geolocation' in navigator) {
@@ -164,7 +246,7 @@ if ('geolocation' in navigator) {
 
     navigator.geolocation.getCurrentPosition(gotLocation, (pos) => {
       console.log(pos)
-    })//, options);
+    }, options);
   } else {
     console.log('geolocation not available');
   }

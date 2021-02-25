@@ -34,14 +34,16 @@ mymap.on('zoomend', function() {
     marker.setLatLng(latlng);
 });
 
+
+
 if('geolocation' in navigator) {
     console.log('geolocation available');
     
     
     try {
-    navigator.geolocation.getCurrentPosition( position => {
+    navigator.geolocation.getCurrentPosition( async (position) => {
         console.log(position);
-        /*lat = position.coords.latitude
+        lat = position.coords.latitude
         lon = position.coords.longitude
         document.getElementById('clat').textContent = lat.toFixed(2);
         document.getElementById('clon').textContent = lon.toFixed(2);
@@ -49,14 +51,14 @@ if('geolocation' in navigator) {
                 
         clientMarker.setLatLng([lat, lon])
 
-        const url = `weather/${lat},${lon}`;
+       /* const url = `weather/${lat},${lon}`;
         const response = await fetch(url)
         const data = await response.json()
         console.log(data)*/
-    })
-} catch(err){
-    console.log(err)
-} 
+        })
+    } catch(err){
+        console.log(err)
+    } 
 
 
 } 
@@ -64,7 +66,8 @@ else {
     console.log('Geolocation not available. :(');
 }
 
-  
+
+
 
 
 async function getISS() 

@@ -6,12 +6,15 @@ const fetch = require('node-fetch')
 router.use(bodyParser.urlencoded({ extended: true }));
 
 
+let hitCount = 0;
+
 router.get("/", (req, res) => {
-    res.render('index', { page: 'Home', menuId: 'home' });
+    hitCount++;
+    res.render('index', { page: 'Home', menuId: 'home', hitCount: hitCount })
 })
 
 router.get('/index', (req, res) => {
-    res.render('index', { page: 'Home', menuId: 'home' })
+    res.render('index',  { page: 'Home', menuId: 'home', hitCount: hitCount })
 })
 
 router.get("/iGrow", (req, res) => {
@@ -54,21 +57,19 @@ router.get('/weather/:latlon', async (req, res) => {
     const lon = latlon[1];
    // console.log(lat, lon);
 
-    const options = {
-        "method": "GET",
-        "headers": {    "x-rapidapi-key": process.env.WEATHER_API        }
-    }
-
-    const weather_response = await fetch(`https://community-open-weather-map.p.rapidapi.com/weather?lat=${lat}&lon=${lon}&units=metric`, options);
+       
+    const weather_response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&&units=metric&APPID=${process.env.WEATHER_API}`);
     const weather = await weather_response.json()
     console.log(weather)
 
-    const aq_url = `https://api.openaq.org/v1/latest?has_geo=true&coordinates=${lat},${lon}&radius=100000&order_by[]=date&order_by[]=distance`;
+    const aq_url = `https://api.openaq.org/v2/latest?has_geo=true&coordinates=${lat},${lon}&radius=5000&order_by=lastUpdated`
     const aq_response = await fetch(aq_url);
+    console.log(aq_response)
     const aq_data = await aq_response.json();
 
-    console.log(aq_url)
-    console.log(aq_data.results[aq_data.results.length -1])
+
+
+    if(aq_data) console.log(aq_data.results[aq_data.results.length -1])
 
     const data = {
         weather: weather,
