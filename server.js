@@ -44,3 +44,8 @@ app.listen(process.env.PORT, () =>{
 
 //console.log('Launching automation scripts')
 //require('./serverScripts.js')  // generate infos/index.html
+
+
+var fsTools = require('./fileAccess')
+fsTools.readFile("greetings.txt")
+
