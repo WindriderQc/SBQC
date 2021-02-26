@@ -223,7 +223,7 @@ log to github and paste ssh key in settings
 
 find . -type f -iname \*.avi -delete
 
-rm -r /path/to/dir/*
+rm -r /path/to/dir/*        ( -f to force for protected files)
 
 df                       // list all disk n space
 
