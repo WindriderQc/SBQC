@@ -2,19 +2,27 @@ require('dotenv').config();
 const router = require('express').Router()
 const bodyParser = require('body-parser')
 const fetch = require('node-fetch')
+var counter = require('../visitorCount')
 
-router.use(bodyParser.urlencoded({ extended: true }));
 
 
-let hitCount = 0;
+//router.use(bodyParser.urlencoded({ extended: true }));
 
-router.get("/", (req, res) => {
-    hitCount++;
-    res.render('index', { page: 'Home', menuId: 'home', hitCount: hitCount })
+
+router.get("/", async (req, res) => {
+    let client = req.headers['user-agent'] 
+    console.log(client)
+    var origin = req.headers['host'] 
+    console.log(origin)
+    var ip = req.socket.remoteAddress
+    console.log(ip)
+    let count = await counter.increaseCount()
+    res.render('index', { page: 'Home', menuId: 'home', hitCount: count })
 })
 
-router.get('/index', (req, res) => {
-    res.render('index',  { page: 'Home', menuId: 'home', hitCount: hitCount })
+router.get('/index', async (req, res) => {
+    let count = await counter.getCount()
+    res.render('index',  { page: 'Home', menuId: 'home', hitCount: count })
 })
 
 router.get("/iGrow", (req, res) => {

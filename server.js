@@ -13,6 +13,7 @@ app.set('view engine', 'ejs')
 //app.use(express.urlencoded({ extended: true })) // insures bodyParser
 app.use(express.static(__dirname + '/public'));
 
+app.use(express.json())
 
 const IN_PROD = process.env.NODE_ENV === 'production'  // for https channel...  IN_PROD will be true if in production environment
 app.use(session({
@@ -46,6 +47,6 @@ app.listen(process.env.PORT, () =>{
 //require('./serverScripts.js')  // generate infos/index.html
 
 
-var fsTools = require('./fileAccess')
-fsTools.readFile("greetings.txt")
+var nodeTools = require('./nodeTools')
+nodeTools.readFile("greetings.txt")
 
