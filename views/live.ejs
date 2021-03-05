@@ -174,7 +174,7 @@ async function gotLocation(pos)
 
 
     try {
-      const api_url = `weather/${lat},${lon}`
+      const api_url = `weather/${lat.toFixed(7)},${lon.toFixed(7)}`
       const response = await fetch(api_url)
       const data = await response.json()
       console.log(data)

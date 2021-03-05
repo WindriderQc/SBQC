@@ -9,10 +9,7 @@ app.set('view engine', 'ejs')
 
 //Middlewares
 //app.use(cors())
-//app.use(express.static('public'))
-//app.use(express.urlencoded({ extended: true })) // insures bodyParser
 app.use(express.static(__dirname + '/public'));
-
 app.use(express.json())
 
 const IN_PROD = process.env.NODE_ENV === 'production'  // for https channel...  IN_PROD will be true if in production environment
