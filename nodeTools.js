@@ -32,4 +32,11 @@ exports.moveFile = async (source, destination) =>{
   // filename must be included in destination as rename is supported   TODO:  ptete mettre filename comme parametre a la function
 }
 
-
+exports.saveFile = async (source, destination) =>{  
+  try {
+    await fs.writeFile(destination, source);
+    console.log(`Saved file to ${destination}`);
+  } catch (error) {
+    console.error(`Got an error trying to move the file: ${error.message}`);
+  }
+}

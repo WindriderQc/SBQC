@@ -6,9 +6,13 @@ const session = require('express-session')
 const app = express()
 app.set('view engine', 'ejs')
 
+var corsOptions = {
+    origin: '*',
+    optionsSuccessStatus: 200,
+  }
 
 //Middlewares
-//app.use(cors())
+//app.use(cors(corsOptions))
 app.use(express.static(__dirname + '/public'));
 app.use(express.json())
 
@@ -29,10 +33,12 @@ app.use(session({
 // Import routes
 const routes = require('./routes/routes')
 const checkins = require('./routes/checkins.routes')
+const liveData = require('./routes/data.routes')
 
 // Route middleware
 app.use('/', routes)
 app.use('/checkins', checkins)
+app.use('/data', liveData)
 
 app.listen(process.env.PORT, () =>{
     console.log('\n\nServer is not running at port %s', process.env.PORT)
@@ -46,4 +52,8 @@ app.listen(process.env.PORT, () =>{
 
 var nodeTools = require('./nodeTools')
 nodeTools.readFile("greetings.txt")
+
+
+
+
 

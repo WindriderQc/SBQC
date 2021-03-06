@@ -51,11 +51,13 @@ function getISS_coord() {
   return {issx, issy}
 }
 
+
 function preload() {
   // The clon and clat in this url are edited to be in the correct order.
   mapimg = loadImage('https://api.mapbox.com/styles/v1/' + mapStyle + '/static/' +                
           clon + ',' + clat + ',' + zoom + '/' +  ww + 'x' + hh + '?access_token=pk.eyJ1Ijoid2luZHJpZGVyIiwiYSI6ImNqczVldmR3bzBmMWU0NHRmbjlta2Y0aDEifQ.FWOdvqw-IBlcJrBKKML7iQ');
-  earthquakes = loadStrings('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.csv');
+  //earthquakes = loadStrings('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.csv', printQuakes);
+  //earthquakes = loadStrings('/data/quakes');
   //loadFont('Montserrat-Regular.otf',  drawText);
 }
 
@@ -91,12 +93,21 @@ function mercY(lat) {
 
 function displayEarthquakes()
 {
-  for (var i = 1; i < earthquakes.length; i++) {
+  console.log('Quakes all month: ' + earthquakes.length)
+  
+   for (var i = 1; i < earthquakes.length; i++) {
+    
+    
+    
     var data = earthquakes[i].split(/,/);  //  splitting csv
     //console.log(data);
     var lat = data[1];
     var lon = data[2];
     var mag = data[4];
+
+
+
+
     var x = mercX(lon) - cx;
     var y = mercY(lat) - cy;
     
@@ -153,9 +164,9 @@ function gotWeather(cityData)
 }
 function getISS_location()
 {
-  var url = 'http://api.open-notify.org/iss-now.json';
+  //var url = 'http://api.open-notify.org/iss-now.json';
 
-  //const url = 'https://api.wheretheiss.at/v1/satellites/25544'
+  const url = 'https://api.wheretheiss.at/v1/satellites/25544'
 
 
   loadJSON(url, gotISSloc);
@@ -163,24 +174,15 @@ function getISS_location()
 
 function gotISSloc(data)
 {
+  //console.log(data)
   Iss = data; 
-  issx = Iss.iss_position.longitude;
-  issy = Iss.iss_position.latitude;
-  //print("Iss  Lon: " + issx + " , Lat: " + issy)
+  issx = Iss.longitude;
+  issy = Iss.latitude;
   var x = mercX(issx)-cx;
   var y = mercY(issy)-cy;
-  //print("Iss X: "+ x + "  Y: " + y );
 
 }
-/*
- async function getPPM() {
-    const response = await fetch('/ppm');
-    const data = await response.json();
-    ppm = data.ppm;
-    print("PPM: " + data.ppm )
-    pPPM.html("PPM :" + ppm);
-  }
-*/
+
 
 
 function setup() {
@@ -197,7 +199,11 @@ function setup() {
   // Show Qc City  -  46.8139° N, 71.2080° W
   ellipse(mercX(-71.2080)-cx, mercY(46.8139)-cy, 10, 10)
 
-  displayEarthquakes()
+
+  earthquakes = loadStrings('quakes.csv', displayEarthquakes);
+
+
+  //displayEarthquakes()
   //displayGrid(45,22.5);
  
 

@@ -19,6 +19,8 @@
   "homepage": "https://github.com/WindriderQc/SBQC#readme",
   "dependencies": {
     "@types/p5": "^0.9.1",
+    "cors": "^2.8.5",
+    "csvtojson": "^2.0.10",
     "dotenv": "^8.2.0",
     "ejs": "^2.7.4",
     "express": "^4.17.1",

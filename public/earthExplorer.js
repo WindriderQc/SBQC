@@ -73,8 +73,13 @@ else {
 async function getISS() 
 {
 
-   const response = await fetch(api_url)
+  /* const response = await fetch(api_url)
+   const data = await response.json()*/
+
+   const response = await fetch('/data/iss')
    const data = await response.json()
+//console.log(data)
+
    const { latitude, longitude } = data
    
    marker.setLatLng([latitude, longitude])
@@ -89,10 +94,10 @@ async function getISS()
 
 
 getISS()
-setInterval(getISS, 1000)
+setInterval(getISS, 5000)
 
 
-
+/*
 
 function ipLookUp () {
     $.ajax('http://ip-api.com/json')
@@ -108,4 +113,4 @@ function ipLookUp () {
         }
     );
   }
-  ipLookUp()
+  ipLookUp()*/
