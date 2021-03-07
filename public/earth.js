@@ -24,14 +24,6 @@ var api = '//api.openweathermap.org/data/2.5/weather?q=';
 var inputCity;
 var appid = '&APPID=3acd322267c6cf3b8b697d7a4e9f78cb';  // Personal API key
 var units = '&units=metric';
-  /*
-  var op = 'WND';  // Weather map layer
-  var x = 0;  // Number of x tile coordinate
-  var y = 0; // Number of y tile coordinate
-  var date = 1527811099;
-  var arrowSteps = 16; // 16
-  //weather = loadStrings('http://maps.openweathermap.org/maps/2.0/weather/' + op + '/' + zoom + '/' + x + '/' + y + '?date=' + date + '&use_norm=true&arrow_step=' + arrowSteps + '&appid=' + appid);
-  */
 
 var pTemp;
 var pHumid;
@@ -39,39 +31,35 @@ var pPPM;
 var earthquakes; // preloaded
 var weather;  // actualized
 
-var SensingData;
-
 var Iss;
 var issx = 0.0000;
 var issy = 0.0000;
 var CityX = 0.0000;
 var CityY = 0.0000;
 
-function getISS_coord() {
-  return {issx, issy}
-}
 
 
 function preload() {
-  // The clon and clat in this url are edited to be in the correct order.
-  mapimg = loadImage('https://api.mapbox.com/styles/v1/' + mapStyle + '/static/' +                
-          clon + ',' + clat + ',' + zoom + '/' +  ww + 'x' + hh + '?access_token=pk.eyJ1Ijoid2luZHJpZGVyIiwiYSI6ImNqczVldmR3bzBmMWU0NHRmbjlta2Y0aDEifQ.FWOdvqw-IBlcJrBKKML7iQ');
-  //earthquakes = loadStrings('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.csv', printQuakes);
-  //earthquakes = loadStrings('/data/quakes');
+  //mapimg = loadImage('https://api.mapbox.com/styles/v1/' + mapStyle + '/static/' +                
+  //                   clon + ',' + clat + ',' + zoom + '/' +  ww + 'x' + hh + '?access_token=pk.eyJ1Ijoid2luZHJpZGVyIiwiYSI6ImNqczVldmR3bzBmMWU0NHRmbjlta2Y0aDEifQ.FWOdvqw-IBlcJrBKKML7iQ', printMap);
+  // mapimg.save('darkmap1200x800', 'png');   //  save image from API
+  mapimg = loadImage('img/darkmap1200x800.png')
+
   //loadFont('Montserrat-Regular.otf',  drawText);
 }
 
-function drawText(font) {
+function drawText(font) 
+{
   //fill('#ED225D');
   textSize(18);
  // textFont(font, 36);  
- stroke('#ff9d00'); 
+  stroke('#ff9d00'); 
   fill('#ff9d00');
   let s = 'Earthquakes in last month'
   text(s, -width/2 + 10, -height/2 + 20);
   stroke(0, 255, 0);
   fill(0, 255, 0, 255);
-  s = 'ISS trace'
+  s = 'International Space Station'
   text(s, -width/2 +10, -height/2 + 40);  
   console.log('Legend printed.')
 }
@@ -91,22 +79,18 @@ function mercY(lat) {
   return a * c;
 }
 
-function displayEarthquakes()
+
+function displayEarthquakes()   //  TODO:  faire une generic method pour utiliser avec d'autre CSV/arrays
 {
   console.log('Quakes all month: ' + earthquakes.length)
-  
-   for (var i = 1; i < earthquakes.length; i++) {
-    
-    
-    
+
+  for (var i = 1; i < earthquakes.length; i++) 
+  {
     var data = earthquakes[i].split(/,/);  //  splitting csv
     //console.log(data);
     var lat = data[1];
     var lon = data[2];
     var mag = data[4];
-
-
-
 
     var x = mercX(lon) - cx;
     var y = mercY(lat) - cy;
@@ -122,19 +106,19 @@ function displayEarthquakes()
     mag = sqrt(mag);
     var magmax = sqrt(pow(10, 10));
     var d = map(mag, 0, magmax, 0, 180);
+
     stroke('#ff9d00');
     fill('#ff9d00');
     ellipse(x, y, d, d);
   }
-
 }
 
-function displayGrid(r,l)
+function displayGrid(r,l, color = 0, weight = 1)   //  smallest weight = 1 pixel
 {
   for (var x = -width/2; x < width/2; x += width / r) {
     for (var y = -height/2; y < height/2; y += height / l) {
-      stroke(0);
-      strokeWeight(0.25);
+      stroke(color);
+      strokeWeight(weight);
       line(x, -height/2, x, height/2);
       line(-width /2, y, width/2, y);
     }
@@ -166,8 +150,8 @@ function getISS_location()
 {
   //var url = 'http://api.open-notify.org/iss-now.json';
 
-  const url = 'https://api.wheretheiss.at/v1/satellites/25544'
-
+  //const url = 'https://api.wheretheiss.at/v1/satellites/25544'
+  const url = '/data/iss'
 
   loadJSON(url, gotISSloc);
 }
@@ -178,12 +162,16 @@ function gotISSloc(data)
   Iss = data; 
   issx = Iss.longitude;
   issy = Iss.latitude;
-  var x = mercX(issx)-cx;
-  var y = mercY(issy)-cy;
+  //var x = mercX(issx)-cx;
+ // var y = mercY(issy)-cy;
+ var x = mercX(issx)-cx;
+ var y = mercY(issy)-cy;
+
+ stroke(0, 255, 0);
+ fill(0, 255, 0, 200);
+ ellipse(x, y, 4, 4);
 
 }
-
-
 
 function setup() {
  
@@ -194,8 +182,9 @@ function setup() {
   image(mapimg, 0, 0)
   cx = mercX(clon) // define center offset
   cy = mercY(clat)
-  stroke(0, 0, 255)
-  fill(0, 0, 255, 200)
+ 
+  stroke(0, 0, 255)  // BLUE
+  fill(0, 0, 255, 120)    //  BLUE + ALPHA
   // Show Qc City  -  46.8139° N, 71.2080° W
   ellipse(mercX(-71.2080)-cx, mercY(46.8139)-cy, 10, 10)
 
@@ -203,8 +192,7 @@ function setup() {
   earthquakes = loadStrings('quakes.csv', displayEarthquakes);
 
 
-  //displayEarthquakes()
-  //displayGrid(45,22.5);
+  //displayGrid(30,20,0, 1);
  
 
   //let legend1 = createDiv('hello there  mf')
@@ -221,7 +209,6 @@ function setup() {
 
   drawText()
   getISS_location()
-  
   setInterval(getISS_location, 5000)
   //setInterval(getPPM, 5000)
 }
@@ -229,9 +216,6 @@ function setup() {
 
 function draw()
 {
-
-
-
   translate(width / 2, height / 2); //  set the 0,0 in the center of map
 
   /*if(weather)
@@ -243,18 +227,12 @@ function draw()
     ellipse(mercX(CityX)-cx, mercY(CityY)-cy, 10, 10)
   }*/
  
-  if(Iss)
+  /*if(Iss)
   {
-    //var x = (width/360) * (180 + int(issx));
-    //var y = (height/180) * (90 - (issy));
     var x = mercX(issx)-cx;
     var y = mercY(issy)-cy;
     stroke(0, 255, 0);
     fill(0, 255, 0, 200);
     ellipse(x, y, 4, 4);
-
-   
-  }
-
-  
+  } */
 }
