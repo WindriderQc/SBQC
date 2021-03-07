@@ -2,6 +2,7 @@ sudo apt install openssh-server
 sudo systemctl enable ssh   //  this insure service start at boot  (usually not necessary, done default at install.)
 sudo systemctl start ssh
 
+sudo sed -i '/preserve_hostname: false/c\preserve_hostname: true' /etc/cloud/cloud.cfg && sudo hostnamectl set-hostname flyingHQ     //  this will set the hostname and insure it stays onto cloud VM
 
 FlyingHQ server:   ssh yb@104.129.129.22
 
