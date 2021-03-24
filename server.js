@@ -6,13 +6,10 @@ const session = require('express-session')
 const app = express()
 app.set('view engine', 'ejs')
 
-var corsOptions = {
-    origin: '*',
-    optionsSuccessStatus: 200,
-  }
+
 
 //Middlewares
-//app.use(cors(corsOptions))
+app.use(cors())
 app.use(express.static(__dirname + '/public'));
 app.use(express.json())
 
@@ -52,7 +49,6 @@ app.listen(process.env.PORT, () =>{
 
 var nodeTools = require('./nodeTools')
 nodeTools.readFile("greetings.txt")
-
 
 
 
