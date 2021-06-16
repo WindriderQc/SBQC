@@ -54,7 +54,7 @@ router.get('/empty', (req, res) => {
     res.render('empty')
 })
 
-router.get('/cv', (req, res) => {
+router.get('/cv_yanikbeaulieu', (req, res) => {
     res.render('cv')
 })
 
