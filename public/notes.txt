@@ -139,7 +139,7 @@ Link to connect to local DB in Compass:
 mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&ssl=false
 
 Link to connect to cloud MongoDB or local in node.js:
-DB_CONNECTION=mongodb+srv://yb:zigzag@cluster0-b2xaf.mongodb.net/test?retryWrites=true&w=majority
+DB_CONNECTION=mongodb+srv://yb:!!!PASSWORD!!!@cluster0-b2xaf.mongodb.net/test?retryWrites=true&w=majority
 DB_CONNECTION=mongodb://127.0.0.1:27017/IoT
 
 
@@ -211,7 +211,7 @@ https://myaccount.google.com/lesssecureapps    ->  Must be on to allow using the
 
 
 ls ~/.ssh
-ssh-keygen -t rsa -b 4096 -C "yanikbeaulieu@hotmail.com"
+ssh-keygen -t rsa -b 4096 -C "xxxx@hotmail.com"
 sudo apt install xclip
 xclip -sel clip < ~/.ssh/id_rsa.pub
 

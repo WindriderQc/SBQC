@@ -1,9 +1,11 @@
 require('dotenv/config')
-const express = require('express')
-const session = require('express-session')
+const express = require('express'),
+session = require('express-session'),
+serveIndex = require('serve-index'),
+path = require('path'),
+app = express()
 //const cors = require('cors')
 
-const app = express()
 app.set('view engine', 'ejs')
 
 var corsOptions = {
@@ -11,9 +13,17 @@ var corsOptions = {
     optionsSuccessStatus: 200,
   }
 
-//Middlewares
+const PUBLIC_HTML = path.resolve(__dirname, 'public');
+
+
+//Middlewares 
 //app.use(cors(corsOptions))
-app.use(express.static(__dirname + '/public'));
+var hourMs = 1000*60*60;
+app.use(express.static(PUBLIC_HTML, { maxAge: hourMs }));  // maxAge allow client to cache data for 1h
+// use serve index to nav public folder
+app.use('/', serveIndex( PUBLIC_HTML));
+
+
 app.use(express.json())
 
 const IN_PROD = process.env.NODE_ENV === 'production'  // for https channel...  IN_PROD will be true if in production environment
