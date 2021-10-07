@@ -157,12 +157,11 @@ DB_CONNECTION=mongodb://127.0.0.1:27017/IoT
   // Install PM2
 sudo npm install pm2@latest -g
 pm2 startup systemd   -> insure startup at boot
-pm2 start server.js  --watch    -> replace hello.js by any application to be launched   watch = replace nodemon, this can be put in package.json
+pm2 start server.js  --watch    -> replace server.js by any application to be launched   watch = replace nodemon, this can be put in package.json
 
 pm2 save
+pm2 monit
 pm2 log
-pm2 monitor
-
 
 
 

@@ -13,16 +13,17 @@ var corsOptions = {
     optionsSuccessStatus: 200,
   }
 
-const PUBLIC_HTML = path.resolve(__dirname, 'public');
+const PUBLIC_HTML = path.resolve(__dirname, 'public') 
+const TOOLS_HTML = path.resolve(__dirname, 'public/Tools')
 
 
 //Middlewares 
 //app.use(cors(corsOptions))
 var hourMs = 1000*60*60;
-app.use(express.static(PUBLIC_HTML, { maxAge: hourMs }));  // maxAge allow client to cache data for 1h
-// use serve index to nav public folder
-app.use('/', serveIndex( PUBLIC_HTML));
-
+app.use(express.static(PUBLIC_HTML, { maxAge: hourMs })) // maxAge allow client to cache data for 1h
+// use serve index to nav folder  (Attention si utiliser sur le public folder, la racine (/) du site sera index au lieu de html
+//app.use('/Tools', serveIndex( path.resolve(__dirname, 'public/Tools')));
+app.use('/Tools', serveIndex(TOOLS_HTML))
 
 app.use(express.json())
 
