@@ -1,20 +1,21 @@
 const sendEmail = async (mail, msg, image64) => {
 
     const nodemailer = require('nodemailer'); 
+    const smtpTransport = require('nodemailer-smtp-transport');
 
 
     this.admin = process.env.ADM_MAIL;
     this.admpass = process.env.ADM_PASS;
 
     console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-    console.log (this.admin, this.admpass)
-    var transporter = nodemailer.createTransport({      
+    console.log ("Sending email from: " + this.admin) //, this.admpass)
+    var transporter = nodemailer.createTransport(smtpTransport({      
         service: 'gmail',
         auth: {
                 user: this.admin,
                 pass: this.admpass
             }
-    })
+    }))
         
 
     const htmlmsg = '<html><body><p>motion detected</p><p>*-*</p></body></html>'

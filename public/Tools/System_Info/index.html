@@ -5,7 +5,7 @@
         </head>
         <body>
         <h1>System Information for flyingHQ</h1>
-        <p><small>Updated on 10/07/2021 04:10:47 PM EDT by yb</small></p>
+        <p><small>Updated on 10/08/2021 03:27:30 PM EDT by yb</small></p>
         <h2>System release info</h2>
 <pre>
 DISTRIB_ID=Ubuntu
@@ -14,14 +14,14 @@ NAME="Ubuntu"
 </pre>
         <h2>System uptime</h2>
 <pre>
- 16:10:47 up 21:14,  0 users,  load average: 0.17, 0.17, 0.25
+ 15:27:31 up 1 day, 20:30,  0 users,  load average: 9.56, 4.43, 1.86
 </pre>
         <h2>Filesystem space</h2>
 <pre>
 Filesystem     1K-blocks    Used Available Use% Mounted on
 udev              460624       0    460624   0% /dev
-tmpfs             100488    1200     99288   2% /run
-/dev/sda3       20389272 9000352  10333800  47% /
+tmpfs             100488    1220     99268   2% /run
+/dev/sda3       20389272 9163620  10170532  48% /
 tmpfs             502424       0    502424   0% /dev/shm
 tmpfs               5120       0      5120   0% /run/lock
 tmpfs             502424       0    502424   0% /sys/fs/cgroup
@@ -33,22 +33,23 @@ tmpfs             502424       0    502424   0% /sys/fs/cgroup
 /dev/loop5         68864   68864         0 100% /snap/lxd/21545
 /dev/loop6         33152   33152         0 100% /snap/snapd/12883
 tmpfs             100484       0    100484   0% /run/user/1000
+/dev/loop7         63360   63360         0 100% /snap/core20/1169
 </pre>
         <h2>Home directory space by user</h2>
 <pre>
     Dirs    Files     Blocks   Directory
     ----   -------    ------   ---------
-    9160    22662 1903580	/home/yb   
+    9351    24767 1987500	/home/yb   
 </pre>
         <h2>Hardware Details  (inxi -Fxz) </h2>
 <pre>
-System:    Kernel: 5.4.0-66-generic x86_64 bits: 64 compiler: gcc v: 9.3.0 Console: N/A dm: N/A 
+System:    Kernel: 5.4.0-66-generic x86_64 bits: 64 compiler: gcc v: 9.3.0 Console: tty 2 dm: N/A 
            Distro: Ubuntu 20.04.3 LTS (Focal Fossa) 
 Machine:   Type: Vmware System: VMware product: VMware Virtual Platform v: N/A serial: <filter> 
            Chassis: No Enclosure type: 1 serial: <filter> 
            Mobo: Intel model: 440BX Desktop Reference Platform serial: <filter> BIOS: Phoenix 
            v: 6.00 date: 12/12/2018 
-Memory:    RAM: total: 981.3 MiB used: 863.9 MiB (88.0%) 
+Memory:    RAM: total: 981.3 MiB used: 902.9 MiB (92.0%) 
            RAM Report: permissions: Unable to run dmidecode. Root privileges required. 
 CPU:       Topology: Single Core model: Intel Xeon Gold 6150 bits: 64 type: MCP arch: Broadwell 
            L2 cache: 24.8 MiB 
@@ -56,7 +57,7 @@ CPU:       Topology: Single Core model: Intel Xeon Gold 6150 bits: 64 type: MCP 
            Speed: 2694 MHz min/max: N/A Core speed (MHz): 1: 2694 
 Graphics:  Device-1: VMware SVGA II Adapter driver: vmwgfx v: 2.15.0.0 bus ID: 00:0f.0 
            chip ID: 15ad:0405 
-           Display: server: No display server data found. Headless machine? tty: N/A 
+           Display: server: No display server data found. Headless machine? tty: 181x10 
            Message: Advanced graphics data unavailable in console. Try -G --display 
 Audio:     Message: No Device data found. 
 Network:   Device-1: Intel 82371AB/EB/MB PIIX4 ACPI vendor: VMware Virtual Machine 
@@ -67,9 +68,9 @@ Network:   Device-1: Intel 82371AB/EB/MB PIIX4 ACPI vendor: VMware Virtual Machi
            IP v4: <filter> scope: global broadcast: <filter> 
            IP v6: <filter> scope: link 
            WAN IP: <filter> 
-Drives:    Local Storage: total: 20.00 GiB used: 8.77 GiB (43.8%) 
+Drives:    Local Storage: total: 20.00 GiB used: 8.92 GiB (44.6%) 
            ID-1: /dev/sda model: Virtual disk size: 20.00 GiB serial: N/A rev: 2.0 scheme: GPT 
-Partition: ID-1: / size: 19.44 GiB used: 8.58 GiB (44.1%) fs: ext4 dev: /dev/sda3 
+Partition: ID-1: / size: 19.44 GiB used: 8.74 GiB (44.9%) fs: ext4 dev: /dev/sda3 
            uuid: c837ed13-738e-11e8-9c98-00505607b87c 
            ID-2: /snap/core18/2074 raw size: 55.4 MiB size: <superuser/root required> 
            used: <superuser/root required> fs: squashfs dev: /dev/loop2 uuid: N/A 
@@ -77,15 +78,17 @@ Partition: ID-1: / size: 19.44 GiB used: 8.58 GiB (44.1%) fs: ext4 dev: /dev/sda
            used: <superuser/root required> fs: squashfs dev: /dev/loop0 uuid: N/A 
            ID-4: /snap/core20/1081 raw size: 61.8 MiB size: <superuser/root required> 
            used: <superuser/root required> fs: squashfs dev: /dev/loop1 uuid: N/A 
-           ID-5: /snap/lxd/21029 raw size: 70.3 MiB size: <superuser/root required> 
+           ID-5: /snap/core20/1169 raw size: 61.8 MiB size: <superuser/root required> 
+           used: <superuser/root required> fs: squashfs dev: /dev/loop7 uuid: N/A 
+           ID-6: /snap/lxd/21029 raw size: 70.3 MiB size: <superuser/root required> 
            used: <superuser/root required> fs: squashfs dev: /dev/loop3 uuid: N/A 
-           ID-6: /snap/lxd/21545 raw size: 67.2 MiB size: <superuser/root required> 
+           ID-7: /snap/lxd/21545 raw size: 67.2 MiB size: <superuser/root required> 
            used: <superuser/root required> fs: squashfs dev: /dev/loop5 uuid: N/A 
-           ID-7: /snap/snapd/12883 raw size: 32.3 MiB size: <superuser/root required> 
+           ID-8: /snap/snapd/12883 raw size: 32.3 MiB size: <superuser/root required> 
            used: <superuser/root required> fs: squashfs dev: /dev/loop6 uuid: N/A 
-           ID-8: /snap/snapd/13170 raw size: 32.3 MiB size: <superuser/root required> 
+           ID-9: /snap/snapd/13170 raw size: 32.3 MiB size: <superuser/root required> 
            used: <superuser/root required> fs: squashfs dev: /dev/loop4 uuid: N/A 
-           ID-9: swap-1 size: 190.0 MiB used: 190.0 MiB (100.0%) fs: swap dev: /dev/sda2 
+           ID-10: swap-1 size: 190.0 MiB used: 190.0 MiB (100.0%) fs: swap dev: /dev/sda2 
            uuid: c837ed12-738e-11e8-9c98-00505607b87c 
 Sensors:   Message: No sensors data was found. Is sensors configured? 
 Repos:     Active apt repos in: /etc/apt/sources.list 
@@ -114,24 +117,25 @@ Repos:     Active apt repos in: /etc/apt/sources.list
            1: deb https: //deb.nodesource.com/node_15.x focal main
            2: deb-src https: //deb.nodesource.com/node_15.x focal main
 Processes: CPU top: 5 
-           1: cpu: 11.2% command: server.js started by: node pid: 188094 mem: 79.9 MiB (8.1%) 
-           2: cpu: 3.6% command: pm2 started by: node pid: 186161 mem: 44.5 MiB (4.5%) 
-           3: cpu: 1.4% command: node pid: 181156 mem: 176.7 MiB (18.0%) 
-           4: cpu: 0.5% command: pm2 pid: 178356 mem: 31.1 MiB (3.1%) 
-           5: cpu: 0.2% command: [rcu_sched] pid: 11 mem: 0.00 MiB (0.0%) 
+           1: cpu: 43.8% command: node pid: 532204 mem: 228.4 MiB (23.2%) 
+           2: cpu: 15.4% command: node pid: 532203 mem: 103.4 MiB (10.5%) 
+           3: cpu: 10.3% command: node pid: 532365 mem: 65.5 MiB (6.6%) 
+           4: cpu: 2.7% command: typingsinstaller.js started by: node pid: 532217 
+           mem: 47.7 MiB (4.8%) 
+           5: cpu: 1.9% command: bootstrap-fork started by: node pid: 423766 mem: 93.9 MiB (9.5%) 
            Memory top: 5 
-           1: mem: 176.7 MiB (18.0%) command: node pid: 181156 cpu: 1.4% 
-           2: mem: 101.2 MiB (10.3%) command: node pid: 181154 cpu: 0.1% 
-           3: mem: 85.6 MiB (8.7%) command: bootstrap-fork started by: node pid: 2447 cpu: 0.1% 
-           4: mem: 79.9 MiB (8.1%) command: server.js started by: node pid: 188094 cpu: 11.2% 
-           5: mem: 53.1 MiB (5.4%) command: main.js started by: node pid: 2382 cpu: 0.0% 
-Info:      Processes: 147 Uptime: 21h 14m Init: systemd v: 245 runlevel: 5 Compilers: gcc: 9.3.0 
-           alt: 7/9 Client: shell wrapper v: 5.0.17-release inxi: 3.0.38 
+           1: mem: 228.4 MiB (23.2%) command: node pid: 532204 cpu: 43.8% 
+           2: mem: 103.4 MiB (10.5%) command: node pid: 532203 cpu: 15.4% 
+           3: mem: 93.9 MiB (9.5%) command: bootstrap-fork started by: node pid: 423766 cpu: 1.9% 
+           4: mem: 65.5 MiB (6.6%) command: node pid: 532365 cpu: 10.3% 
+           5: mem: 52.7 MiB (5.3%) command: main.js started by: node pid: 423687 cpu: 0.1% 
+Info:      Processes: 154 Uptime: 1d 20h 31m Init: systemd v: 245 runlevel: 5 Compilers: 
+           gcc: 9.3.0 alt: 7/9 Client: shell wrapper v: 5.0.17-release inxi: 3.0.38 
 </pre>
         <h2>Hosts scan on 192.168.0.0/24</h2>
 <pre>
-Starting Nmap 7.80 ( https://nmap.org ) at 2021-10-07 16:10 EDT
-Nmap done: 256 IP addresses (0 hosts up) scanned in 11.41 seconds
+Starting Nmap 7.80 ( https://nmap.org ) at 2021-10-08 15:28 EDT
+Nmap done: 256 IP addresses (0 hosts up) scanned in 47.38 seconds
 
 </pre>
         </body>

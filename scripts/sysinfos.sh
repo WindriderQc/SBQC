@@ -141,7 +141,7 @@ _EOF_
 
 echo "Writing page"
 
-filename=./public/Tools/infos/index.html
+filename=./public/Tools/System_Info/index.html
 
 write_page > $filename
 

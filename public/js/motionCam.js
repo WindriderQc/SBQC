@@ -230,10 +230,13 @@ async function sendAlert()
     const options = {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+       // 'Content-Type':  'application/json; charset=UTF-8'  // 'application/json' //'text/html'  
+        'Accept': 'application/json'
       },
       body: JSON.stringify(data)
     };
+    
+    console.log('Sending alert email')
     const response = await fetch('/alert', options);
     const json = await response.json();
     console.log(json);

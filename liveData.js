@@ -2,9 +2,10 @@ const fetch = require('node-fetch')
 const nodeTools = require('./nodeTools')
 //nodeTools.readFile("greetings.txt")
 
-
-
 let datas = {version: "1.0"}
+
+
+
 
 const api_url = 'https://api.wheretheiss.at/v1/satellites/25544';
 
@@ -23,13 +24,11 @@ setInterval(getISS, 5000)
 
 
 
-const quakes_url = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.csv'
-
 
 
 
 const CSVToJSON = require('csvtojson');
-
+const quakes_url = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.csv'
 
 async function getQuakes() 
 {
