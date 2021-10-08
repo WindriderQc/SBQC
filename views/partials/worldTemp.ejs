@@ -9,7 +9,7 @@
 async function getData() {
     const xs = [];
     const ys = [];
-    const response = await fetch('ZonAnn.Ts+dSST.csv'); // https://data.giss.nasa.gov/gistemp/tabledata_v4/ZonAnn.Ts+dSST.csv
+    const response = await fetch('data/ZonAnn.Ts+dSST.csv'); // https://data.giss.nasa.gov/gistemp/tabledata_v4/ZonAnn.Ts+dSST.csv
     const data = await response.text();
     const table = data.split('\n').slice(1);
     table.forEach(row => {

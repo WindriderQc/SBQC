@@ -37,7 +37,7 @@ async function getQuakes()
         const response = await fetch(quakes_url)
         const data = await response.text()
 
-        nodeTools.saveFile( data,"./public/quakes.csv",)
+        nodeTools.saveFile( data,"./public/data/quakes.csv",)
 
 
 

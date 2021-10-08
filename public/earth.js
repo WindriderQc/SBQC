@@ -189,7 +189,7 @@ function setup() {
   ellipse(mercX(-71.2080)-cx, mercY(46.8139)-cy, 10, 10)
 
 
-  earthquakes = loadStrings('quakes.csv', displayEarthquakes);
+  earthquakes = loadStrings('data/quakes.csv', displayEarthquakes);
 
 
   //displayGrid(30,20,0, 1);

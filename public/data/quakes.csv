@@ -1,18 +1,41 @@
 time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,type,horizontalError,depthError,magError,magNst,status,locationSource,magSource
+2021-10-07T19:51:22.780Z,19.1648330688477,-155.473495483398,34.2400016784668,2.48000002,md,42,92,,0.119999997,hv,hv72744887,2021-10-07T19:56:54.050Z,"4 km S of Pāhala, Hawaii",earthquake,0.54,0.790000021,1.5,23,automatic,hv,hv
+2021-10-07T19:40:57.302Z,61.0113,-150.8853,12,1.5,ml,,,,0.31,ak,ak021cve13tx,2021-10-07T19:54:22.324Z,"14 km NW of Point Possession, Alaska",earthquake,,0.4,,,automatic,ak,ak
+2021-10-07T19:36:18.970Z,38.7971649,-122.75,1.21,0.99,md,13,96,0.008338,0.03,nc,nc73636750,2021-10-07T19:47:10.847Z,"2km NNE of The Geysers, CA",earthquake,0.28,0.59,0.07,4,automatic,nc,nc
+2021-10-07T19:20:55.651Z,59.5837,-153.4099,110.5,1.8,ml,,,,0.31,ak,ak021cvdwte4,2021-10-07T19:25:18.579Z,"45 km ESE of Pedro Bay, Alaska",earthquake,,0.5,,,automatic,ak,ak
+2021-10-07T19:16:25.130Z,19.1539993286133,-155.487167358398,31.0100002288818,1.90999997,md,23,225,,0.180000007,hv,hv72744872,2021-10-07T19:19:36.500Z,"5 km S of Pāhala, Hawaii",earthquake,1.25,1.62,1.90999997,4,automatic,hv,hv
+2021-10-07T19:09:36.541Z,59.9336,-140.8699,15.5,2,ml,,,,0.96,ak,ak021cvduf8a,2021-10-07T19:14:27.063Z,"77 km WNW of Yakutat, Alaska",earthquake,,0.2,,,automatic,ak,ak
+2021-10-07T19:07:35.990Z,38.8258324,-122.8066635,2.51,0.85,md,8,108,0.003608,0.01,nc,nc73636735,2021-10-07T19:21:10.991Z,"7km NW of The Geysers, CA",earthquake,0.56,1.71,,1,automatic,nc,nc
+2021-10-07T19:03:27.390Z,39.4226667,-110.293,-3.01,1.63,ml,10,200,0.0249,0.14,uu,uu60462032,2021-10-07T20:05:33.790Z,"16 km SSE of Sunnyside, Utah",earthquake,0.89,2.11,0.166,4,reviewed,uu,uu
+2021-10-07T18:57:21.407Z,61.8227,-149.979,24.5,1.7,ml,,,,0.42,ak,ak021cvdj8np,2021-10-07T19:01:35.488Z,"8 km NNE of Willow, Alaska",earthquake,,0.4,,,automatic,ak,ak
+2021-10-07T18:36:07.140Z,36.9996681,-118.329834,0.56,2.34,md,15,105,0.09663,0.2,nc,nc73636715,2021-10-07T19:23:15.956Z,"19km S of Big Pine, CA",earthquake,0.58,1.49,0.25,6,automatic,nc,nc
+2021-10-07T18:29:47.442Z,61.492,-152.2336,116.7,1.5,ml,,,,0.42,ak,ak021cvddaka,2021-10-07T18:42:13.090Z,"70 km SW of Skwentna, Alaska",earthquake,,0.7,,,automatic,ak,ak
+2021-10-07T18:28:04.185Z,22.312,94.7455,114.19,5.6,mww,,27,1.109,0.74,us,us6000fsrg,2021-10-07T19:44:27.305Z,"46 km WNW of Monywa, Myanmar",earthquake,3.6,5.5,0.062,25,reviewed,us,us
+2021-10-07T18:15:27.890Z,33.0678333,-114.9995,-0.25,1.36,ml,17,66,0.09703,0.29,ci,ci40065272,2021-10-07T20:01:58.896Z,"46km NE of Holtville, CA",quarry blast,0.7,31.61,0.11,6,reviewed,ci,ci
+2021-10-07T18:14:56.587Z,13.8683,120.7093,182.53,5.2,mww,,109,8.906,0.67,us,us6000fsrb,2021-10-07T18:30:51.904Z,"2 km NNE of Hukay, Philippines",earthquake,10.8,4.9,0.078,16,reviewed,us,us
+2021-10-07T18:08:59.610Z,19.4258327484131,-154.918334960938,0.219999998807907,1.82000005,md,27,236,,0.25999999,hv,hv72744827,2021-10-07T18:43:23.942Z,"4 km S of Leilani Estates, Hawaii",earthquake,1.1,0.360000014,1.05999994,7,automatic,hv,hv
+2021-10-07T18:06:02.290Z,39.425,-110.3008333,-1.96,1.73,md,8,198,0.01882,0.12,uu,uu60462022,2021-10-07T18:48:05.270Z,"15 km SSE of Sunnyside, Utah",earthquake,0.78,0.84,0.155,6,reviewed,uu,uu
+2021-10-07T18:05:36.600Z,32.8513333,-116.1376667,9.57,1.09,ml,35,51,0.06842,0.18,ci,ci40065248,2021-10-07T18:37:38.005Z,"19km NW of Ocotillo, CA",earthquake,0.2,0.55,0.161,10,reviewed,ci,ci
 2021-10-07T17:56:42.902Z,63.5712,-147.2872,12.2,1.3,ml,,,,0.38,ak,ak021cvcxmyq,2021-10-07T18:01:07.990Z,"82 km ESE of Denali Park, Alaska",earthquake,,0.5,,,automatic,ak,ak
+2021-10-07T17:56:15.101Z,-55.7407,-26.4999,10,5.5,mb,,68,10.82,0.54,us,us6000fsr4,2021-10-07T18:13:12.040Z,"South Sandwich Islands region",earthquake,11,1.9,0.06,102,reviewed,us,us
+2021-10-07T17:56:00.830Z,39.4286667,-110.315,-1.04,1.67,md,10,193,0.009055,0.05,uu,uu60462017,2021-10-07T18:29:04.010Z,"14 km SSE of Sunnyside, Utah",earthquake,0.55,0.15,0.192,7,reviewed,uu,uu
+2021-10-07T17:53:21.820Z,17.0727,-60.3452,10,4.4,mb,,201,1.023,0.75,us,us6000fsr1,2021-10-07T18:11:13.040Z,"115 km NE of Beauséjour, Guadeloupe",earthquake,5.2,1.4,0.162,11,reviewed,us,us
 2021-10-07T17:50:47.139Z,62.2832,-149.2662,34.1,1.5,ml,,,,0.56,ak,ak021cvcwczt,2021-10-07T17:54:27.060Z,"33 km ENE of Susitna North, Alaska",earthquake,,0.4,,,automatic,ak,ak
 2021-10-07T17:30:10.499Z,60.1036,-151.3959,68,1.6,ml,,,,0.44,ak,ak021cvcrzuh,2021-10-07T17:33:04.269Z,"14 km S of Clam Gulch, Alaska",earthquake,,1,,,automatic,ak,ak
-2021-10-07T17:27:40.119Z,35.95394135,-97.78701782,5.164165497,1.74,ml,10,173.6816406,0.1931155175,0.154691838,ok,ok2021trbx,2021-10-07T17:30:32.633Z,"11 km ESE of Dover, Oklahoma",earthquake,,9.393218788,,8,automatic,ok,ok
-2021-10-07T17:26:38.390Z,33.8366667,-117.4886667,2.83,1.91,ml,38,39,0.0411,0.22,ci,ci40065208,2021-10-07T17:31:06.756Z,"6km SSE of Home Gardens, CA",quarry blast,0.3,0.52,0.207,28,automatic,ci,ci
+2021-10-07T17:27:39.950Z,35.94966667,-97.79616667,5,1.69,ml,91,28,0.1997608001,0.24,ok,ok2021trbx,2021-10-07T18:23:02.347Z,"10 km ESE of Dover, Oklahoma",earthquake,,0.6,0.24,39,reviewed,ok,ok
+2021-10-07T17:26:38.030Z,33.8373333,-117.4946667,-0.51,1.82,ml,66,22,0.04586,0.25,ci,ci40065208,2021-10-07T18:10:03.436Z,"5km SSE of Home Gardens, CA",quarry blast,0.27,31.61,0.18,51,reviewed,ci,ci
 2021-10-07T17:22:44.656Z,63.5797,-147.2805,0,2.6,ml,,,,0.58,ak,ak021cvcqcr6,2021-10-07T17:28:53.642Z,"82 km ESE of Denali Park, Alaska",earthquake,,0.3,,,automatic,ak,ak
+2021-10-07T17:16:23.871Z,39.1385,-119.7304,6.7,1.2,ml,9,94.42,0.032,0.1266,nn,nn00825134,2021-10-07T20:02:18.457Z,"4 km SE of Carson City, Nevada",earthquake,,1.6,0.26,3,reviewed,nn,nn
+2021-10-07T17:02:24.308Z,39.1394,-119.7253,11.2,0.3,ml,4,129.36,0.11,0.0416,nn,nn00825131,2021-10-07T19:15:51.023Z,"4 km SE of Carson City, Nevada",earthquake,,8.8,0,1,reviewed,nn,nn
 2021-10-07T16:56:10.709Z,37.3782,-117.1327,1.8,1.5,ml,24,131.43,0.128,0.2276,nn,nn00825114,2021-10-07T16:59:46.812Z,"37 km SSE of Goldfield, Nevada",earthquake,,5.7,0.83,13,automatic,nn,nn
 2021-10-07T16:55:07.530Z,35.6548333,-117.4678333,1.81,1.03,ml,16,113,0.1366,0.19,ci,ci40065184,2021-10-07T17:18:12.309Z,"14km SSW of Searles Valley, CA",earthquake,0.67,1.28,0.162,8,reviewed,ci,ci
+2021-10-07T16:48:06.481Z,39.1397,-119.728,9.7,0.4,ml,6,95.81,0.112,0.0422,nn,nn00825130,2021-10-07T19:09:35.401Z,"4 km SE of Carson City, Nevada",earthquake,,4.3,0.2,2,reviewed,nn,nn
 2021-10-07T16:44:22.445Z,31.8288,137.9307,377.87,4.1,mb,,134,2.044,0.37,us,us6000fsq1,2021-10-07T17:17:35.040Z,"279 km SE of Shingū, Japan",earthquake,10.5,8.4,0.059,80,reviewed,us,us
 2021-10-07T16:41:56.255Z,61.0361,-150.8324,13.5,1.3,ml,,,,0.64,ak,ak021cvc90nd,2021-10-07T16:45:18.560Z,"14 km NNW of Point Possession, Alaska",earthquake,,0.2,,,automatic,ak,ak
 2021-10-07T16:34:32.710Z,48.6006666666667,-121.972666666667,6.31,1.37,ml,9,84,0.02944,0.15,uw,uw61778667,2021-10-07T17:26:45.520Z,"8 km N of Hamilton, Washington",earthquake,0.46,0.64,0.155863053627168,3,reviewed,uw,uw
 2021-10-07T16:32:44.850Z,39.4236667,-110.2946667,-2.64,1.53,md,7,200,0.02358,0.11,uu,uu60462012,2021-10-07T16:41:48.730Z,"16 km SSE of Sunnyside, Utah",earthquake,1.38,2.9,0.196,6,reviewed,uu,uu
 2021-10-07T16:29:19.110Z,33.1616667,-116.5365,17.59,0.84,ml,28,93,0.09539,0.16,ci,ci40065168,2021-10-07T17:09:08.257Z,"11km NNE of Julian, CA",earthquake,0.26,0.51,0.146,12,reviewed,ci,ci
-2021-10-07T16:27:48.211Z,38.5371,-119.4044,2.2,1.3,ml,8,107.12,0.042,0.1152,nn,nn00825113,2021-10-07T16:31:13.388Z,"6 km ENE of Walker, California",earthquake,,1.3,0.28,3,automatic,nn,nn
+2021-10-07T16:27:48.790Z,38.5341667,-119.4081667,2.62,1.17,md,10,97,0.038,0.08,nc,nc73636695,2021-10-07T19:11:17.408Z,"28km SSW of Smith Valley, NV",earthquake,0.49,1,0.174,8,reviewed,nc,nc
 2021-10-07T16:27:34.019Z,61.6739,-149.5049,34.8,1.4,ml,,,,0.63,ak,ak021cvc5ywp,2021-10-07T16:30:36.732Z,"6 km NW of Tanaina, Alaska",earthquake,,0.2,,,automatic,ak,ak
 2021-10-07T16:25:17.800Z,19.1841659545898,-155.478332519531,36.4700012207031,2.44,ml,48,80,,0.109999999,hv,hv72744757,2021-10-07T16:35:05.040Z,"Island of Hawaii, Hawaii",earthquake,0.45,0.629999995,3.88,17,automatic,hv,hv
 2021-10-07T16:11:43.606Z,12.6709,-88.3542,43.31,4,mb,,208,0.793,0.24,us,us6000fspf,2021-10-07T16:49:24.040Z,"65 km SSW of Chirilagua, El Salvador",earthquake,6.2,22.2,0.299,4,reviewed,us,us
@@ -23,7 +46,7 @@ time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,
 2021-10-07T15:53:42.850Z,33.2385,-116.0655,10.39,1.11,ml,35,53,0.07858,0.21,ci,ci40065160,2021-10-07T16:21:32.368Z,"12km WSW of Salton City, CA",earthquake,0.24,0.63,0.196,17,reviewed,ci,ci
 2021-10-07T15:45:21.880Z,38.824501,-122.8096695,3.19,0.85,md,8,74,0.001149,0.01,nc,nc73636670,2021-10-07T16:29:18.357Z,"7km NW of The Geysers, CA",earthquake,0.47,1.78,,1,automatic,nc,nc
 2021-10-07T15:39:56.673Z,61.7411,-140.1153,0,1.9,ml,,,,0.48,ak,ak021cvbn5n7,2021-10-07T15:43:00.852Z,"116 km SSE of Alcan Border, Alaska",earthquake,,0.3,,,automatic,ak,ak
-2021-10-07T15:37:18.480Z,40.4589996,-123.9166641,23.78,1.64,md,4,211,0.08018,0.03,nc,nc73636665,2021-10-07T16:04:11.187Z,"17km ESE of Rio Dell, CA",earthquake,1.96,5.96,,1,automatic,nc,nc
+2021-10-07T15:37:18.440Z,40.4758333,-123.902,20.28,1.76,md,17,74,0.06977,0.09,nc,nc73636665,2021-10-07T20:09:13.903Z,"18km E of Rio Dell, CA",earthquake,0.29,0.38,0.172,15,reviewed,nc,nc
 2021-10-07T15:28:10.000Z,39.4236667,-110.2983333,-2.03,1.56,md,8,199,0.02074,0.12,uu,uu60462002,2021-10-07T16:18:38.700Z,"16 km SSE of Sunnyside, Utah",earthquake,1.2,1.28,0.179,7,reviewed,uu,uu
 2021-10-07T15:24:39.651Z,31.60897138,-104.5067478,9.242236328,2.5,ml,10,144,0.059947991,0.3,tx,tx2021tqxw,2021-10-07T17:19:22.040Z,"64 km S of Whites City, New Mexico",earthquake,2.573840384,1.550898545,0.2,6,reviewed,tx,tx
 2021-10-07T15:10:38.270Z,35.8683333,-117.686,4.59,1.13,ml,18,67,0.0845,0.1,ci,ci40065112,2021-10-07T15:38:21.884Z,"21km ESE of Little Lake, CA",earthquake,0.16,0.34,0.117,7,reviewed,ci,ci
@@ -38,12 +61,15 @@ time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,
 2021-10-07T14:20:26.660Z,35.9088333,-117.6943333,2.76,1.12,ml,18,68,0.05284,0.14,ci,ci40065040,2021-10-07T15:26:36.767Z,"19km E of Little Lake, CA",earthquake,0.21,0.33,0.157,8,reviewed,ci,ci
 2021-10-07T14:16:16.840Z,38.8361664,-122.7986679,2.12,1.1,md,19,66,0.006876,0.03,nc,nc73636645,2021-10-07T15:44:12.045Z,"7km WNW of Cobb, CA",earthquake,0.22,0.51,0.15,4,automatic,nc,nc
 2021-10-07T14:15:29.590Z,19.1860008239746,-155.498168945312,33.3899993896484,1.75,md,27,88,,0.129999995,hv,hv72744687,2021-10-07T14:19:00.250Z,"2 km SW of Pāhala, Hawaii",earthquake,0.64,1.07000005,0.959999979,7,automatic,hv,hv
+2021-10-07T14:02:47.299Z,32.71636963,-100.7001477,6.969604492,2.2,ml,15,96,0.05455273566,0.2,tx,tx2021tqve,2021-10-07T18:35:58.583Z,"10 km NNE of Hermleigh, Texas",earthquake,1.105295516,1.401496425,0.1,9,reviewed,tx,tx
+2021-10-07T13:58:34.244Z,39.1913,-119.6261,5.7,0,ml,3,178.85,0.104,0.0502,nn,nn00825129,2021-10-07T19:03:20.968Z,"5 km SSW of Dayton, Nevada",earthquake,,10.5,0.04,2,reviewed,nn,nn
 2021-10-07T13:47:00.805Z,62.4079,-150.5657,57.2,2.6,ml,,,,0.59,ak,ak021cvahvtf,2021-10-07T16:24:54.040Z,"14 km SE of Petersville, Alaska",earthquake,,0.7,,,automatic,ak,ak
-2021-10-07T13:41:24.191Z,35.5675,140.1064,61.97,5.9,mww,,121,1.809,0.85,us,us6000fsl6,2021-10-07T17:59:21.429Z,"3 km SSW of Chiba, Japan",earthquake,7,6.9,0.06,27,reviewed,us,us
+2021-10-07T13:41:24.191Z,35.5675,140.1064,61.97,5.9,mww,,121,1.809,0.85,us,us6000fsl6,2021-10-07T20:08:19.887Z,"3 km SSW of Chiba, Japan",earthquake,7,6.9,0.06,27,reviewed,us,us
 2021-10-07T13:27:00.273Z,61.6046,-142.6085,9.9,1.6,ml,,,,0.29,ak,ak021cvadlhe,2021-10-07T13:49:37.217Z,"25 km NE of McCarthy, Alaska",earthquake,,0.5,,,automatic,ak,ak
 2021-10-07T13:18:59.690Z,38.8111649,-122.7938309,3.28,0.45,md,13,69,0.003393,0.02,nc,nc73636615,2021-10-07T14:44:12.136Z,"5km NW of The Geysers, CA",earthquake,0.36,0.73,0.38,2,automatic,nc,nc
 2021-10-07T13:17:28.170Z,38.8256683,-122.8525009,1.79,0.37,md,10,101,0.003895,0.01,nc,nc73636610,2021-10-07T13:47:17.759Z,"10km WNW of The Geysers, CA",earthquake,0.37,0.74,,1,automatic,nc,nc
 2021-10-07T13:17:04.960Z,38.824501,-122.8538361,1.88,0.85,md,15,64,0.003856,0.03,nc,nc73636605,2021-10-07T13:36:11.700Z,"10km WNW of The Geysers, CA",earthquake,0.28,0.51,0.01,3,automatic,nc,nc
+2021-10-07T13:13:08.241Z,40.0969,-119.6799,13.4,-0.1,ml,3,178.15,0.084,0.1344,nn,nn00825128,2021-10-07T18:50:56.563Z,"17 km NNW of Sutcliffe, Nevada",earthquake,,6.5,0.1,2,reviewed,nn,nn
 2021-10-07T13:09:27.580Z,35.8618333,-117.6528333,9.86,1.09,ml,12,101,0.06431,0.1,ci,ci40064984,2021-10-07T15:12:24.248Z,"24km ESE of Little Lake, CA",earthquake,0.26,0.62,0.147,5,reviewed,ci,ci
 2021-10-07T13:07:34.300Z,38.8260002,-122.8523331,1.8,0.46,md,9,110,0.003867,0.02,nc,nc73636600,2021-10-07T14:26:10.999Z,"10km WNW of The Geysers, CA",earthquake,0.31,0.44,0.33,3,automatic,nc,nc
 2021-10-07T13:02:47.100Z,62.8943,-148.3729,9.2,1.6,ml,,,,0.75,ak,ak021cva8c7a,2021-10-07T13:28:04.328Z,"62 km SSE of Cantwell, Alaska",earthquake,,0.2,,,automatic,ak,ak
@@ -54,39 +80,45 @@ time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,
 2021-10-07T11:51:31.180Z,45.3491666666667,-121.748333333333,-2.06,-0.29,md,4,285,0.02997,0.04,uw,uw61778592,2021-10-07T17:46:55.210Z,"5 km N of Government Camp, Oregon",earthquake,0.68,0.39,0.0436921794376797,3,reviewed,uw,uw
 2021-10-07T11:49:36.930Z,38.6086667,-112.6383333,0.73,0.77,md,9,144,0.1497,0.1,uu,uu60461972,2021-10-07T16:24:19.780Z,"27 km SW of Kanosh, Utah",earthquake,0.84,7.75,0.272,4,reviewed,uu,uu
 2021-10-07T11:48:39.090Z,38.8256683,-122.8529968,2.06,0.72,md,19,60,0.003561,0.03,nc,nc73636590,2021-10-07T12:09:13.158Z,"10km WNW of The Geysers, CA",earthquake,0.25,0.44,0.13,4,automatic,nc,nc
-2021-10-07T11:37:47.280Z,38.532,-119.4088333,2.49,1.42,md,12,104,0.03599,0.05,nc,nc73636585,2021-10-07T17:36:12.030Z,"29km SSW of Smith Valley, NV",earthquake,0.26,0.57,0.34,14,reviewed,nc,nc
-2021-10-07T11:27:32.284Z,38.5316,-119.4062,3.6,1.6,ml,17,52.58,0.037,0.1235,nn,nn00825102,2021-10-07T11:31:02.944Z,"6 km ENE of Walker, California",earthquake,,0.5,0.19,9,automatic,nn,nn
+2021-10-07T11:42:00.316Z,32.1194458,-102.1728516,7.116333008,1.9,ml,18,62,0.01143239906,0.1,tx,tx2021tqqo,2021-10-07T19:09:38.433Z,"16 km NNW of Midland, Texas",earthquake,0.7541861298,1.199229714,0.2,13,reviewed,tx,tx
+2021-10-07T11:37:47.280Z,38.532,-119.4088333,2.49,1.42,md,12,104,0.03599,0.05,nc,nc73636585,2021-10-07T19:21:10.466Z,"29km SSW of Smith Valley, NV",earthquake,0.26,0.57,0.34,14,reviewed,nc,nc
+2021-10-07T11:27:32.750Z,38.533,-119.4076667,2.84,1.8,md,16,75,0.03735,0.1,nc,nc73636580,2021-10-07T18:59:20.335Z,"28km S of Smith Valley, NV",earthquake,0.28,0.6,0.2,16,reviewed,nc,nc
 2021-10-07T11:24:18.036Z,65.9162,-156.1787,0,1.8,ml,,,,1.09,ak,ak021cv964i5,2021-10-07T11:29:40.427Z,"26 km NNE of Huslia, Alaska",earthquake,,0.3,,,automatic,ak,ak
-2021-10-07T11:22:18.770Z,38.5283333,-119.411,2.65,1.43,md,10,103,0.03211,0.05,nc,nc73636575,2021-10-07T17:13:12.578Z,"29km SSW of Smith Valley, NV",earthquake,0.28,0.6,0.219,14,reviewed,nc,nc
+2021-10-07T11:22:18.770Z,38.5283333,-119.411,2.65,1.43,md,10,103,0.03211,0.05,nc,nc73636575,2021-10-07T18:55:10.314Z,"29km SSW of Smith Valley, NV",earthquake,0.28,0.6,0.219,14,reviewed,nc,nc
 2021-10-07T11:07:20.347Z,38.1668,-117.9094,9.3,1.5,ml,16,74.23,0.03,0.1137,nn,nn00825096,2021-10-07T11:10:32.273Z,"30 km SE of Mina, Nevada",earthquake,,0.3,0.24,7,automatic,nn,nn
 2021-10-07T11:06:31.480Z,39.4253333,-110.2951667,-2.6,1.53,md,8,200,0.02322,0.12,uu,uu60461967,2021-10-07T15:05:41.460Z,"16 km SSE of Sunnyside, Utah",earthquake,1.24,2.55,0.121,7,reviewed,uu,uu
 2021-10-07T11:06:22.130Z,38.8371658,-122.836998,1.28,0.37,md,10,114,0.001847,0.02,nc,nc73636570,2021-10-07T11:19:09.852Z,"10km NW of The Geysers, CA",earthquake,0.3,0.56,,2,automatic,nc,nc
+2021-10-07T10:56:24.006Z,31.66869045,-104.510584,7.905419922,2.4,ml,19,78,0.008367245537,0.2,tx,tx2021tqpa,2021-10-07T18:10:55.767Z,"57 km SSW of Whites City, New Mexico",earthquake,1.491568176,0.9666984752999999,0.2,11,reviewed,tx,tx
 2021-10-07T10:54:49.720Z,35.8661667,-117.688,3.06,1.52,ml,26,45,0.08489,0.19,ci,ci40064936,2021-10-07T15:04:59.290Z,"21km ESE of Little Lake, CA",earthquake,0.2,0.77,0.139,16,reviewed,ci,ci
-2021-10-07T10:54:39.750Z,38.5306664,-119.4088364,2.69,1.94,md,10,104,0.03498,0.07,nc,nc73636560,2021-10-07T13:52:12.789Z,"29km SSW of Smith Valley, NV",earthquake,0.35,1.02,0.1,8,automatic,nc,nc
+2021-10-07T10:54:39.710Z,38.533,-119.4113333,2.69,1.81,md,14,75,0.03557,0.07,nc,nc73636560,2021-10-07T18:45:13.256Z,"28km SSW of Smith Valley, NV",earthquake,0.22,0.42,0.171,17,reviewed,nc,nc
 2021-10-07T10:45:11.751Z,38.5339,-119.4043,2.5,1.2,ml,11,52.49,0.079,0.1439,nn,nn00825092,2021-10-07T10:48:40.688Z,"6 km ENE of Walker, California",earthquake,,0.8,0.19,2,automatic,nn,nn
 2021-10-07T10:44:06.410Z,33.8908333,-116.9171667,12.73,0.58,ml,20,85,0.1149,0.12,ci,ci40064928,2021-10-07T14:57:58.380Z,"5km SW of Banning, CA",earthquake,0.22,0.48,0.114,8,reviewed,ci,ci
 2021-10-07T10:37:06.400Z,38.7849998,-122.7366638,2.64,0.71,md,8,84,0.001761,0.02,nc,nc73636555,2021-10-07T10:48:10.197Z,"2km ENE of The Geysers, CA",earthquake,0.39,1.51,0.17,2,automatic,nc,nc
 2021-10-07T10:33:48.660Z,35.8133333,-117.649,7.93,1.67,ml,29,45,0.04192,0.15,ci,ci40064920,2021-10-07T14:51:01.302Z,"22km N of Ridgecrest, CA",earthquake,0.17,0.4,0.176,15,reviewed,ci,ci
-2021-10-07T10:32:09.790Z,38.5330009,-119.4076691,2.43,1.79,md,9,97,0.03735,0.09,nc,nc73636545,2021-10-07T13:24:11.621Z,"28km S of Smith Valley, NV",earthquake,0.46,1.39,0.11,7,automatic,nc,nc
+2021-10-07T10:32:09.830Z,38.5286667,-119.4098333,2.51,1.85,md,13,103,0.03297,0.06,nc,nc73636545,2021-10-07T18:36:12.201Z,"29km SSW of Smith Valley, NV",earthquake,0.23,0.49,0.156,16,reviewed,nc,nc
 2021-10-07T10:20:18.008Z,60.5448,-151.0372,16.2,1.3,ml,,,,0.5,ak,ak021cv8ju1e,2021-10-07T10:24:43.001Z,"3 km ENE of Ridgeway, Alaska",earthquake,,0.4,,,automatic,ak,ak
 2021-10-07T10:20:09.511Z,31.68652249,-104.3907024,6.722851562,2.9,ml,29,68,0.09552989962,0.3,tx,tx2021tqnv,2021-10-07T16:57:02.174Z,"54 km S of Whites City, New Mexico",earthquake,1.001863118,1.356703637,0.2,17,reviewed,tx,tx
 2021-10-07T10:19:42.860Z,38.7943344,-122.7693329,3.92,0.75,md,12,85,0.009797,0.02,nc,nc73636540,2021-10-07T10:34:10.615Z,"2km NNW of The Geysers, CA",earthquake,0.43,1.17,0.13,2,automatic,nc,nc
 2021-10-07T10:17:14.890Z,38.8086662,-122.8186646,2.88,0.99,md,23,56,0.008217,0.03,nc,nc73636535,2021-10-07T10:47:13.190Z,"6km WNW of The Geysers, CA",earthquake,0.25,0.43,0.08,3,automatic,nc,nc
 2021-10-07T10:13:51.606Z,60.6283,-151.7588,57.5,1.3,ml,,,,0.57,ak,ak021cv8iem0,2021-10-07T10:17:21.903Z,"Kenai Peninsula, Alaska",earthquake,,0.8,,,automatic,ak,ak
 2021-10-07T10:11:14.840Z,19.1771659851074,-155.486999511719,35.7099990844727,1.71000004,md,31,147,,0.200000003,hv,hv72744487,2021-10-07T10:14:27.980Z,"2 km SSW of Pāhala, Hawaii",earthquake,0.74,1.24000001,0.730000019,3,automatic,hv,hv
+2021-10-07T09:41:07.192Z,39.189,-119.64,6.9,0.2,ml,6,127.48,0.105,0.0858,nn,nn00825123,2021-10-07T18:38:30.843Z,"6 km SW of Dayton, Nevada",earthquake,,3.2,0.03,2,reviewed,nn,nn
 2021-10-07T09:38:57.590Z,19.2294998168945,-155.413497924805,33.4300003051758,2.04999995,md,38,145,,0.170000002,hv,hv72744452,2021-10-07T09:42:07.560Z,"7 km ENE of Pāhala, Hawaii",earthquake,0.68,0.810000002,0.850000024,7,automatic,hv,hv
 2021-10-07T09:23:25.544Z,60.4753,-152.9437,131.9,1.8,ml,,,,0.69,ak,ak021cv7z26w,2021-10-07T09:37:07.195Z,"81 km ENE of Port Alsworth, Alaska",earthquake,,0.5,,,automatic,ak,ak
 2021-10-07T09:20:43.080Z,17.9318,-66.8441,10,3.05,md,18,184,0.0557,0.09,pr,pr2021280002,2021-10-07T11:13:50.285Z,"7 km SE of Maria Antonia, Puerto Rico",earthquake,0.41,0.35,0.33,13,reviewed,pr,pr
 2021-10-07T09:15:36.416Z,61.5441,-151.0776,59.6,1.1,ml,,,,0.49,ak,ak021cv7xd9m,2021-10-07T09:19:55.159Z,"30 km W of Susitna, Alaska",earthquake,,1.5,,,automatic,ak,ak
 2021-10-07T09:13:38.070Z,36.2155,-89.4561667,9.89,1.59,md,15,60,0.03243,0.03,nm,nm60371621,2021-10-07T15:39:39.350Z,"6 km SSE of Ridgely, Tennessee",earthquake,0.39,0.63,0.066,10,reviewed,nm,nm
 2021-10-07T09:10:31.489Z,63.5791,-147.273,1.2,1.5,ml,,,,0.82,ak,ak021cv7wab5,2021-10-07T09:18:14.710Z,"83 km ESE of Denali Park, Alaska",earthquake,,0.3,,,automatic,ak,ak
+2021-10-07T08:57:04.314Z,31.6778149,-104.3868563,6.877099609,2.3,ml,22,55,0.09754835878,0.3,tx,tx2021tqlb,2021-10-07T18:17:21.647Z,"55 km S of Whites City, New Mexico",earthquake,1.142785128,1.346971549,0.1,12,reviewed,tx,tx
 2021-10-07T08:49:30.746Z,62.0124,-144.5445,0,1.8,ml,,,,1.03,ak,ak021cv7j7ki,2021-10-07T09:12:53.753Z,"38 km NNE of Kenny Lake, Alaska",earthquake,,0.2,,,automatic,ak,ak
 2021-10-07T08:39:08.270Z,38.8133316,-122.7623367,1.79,0.98,md,17,107,0.01433,0.04,nc,nc73636530,2021-10-07T08:55:12.255Z,"4km WSW of Cobb, CA",earthquake,0.27,0.45,0.17,4,automatic,nc,nc
 2021-10-07T08:38:13.210Z,60.3367,-151.961,63.4,1.5,ml,,,,0.73,ak,ak021cv7gtcf,2021-10-07T08:45:50.438Z,"33 km WNW of Clam Gulch, Alaska",earthquake,,0.6,,,automatic,ak,ak
 2021-10-07T08:37:43.868Z,63.5305,-147.5196,2.6,1.4,ml,,,,0.88,ak,ak021cv7gnzt,2021-10-07T08:44:10.116Z,"72 km ESE of Denali Park, Alaska",earthquake,,0.4,,,automatic,ak,ak
 2021-10-07T08:32:56.148Z,36.7112,-116.1953,3.4,0.4,ml,9,91.23,0.022,0.0946,nn,nn00825087,2021-10-07T13:19:23.578Z,"49 km WNW of Indian Springs, Nevada",earthquake,,0.4,0.33,5,automatic,nn,nn
+2021-10-07T08:26:46.657Z,40.1789,-119.7945,4.7,0.7,ml,5,226.06,0.049,0.1696,nn,nn00825122,2021-10-07T18:29:10.486Z,"29 km E of Herlong, California",earthquake,,5.2,0.03,2,reviewed,nn,nn
 2021-10-07T08:26:12.320Z,38.522,-119.4115,2.43,0.87,md,10,109,0.02741,0.04,nc,nc73636525,2021-10-07T09:23:14.061Z,"30km SSW of Smith Valley, NV",earthquake,0.3,0.48,0.233,8,reviewed,nc,nc
 2021-10-07T08:21:24.210Z,37.7818336,-122.1524963,9.66,2.15,md,47,58,0.01927,0.08,nc,nc73636520,2021-10-07T14:53:04.426Z,"6km SSW of Moraga, CA",earthquake,0.17,0.31,0.16,49,automatic,nc,nc
+2021-10-07T08:20:55.711Z,40.1826,-119.7898,6.7,0.8,ml,4,231.58,0.046,0.0689,nn,nn00825121,2021-10-07T18:22:52.773Z,"29 km E of Herlong, California",earthquake,,3.6,0.05,2,reviewed,nn,nn
 2021-10-07T08:15:21.600Z,19.1889991760254,-155.452835083008,35.6800003051758,2.08999991,md,40,123,,0.109999999,hv,hv72744367,2021-10-07T08:21:25.060Z,"Island of Hawaii, Hawaii",earthquake,0.62,0.730000019,1.69000006,14,automatic,hv,hv
 2021-10-07T08:12:17.586Z,61.8648,-148.5308,13,0.9,ml,,,,0.55,ak,ak021cv7b926,2021-10-07T08:15:36.111Z,"8 km NNW of Chickaloon, Alaska",earthquake,,0.6,,,automatic,ak,ak
 2021-10-07T08:05:34.720Z,36.4440002,-121.0165024,-0.54,1.71,md,7,164,0.01939,0.24,nc,nc73636515,2021-10-07T09:58:10.390Z,"15km SE of Pinnacles, CA",earthquake,1.94,1.95,0.14,6,automatic,nc,nc
@@ -98,14 +130,16 @@ time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,
 2021-10-07T07:40:53.100Z,38.528,-119.413,2.76,2.25,md,16,103,0.03083,0.06,nc,nc73636510,2021-10-07T12:27:15.272Z,"29km SSW of Smith Valley, NV",earthquake,0.23,0.37,0.272,29,reviewed,nc,nc
 2021-10-07T07:39:01.210Z,38.821167,-122.805336,2.77,0.97,md,23,61,0.004318,0.01,nc,nc73636505,2021-10-07T07:56:11.732Z,"6km NW of The Geysers, CA",earthquake,0.23,0.42,0.27,2,automatic,nc,nc
 2021-10-07T07:34:50.850Z,38.5293333,-119.4111667,2.09,2.25,md,19,103,0.03278,0.05,nc,nc73636500,2021-10-07T16:31:30.107Z,"29km SSW of Smith Valley, NV",earthquake,0.18,0.45,0.182,28,reviewed,nc,nc
+2021-10-07T07:26:39.410Z,38.7486667,-122.8346667,3.97,0.58,md,21,196,0.0221,0.06,nc,nc73636495,2021-10-07T20:01:10.055Z,"8km WSW of The Geysers, CA",earthquake,0.29,0.46,0.215,7,reviewed,nc,nc
 2021-10-07T07:18:29.980Z,18.2936,-66.3018,22,2.8,md,12,134,0.2187,0.16,pr,pr2021280001,2021-10-07T10:48:21.647Z,"5 km SSE of Corozal, Puerto Rico",earthquake,0.44,0.75,0.02,5,reviewed,pr,pr
 2021-10-07T07:17:15.590Z,34.0576667,-117.2403333,14.68,0.78,ml,24,88,0.05927,0.11,ci,ci40064896,2021-10-07T14:39:56.453Z,"2km ENE of Loma Linda, CA",earthquake,0.17,0.34,0.056,7,reviewed,ci,ci
 2021-10-07T07:17:01.310Z,19.1643333435059,-155.5,37.0699996948242,2.00999999,md,33,108,,0.140000001,hv,hv72744302,2021-10-07T07:20:09.730Z,"4 km SSW of Pāhala, Hawaii",earthquake,0.67,1.23000002,0.670000017,11,automatic,hv,hv
 2021-10-07T07:07:31.680Z,33.0363333,-116.4316667,8.84,1.23,ml,35,43,0.1352,0.21,ci,ci40064880,2021-10-07T13:57:14.520Z,"17km ESE of Julian, CA",earthquake,0.27,1.05,0.212,25,reviewed,ci,ci
-2021-10-07T06:55:11.300Z,39.5019989,-122.9556656,-0.09,2.16,md,16,108,0.1851,0.14,nc,nc73636490,2021-10-07T08:52:11.234Z,"10km N of Lake Pillsbury, CA",earthquake,0.47,11.03,0.15,9,automatic,nc,nc
+2021-10-07T06:55:11.410Z,39.4935,-122.9595,7.5,2.03,md,33,72,0.1771,0.13,nc,nc73636490,2021-10-07T19:56:12.905Z,"10km N of Lake Pillsbury, CA",earthquake,0.22,0.88,0.156,39,reviewed,nc,nc
 2021-10-07T06:52:39.680Z,38.8018341,-122.8148346,3.14,1.17,md,9,97,0.01323,0.01,nc,nc73636485,2021-10-07T08:19:15.878Z,"6km WNW of The Geysers, CA",earthquake,0.52,1.82,,1,automatic,nc,nc
 2021-10-07T06:50:44.365Z,31.67847833,-104.3908999,6.131567383,2.6,ml,28,68,0.09418450336,0.3,tx,tx2021tqgx,2021-10-07T17:03:18.608Z,"55 km S of Whites City, New Mexico",earthquake,1.053381997,1.307054943,0.2,18,reviewed,tx,tx
 2021-10-07T06:50:43.250Z,38.8016663,-122.8156662,2.89,0.84,md,10,125,0.01277,0.02,nc,nc73636480,2021-10-07T07:07:12.247Z,"6km WNW of The Geysers, CA",earthquake,0.5,1.02,,1,automatic,nc,nc
+2021-10-07T06:43:08.684Z,31.65630296,-104.2962441,6.979931641,2,ml,18,59,0.1180801123,0.2,tx,tx2021tqgr,2021-10-07T19:06:25.125Z,"58 km S of Whites City, New Mexico",earthquake,1.026085875,1.440179873,0.1,10,reviewed,tx,tx
 2021-10-07T06:34:25.193Z,38.1844,-117.8766,8.4,1.4,ml,13,78.57,0.023,0.2022,nn,nn00825076,2021-10-07T06:37:37.513Z,"30 km SE of Mina, Nevada",earthquake,,0.3,1.11,6,automatic,nn,nn
 2021-10-07T06:18:20.420Z,62.2038,-152.3387,128.2,1.6,ml,,,,0.46,ak,ak021cv65od1,2021-10-07T06:25:33.499Z,"54 km WNW of Skwentna, Alaska",earthquake,,0.6,,,automatic,ak,ak
 2021-10-07T06:12:48.480Z,19.1533336639404,-155.462997436523,34.8300018310547,1.87,md,37,162,,0.150000006,hv,hv72744222,2021-10-07T06:15:59.400Z,"5 km SSE of Pāhala, Hawaii",earthquake,0.82,1.17999995,0.280000001,9,automatic,hv,hv
@@ -113,6 +147,7 @@ time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,
 2021-10-07T05:59:08.788Z,-2.4287,-78.7198,92.59,4.3,mb,,152,1.702,0.68,us,us6000fsj9,2021-10-07T06:55:05.040Z,"28 km ENE of Cañar, Ecuador",earthquake,8.1,10.9,0.109,24,reviewed,us,us
 2021-10-07T05:44:56.753Z,38.5256,-119.4113,3.8,1.5,ml,10,113.8,0.03,0.169,nn,nn00825074,2021-10-07T05:48:16.210Z,"California-Nevada border region",earthquake,,0.7,0.03,2,automatic,nn,nn
 2021-10-07T05:24:45.700Z,19.2226657867432,-155.387329101562,32.9599990844727,2.16,ml,47,152,,0.129999995,hv,hv72744182,2021-10-07T05:51:47.040Z,"9 km ENE of Pāhala, Hawaii",earthquake,0.58,0.810000002,3.37,7,automatic,hv,hv
+2021-10-07T05:20:53.977Z,38.5114,-119.4096,3.9,0,ml,7,163.83,0.024,0.145,nn,nn00825120,2021-10-07T18:04:16.326Z,"5 km E of Walker, California",earthquake,,2.7,0.43,3,reviewed,nn,nn
 2021-10-07T05:20:30.068Z,66.9964,-154.5416,0.1,1.9,ml,,,,0.92,ak,ak021cv5kox3,2021-10-07T05:29:36.463Z,"94 km WNW of Alatna, Alaska",earthquake,,1.1,,,automatic,ak,ak
 2021-10-07T05:13:01.266Z,-8.2851,119.5236,186.86,4.9,mb,,61,2.707,1.11,us,us6000fsir,2021-10-07T05:39:14.040Z,"33 km N of Komodo, Indonesia",earthquake,7.8,6.9,0.091,38,reviewed,us,us
 2021-10-07T04:58:45.065Z,58.5043,-154.1485,91.1,1.6,ml,,,,0.37,ak,ak021cv57fpb,2021-10-07T05:03:53.499Z,"87 km WNW of Aleneva, Alaska",earthquake,,0.7,,,automatic,ak,ak
@@ -136,16 +171,20 @@ time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,
 2021-10-07T03:08:34.640Z,35.7733333,-117.5955,6.9,0.33,ml,15,126,0.04235,0.11,ci,ci40064816,2021-10-07T14:22:41.379Z,"17km W of Searles Valley, CA",earthquake,0.24,0.38,0.237,4,reviewed,ci,ci
 2021-10-07T03:08:24.480Z,35.5983333,-117.4448333,10.46,0.43,ml,8,142,0.01843,0.11,ci,ci37482213,2021-10-07T14:27:01.921Z,"19km S of Searles Valley, CA",earthquake,0.81,0.48,0.21,5,reviewed,ci,ci
 2021-10-07T03:06:38.800Z,38.8084984,-122.7385025,2.5,0.7,md,7,128,0.01834,0.02,nc,nc73636455,2021-10-07T03:26:12.222Z,"2km SW of Cobb, CA",earthquake,0.36,1.29,0.17,2,automatic,nc,nc
+2021-10-07T03:03:44.540Z,61.14,-152.427666666667,2.17,0.12,ml,12,126,,0.12,av,av91042278,2021-10-07T19:49:47.890Z,"70 km W of Tyonek, Alaska",earthquake,0.37,0.35,0.168803563930368,12,reviewed,av,av
 2021-10-07T02:48:09.550Z,35.9215,-117.7395,5.27,0.74,ml,17,50,0.06929,0.08,ci,ci40064808,2021-10-07T14:18:04.257Z,"15km E of Little Lake, CA",earthquake,0.14,0.53,0.198,6,reviewed,ci,ci
 2021-10-07T02:42:13.880Z,38.5416667,-119.5378333,5.4,1.41,md,13,75,0.02361,0.09,nc,nc73636450,2021-10-07T07:28:11.392Z,"28km SE of Markleeville, CA",earthquake,0.29,0.41,0.531,14,reviewed,nc,nc
 2021-10-07T02:42:06.622Z,37.3658,-117.1316,2.9,1.3,ml,15,130.29,0.122,0.2488,nn,nn00825065,2021-10-07T02:45:34.601Z,"39 km SSE of Goldfield, Nevada",earthquake,,1.4,0.91,8,automatic,nn,nn
 2021-10-07T02:41:28.260Z,38.7944984,-122.7669983,3.02,1.15,md,27,71,0.008357,0.03,nc,nc73636445,2021-10-07T05:41:13.649Z,"2km NNW of The Geysers, CA",earthquake,0.25,0.48,0.04,5,automatic,nc,nc
+2021-10-07T02:40:05.340Z,40.4826667,-123.8993333,19.72,2,md,23,66,0.06265,0.11,nc,nc73636440,2021-10-07T20:06:13.088Z,"18km E of Rio Dell, CA",earthquake,0.24,0.42,0.134,16,reviewed,nc,nc
+2021-10-07T02:37:42.335Z,31.71736594,-103.8491765,9.704980469,2.1,ml,17,101,0.1552472323,0.1,tx,tx2021tpyn,2021-10-07T19:20:41.733Z,"23 km W of Mentone, Texas",earthquake,1.2560444280000003,3.127045485,0.2,7,reviewed,tx,tx
 2021-10-07T02:28:45.034Z,37.3767,-117.1327,3.1,1.4,ml,20,107.58,0.127,0.2547,nn,nn00825062,2021-10-07T02:37:21.563Z,"California-Nevada border region",earthquake,,1.3,0.86,13,automatic,nn,nn
-2021-10-07T02:18:48.660Z,40.6126671,-122.4426651,21.46,2.64,md,11,112,0.07662,0.07,nc,nc73636435,2021-10-07T16:30:00.722Z,"4km ENE of Shasta, CA",earthquake,0.67,0.44,0.12,14,automatic,nc,nc
+2021-10-07T02:18:48.580Z,40.6101667,-122.452,22.17,2.55,md,19,51,0.06319,0.09,nc,nc73636435,2021-10-07T20:06:13.770Z,"4km ENE of Shasta, CA",earthquake,0.4,0.29,0.093,28,reviewed,nc,nc
 2021-10-07T02:12:41.700Z,33.7513333,-116.9196667,10.46,0.76,ml,14,79,0.06418,0.19,ci,ci40064800,2021-10-07T13:57:56.534Z,"2km W of Valle Vista, CA",earthquake,0.41,0.83,0.18,18,reviewed,ci,ci
 2021-10-07T01:54:41.000Z,38.5441,-119.4627,3.3,1.1,ml,8,111.1,0.044,0.0964,nn,nn00825061,2021-10-07T01:58:03.918Z,"3 km NNE of Walker, California",earthquake,,1,0.25,2,automatic,nn,nn
 2021-10-07T01:47:44.489Z,60.1809,-152.7323,106.8,1.8,ml,,,,0.64,ak,ak021cv3cryp,2021-10-07T01:53:00.332Z,"60 km WNW of Ninilchik, Alaska",earthquake,,1,,,automatic,ak,ak
 2021-10-07T01:36:20.610Z,38.5441667,-119.5333333,3.86,1.18,md,12,79,0.02791,0.09,nc,nc73636420,2021-10-07T04:49:11.346Z,"28km SE of Markleeville, CA",earthquake,0.35,0.44,0.158,8,reviewed,nc,nc
+2021-10-07T01:34:42.499Z,31.55802883,-104.1462709,6.131567383,2,ml,20,68,0.08206231526,0.3,tx,tx2021tpwn,2021-10-07T19:01:11.723Z,"43 km NW of Toyah, Texas",earthquake,1.085411541,1.165923741,0.2,10,reviewed,tx,tx
 2021-10-07T01:19:54.770Z,38.8323326,-122.8176651,1.68,0.85,md,15,55,0.01071,0.01,nc,nc73636410,2021-10-07T01:51:11.515Z,"8km NW of The Geysers, CA",earthquake,0.27,0.64,,1,automatic,nc,nc
 2021-10-07T01:14:03.828Z,63.1036,-152.0267,0,2.7,ml,,,,0.82,ak,ak021cv35m67,2021-10-07T01:20:36.341Z,"51 km SSW of Denali National Park, Alaska",earthquake,,0.5,,,automatic,ak,ak
 2021-10-07T01:08:42.460Z,34.6378333,-119.5206667,9.4,1.44,ml,19,69,0.1393,0.18,ci,ci40064768,2021-10-07T14:12:09.924Z,"25km NNE of Montecito, CA",earthquake,0.28,1.18,0.164,15,reviewed,ci,ci
@@ -157,7 +196,7 @@ time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,
 2021-10-07T00:25:12.578Z,62.6234,-145.485,0,1.5,ml,,,,1.33,ak,ak021cv2mk55,2021-10-07T00:28:39.298Z,"37 km NNW of Gakona, Alaska",earthquake,,0.4,,,automatic,ak,ak
 2021-10-07T00:23:21.610Z,19.2156658172607,-155.40983581543,35.7000007629395,2.34,ml,48,145,,0.119999997,hv,hv72743787,2021-10-07T00:28:51.470Z,"7 km E of Pāhala, Hawaii",earthquake,0.58,0.720000029,0.06,3,automatic,hv,hv
 2021-10-07T00:14:39.150Z,37.9553337,-122.0356674,8.48,1.38,md,9,175,0.07313,0.02,nc,nc73636400,2021-10-07T02:59:12.045Z,"2km SW of Concord, CA",earthquake,0.55,1.22,0.11,9,automatic,nc,nc
-2021-10-07T00:09:20.289Z,-39.2177,174.7641,218.19,4.6,mb,,71,0.707,0.69,us,us6000fshg,2021-10-07T01:12:57.460Z,"46 km ENE of Eltham, New Zealand",earthquake,6.7,5.3,0.116,22,reviewed,us,us
+2021-10-07T00:09:20.289Z,-39.2177,174.7641,218.19,4.6,mb,,71,0.707,0.69,us,us6000fshg,2021-10-07T18:56:45.255Z,"46 km ENE of Eltham, New Zealand",earthquake,6.7,5.3,0.116,22,reviewed,us,us
 2021-10-07T00:03:07.047Z,68.5239,-147.0967,0,2.1,ml,,,,0.86,ak,ak021cv2htyo,2021-10-07T00:06:56.507Z,"78 km NW of Arctic Village, Alaska",earthquake,,0.6,,,automatic,ak,ak
 2021-10-07T00:00:57.282Z,30.1172,68.0341,10,4.6,mb,,100,4.492,0.87,us,us6000fshe,2021-10-07T06:43:26.631Z,"9 km E of Harnai, Pakistan",earthquake,10.1,1.9,0.076,51,reviewed,us,us
 2021-10-06T23:40:21.654Z,2.5792,128.336,175.97,4.5,mb,,116,2.04,0.62,us,us6000fsh4,2021-10-07T00:46:21.040Z,"100 km NNE of Tobelo, Indonesia",earthquake,10.5,8.7,0.09,36,reviewed,us,us
@@ -181,7 +220,7 @@ time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,
 2021-10-06T22:14:47.610Z,38.5456667,-119.4095,0.24,1.72,md,11,119,0.04704,0.08,nc,nc73636370,2021-10-07T11:56:13.081Z,"27km SSW of Smith Valley, NV",earthquake,0.43,1.19,0.253,14,reviewed,nc,nc
 2021-10-06T22:14:30.094Z,39.4164,-119.9237,8.5,0.1,ml,5,134.45,0.126,0.1282,nn,nn00825055,2021-10-07T02:38:39.981Z,"8 km ENE of Floriston, California",earthquake,,6.4,0,1,reviewed,nn,nn
 2021-10-06T22:05:04.080Z,38.8073349,-122.7975006,3.64,0.56,md,20,33,0.00183,0.02,nc,nc73636365,2021-10-06T22:25:11.095Z,"5km NW of The Geysers, CA",earthquake,0.29,0.55,0.41,4,automatic,nc,nc
-2021-10-06T22:01:08.736Z,30.2203,68.0142,9,5.9,mwb,,23,4.395,0.72,us,us6000fsg9,2021-10-07T17:02:47.712Z,"Pakistan",earthquake,8.7,1.8,0.026,142,reviewed,us,us
+2021-10-06T22:01:08.736Z,30.2203,68.0142,9,5.9,mwb,,23,4.395,0.72,us,us6000fsg9,2021-10-07T18:37:00.077Z,"Pakistan",earthquake,8.7,1.8,0.026,142,reviewed,us,us
 2021-10-06T21:58:59.444Z,59.7166,-152.8181,81.3,1.5,ml,,,,0.26,ak,ak021ctrshlk,2021-10-06T22:02:13.492Z,"55 km W of Anchor Point, Alaska",earthquake,,0.5,,,automatic,ak,ak
 2021-10-06T21:45:46.796Z,37.3812,-117.1246,1.8,1.4,ml,18,132.14,0.135,0.2186,nn,nn00825041,2021-10-06T21:49:17.359Z,"37 km SSE of Goldfield, Nevada",earthquake,,6.1,0.87,13,automatic,nn,nn
 2021-10-06T21:37:06.120Z,34.97783333,-97.69133333,10.95,1.37,ml,48,57,0.09808075321,0.36,ok,ok2021tpoq,2021-10-07T17:17:52.510Z,"8 km SW of Dibble, Oklahoma",earthquake,,1.4,0.21,19,reviewed,ok,ok
@@ -196,6 +235,7 @@ time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,
 2021-10-06T20:56:16.900Z,19.2181666666667,-155.438166666667,33.7,2.62,ml,54,125,,0.1,hv,hv72743512,2021-10-06T23:27:58.740Z,"4 km ENE of Pāhala, Hawaii",earthquake,0.39,0.49,0.180573384467798,31,reviewed,hv,hv
 2021-10-06T20:54:29.250Z,32.7791667,-115.4838333,3.4,1.01,ml,11,164,0.04067,0.26,ci,ci40064624,2021-10-06T21:49:20.182Z,"7km NE of Heber, CA",earthquake,0.74,0.59,0.177,8,reviewed,ci,ci
 2021-10-06T20:51:49.967Z,64.4821,-153.1672,0,1.5,ml,,,,0.96,ak,ak021ctr5j8y,2021-10-06T20:56:45.662Z,"78 km NNW of Lake Minchumina, Alaska",earthquake,,0.4,,,automatic,ak,ak
+2021-10-06T20:46:34.302Z,31.71784571,-103.8400224,5.540283203000001,2.3,ml,20,96,0.1629683635,0.2,tx,tx2021tpmz,2021-10-07T18:30:25.188Z,"western Texas",earthquake,0.9856324361999999,2.905970976,0.1,8,reviewed,tx,tx
 2021-10-06T20:37:23.210Z,35.9663333,-117.4756667,5.98,0.49,ml,10,121,0.0921,0.04,ci,ci40064616,2021-10-07T15:42:56.291Z,"23km NNW of Searles Valley, CA",earthquake,0.19,0.56,0.071,4,reviewed,ci,ci
 2021-10-06T20:28:52.810Z,38.5313333,-119.5011667,5.79,1.43,md,12,97,0.02479,0.06,nc,nc73636355,2021-10-07T11:25:10.894Z,"31km SE of Markleeville, CA",earthquake,0.33,0.4,0.599,12,reviewed,nc,nc
 2021-10-06T20:26:31.920Z,19.1851666666667,-155.484333333333,37.66,2.67,ml,53,71,,0.11,hv,hv72743477,2021-10-06T23:19:47.920Z,"2 km SSW of Pāhala, Hawaii",earthquake,0.43,0.52,0.2016742122469,34,reviewed,hv,hv
@@ -611,7 +651,7 @@ time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,
 2021-10-05T17:13:06.089Z,35.95133333,-97.79783333,7.24,1.72,ml,39,42,0.1988609767,0.18,ok,ok2021tnkl,2021-10-06T01:21:37.036Z,"10 km ESE of Dover, Oklahoma",earthquake,,0.6,0.22,5,reviewed,ok,ok
 2021-10-05T17:00:36.320Z,38.5276667,-119.4106667,1.54,1.68,md,13,78,0.03179,0.08,nc,nc73633841,2021-10-05T20:18:15.459Z,"29km SSW of Smith Valley, NV",earthquake,0.31,0.66,0.162,13,reviewed,nc,nc
 2021-10-05T17:00:11.320Z,19.312,-155.244666666667,5.12,1.19,md,24,108,,0.09,hv,hv72741437,2021-10-05T20:55:59.320Z,"14 km S of Volcano, Hawaii",earthquake,0.28,0.65,0.0527547763949929,9,reviewed,hv,hv
-2021-10-05T16:56:05.040Z,37.8110008,-121.9095001,8.88,1.53,md,10,164,0.08133,0.05,nc,nc73633836,2021-10-05T19:51:10.588Z,"1km S of Blackhawk, CA",earthquake,0.42,0.75,0.09,8,automatic,nc,nc
+2021-10-05T16:56:05.030Z,37.8105,-121.9065,8.61,1.58,md,22,87,0.0822,0.07,nc,nc73633836,2021-10-07T20:06:12.087Z,"1km S of Blackhawk, CA",earthquake,0.24,0.6,0.218,15,reviewed,nc,nc
 2021-10-05T16:46:59.920Z,19.1803333333333,-155.493,37.23,2.82,md,43,81,,0.12,hv,hv72741417,2021-10-05T20:33:02.830Z,"2 km SSW of Pāhala, Hawaii",earthquake,0.46,0.64,0.152547072128492,19,reviewed,hv,hv
 2021-10-05T16:40:44.928Z,60.0505,-140.0907,11.6,1.5,ml,,,,0.66,ak,ak021cs163lh,2021-10-05T16:54:25.267Z,"59 km NNW of Yakutat, Alaska",earthquake,,0.1,,,automatic,ak,ak
 2021-10-05T16:35:53.230Z,34.0186667,-116.4451667,7.96,0.97,ml,31,58,0.06823,0.14,ci,ci40063504,2021-10-05T16:50:56.287Z,"8km NE of Desert Hot Springs, CA",earthquake,0.18,0.49,0.095,14,reviewed,ci,ci
@@ -670,7 +710,7 @@ time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,
 2021-10-05T13:50:29.928Z,37.3872,-117.1242,6.1,2.3,ml,24,95.12,0.139,0.1817,nn,nn00824867,2021-10-06T02:37:22.694Z,"36 km SSE of Goldfield, Nevada",earthquake,,3.6,0.46,16,reviewed,nn,nn
 2021-10-05T13:49:19.300Z,47.713,-120.027333333333,6.98,0.95,ml,15,63,0.05085,0.1,uw,uw61778062,2021-10-05T19:16:58.960Z,"8 km NNE of Waterville, Washington",earthquake,0.21,0.46,0.0689008228668178,6,reviewed,uw,uw
 2021-10-05T13:48:04.989Z,37.3796,-117.1367,1.7,1.6,ml,22,117.86,0.127,0.2887,nn,nn00824865,2021-10-05T13:51:49.381Z,"37 km SSE of Goldfield, Nevada",earthquake,,5.8,0.84,16,automatic,nn,nn
-2021-10-05T13:37:15.960Z,36.0106659,-120.5695038,2.9,0.91,md,11,112,0.0267,0.05,nc,nc73633791,2021-10-05T13:54:36.647Z,"18km NW of Parkfield, CA",earthquake,0.4,0.74,0.17,5,automatic,nc,nc
+2021-10-05T13:37:15.940Z,36.0091667,-120.5766667,3.09,1.16,md,22,103,0.03248,0.08,nc,nc73633791,2021-10-07T19:56:13.551Z,"18km NW of Parkfield, CA",earthquake,0.24,0.4,0.143,9,reviewed,nc,nc
 2021-10-05T13:36:47.610Z,19.140832901001,-155.492172241211,33.3300018310547,2.01999998,md,42,159,,0.119999997,hv,hv72741212,2021-10-05T13:39:58.840Z,"7 km SSW of Pāhala, Hawaii",earthquake,0.62,1,1.58000004,18,automatic,hv,hv
 2021-10-05T13:34:19.890Z,34.0115,-117.2366667,17.83,0.85,ml,33,99,0.08312,0.16,ci,ci40063352,2021-10-05T15:47:31.899Z,"5km SSE of Loma Linda, CA",earthquake,0.23,0.47,0.122,9,reviewed,ci,ci
 2021-10-05T13:18:38.400Z,38.7901649,-122.7298355,0.6,0.46,md,8,121,0.008766,0.03,nc,nc73633786,2021-10-05T14:51:11.016Z,"3km ENE of The Geysers, CA",earthquake,0.3,0.8,0.08,2,automatic,nc,nc
@@ -736,7 +776,7 @@ time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,
 2021-10-05T09:20:15.560Z,35.7868333,-117.6121667,8.98,1.01,ml,19,120,0.03121,0.1,ci,ci40063256,2021-10-05T15:14:18.704Z,"19km W of Searles Valley, CA",earthquake,0.19,0.4,0.189,6,reviewed,ci,ci
 2021-10-05T09:14:51.990Z,35.8708333,-117.7035,7.74,0.34,ml,18,71,0.07968,0.07,ci,ci40063248,2021-10-05T15:11:28.686Z,"20km ESE of Little Lake, CA",earthquake,0.14,0.4,0.041,4,reviewed,ci,ci
 2021-10-05T09:09:38.100Z,35.5565,-84.1093333,14.51,1.23,md,6,184,0.1013,0.34,se,se60135743,2021-10-06T12:13:08.110Z,"12 km ESE of Vonore, Tennessee",earthquake,1.21,1.98,0.018,4,reviewed,se,se
-2021-10-05T09:09:07.850Z,38.8376656,-122.8276672,0.78,1.28,md,15,91,0.006176,0.07,nc,nc73633726,2021-10-05T11:53:10.868Z,"9km NW of The Geysers, CA",earthquake,0.24,0.55,0.13,3,automatic,nc,nc
+2021-10-05T09:09:07.740Z,38.8413333,-122.8263333,1.49,1.17,md,41,96,0.007656,0.06,nc,nc73633726,2021-10-07T19:43:12.359Z,"9km WNW of Cobb, CA",earthquake,0.13,0.22,0.135,12,reviewed,nc,nc
 2021-10-05T09:07:33.411Z,-59.095,-23.0103,10,5,mb,,131,8.839,0.66,us,us6000frv3,2021-10-05T09:27:27.040Z,"South Sandwich Islands region",earthquake,11.4,2,0.08,50,reviewed,us,us
 2021-10-05T09:01:23.960Z,58.3886666666667,-154.534666666667,2.36,-0.64,ml,4,271,,0.24,av,av91042168,2021-10-06T03:45:50.570Z,"91 km N of Karluk, Alaska",earthquake,1.33,2.48,0.278203406394698,4,reviewed,av,av
 2021-10-05T09:01:07.330Z,38.8346672,-122.8176651,2.06,0.85,md,9,92,0.01272,0.01,nc,nc73633716,2021-10-05T09:19:13.203Z,"8km NW of The Geysers, CA",earthquake,0.36,1.15,,1,automatic,nc,nc
@@ -802,14 +842,14 @@ time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,
 2021-10-05T05:38:58.042Z,37.442,-117.0771,0,1.2,ml,16,140.83,0.602,0.2541,nn,nn00824781,2021-10-05T05:42:16.937Z,"32 km SSE of Goldfield, Nevada",earthquake,,34.3,0.89,9,automatic,nn,nn
 2021-10-05T05:38:05.920Z,35.8683333,-117.6863333,5.46,1.19,ml,29,41,0.08459,0.13,ci,ci40063176,2021-10-05T14:52:21.561Z,"21km ESE of Little Lake, CA",earthquake,0.14,0.52,0.145,15,reviewed,ci,ci
 2021-10-05T05:23:49.700Z,33.96616667,-97.29116667,9.8,1.28,ml,21,124,0.09628110636,0.2,ok,ok2021tmna,2021-10-06T15:35:23.048Z,"15 km NE of Leon, Oklahoma",earthquake,,1.3,0.33,4,reviewed,ok,ok
-2021-10-05T05:18:22.050Z,38.8333321,-122.8151703,1.64,1.2,md,23,55,0.01671,0.01,nc,nc73633646,2021-10-05T08:54:10.755Z,"8km NW of The Geysers, CA",earthquake,0.19,0.41,0.03,5,automatic,nc,nc
+2021-10-05T05:18:22.040Z,38.8333333,-122.8148333,1.81,1.17,md,42,45,0.0106,0.04,nc,nc73633646,2021-10-07T19:23:16.535Z,"8km NW of The Geysers, CA",earthquake,0.13,0.21,0.227,12,reviewed,nc,nc
 2021-10-05T05:18:01.976Z,37.3822,-117.1282,0.5,1.4,ml,20,132.06,0.133,0.2823,nn,nn00824778,2021-10-05T05:21:38.141Z,"37 km SSE of Goldfield, Nevada",earthquake,,12.1,0.81,13,automatic,nn,nn
 2021-10-05T05:14:36.440Z,19.191499710083,-155.471832275391,29.8999996185303,1.82000005,md,29,96,,0.159999996,hv,hv72740847,2021-10-05T05:17:46.540Z,"1 km SSE of Pāhala, Hawaii",earthquake,0.77,1.38999999,0.910000026,8,automatic,hv,hv
 2021-10-05T05:12:05.900Z,47.4078333,-113.1248333,18.29,0.71,ml,9,122,0.301,0.07,mb,mb80525814,2021-10-05T20:06:46.940Z,"37 km NE of Seeley Lake, Montana",earthquake,0.35,1.7,0.115,4,reviewed,mb,mb
 2021-10-05T05:09:12.050Z,37.3694,-117.1398,2.5,1,ml,8,145.92,0.118,0.1697,nn,nn00824777,2021-10-05T05:12:55.088Z,"38 km SSE of Goldfield, Nevada",earthquake,,2.1,1,4,automatic,nn,nn
 2021-10-05T05:06:59.157Z,61.4374,-150.8308,54.9,1.3,ml,,,,0.51,ak,ak021cruf1r0,2021-10-05T05:30:23.213Z,"20 km SW of Susitna, Alaska",earthquake,,0.5,,,automatic,ak,ak
 2021-10-05T05:05:45.379Z,61.8803,-152.0365,115.3,1.6,ml,,,,0.6,ak,ak021cruetbn,2021-10-05T05:12:10.899Z,"35 km WSW of Skwentna, Alaska",earthquake,,0.7,,,automatic,ak,ak
-2021-10-05T05:03:36.380Z,36.5913333,-121.285,6.69,1.88,md,50,93,0.03082,0.12,nc,nc73633641,2021-10-07T17:58:11.995Z,"14km WNW of Pinnacles, CA",earthquake,0.19,0.46,0.251,44,reviewed,nc,nc
+2021-10-05T05:03:36.380Z,36.5913333,-121.285,6.69,1.88,md,50,93,0.03082,0.12,nc,nc73633641,2021-10-07T20:09:13.535Z,"14km WNW of Pinnacles, CA",earthquake,0.19,0.46,0.251,44,reviewed,nc,nc
 2021-10-05T04:56:27.860Z,44.773,-111.0223333,9.14,0.98,ml,13,137,0.01788,0.11,uu,uu60461567,2021-10-05T13:07:12.610Z,"13 km E of Hebgen Lake Estates, Montana",earthquake,0.49,0.85,0.361,3,reviewed,uu,uu
 2021-10-05T04:54:44.989Z,61.8508,-148.5408,13.3,0.6,ml,,,,0.24,ak,ak021cru3vua,2021-10-05T04:58:08.441Z,"7 km NW of Chickaloon, Alaska",earthquake,,0.5,,,automatic,ak,ak
 2021-10-05T04:54:10.960Z,38.8363342,-122.8068314,1.7,0.85,md,9,86,0.01304,0.02,nc,nc73633631,2021-10-05T05:05:11.576Z,"7km WNW of Cobb, CA",earthquake,0.36,1.11,,1,automatic,nc,nc
@@ -869,7 +909,7 @@ time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,
 2021-10-05T02:44:23.683Z,63.4793,-151.2698,9.4,0.2,ml,,,,0.74,ak,ak021crsutts,2021-10-05T16:24:10.970Z,"23 km ESE of Denali National Park, Alaska",earthquake,,0.4,,,reviewed,ak,ak
 2021-10-05T02:44:09.640Z,59.5154,-152.396,63.3,2.9,ml,,,,0.6,ak,ak021crsusop,2021-10-05T03:17:09.711Z,"32 km WNW of Nanwalek, Alaska",earthquake,,0.4,,,automatic,ak,ak
 2021-10-05T02:44:02.383Z,62.0447,-148.8723,34.8,2.3,ml,,,,1.98,ak,ak021crsus5y,2021-10-05T02:49:48.396Z,"30 km N of Sutton-Alpine, Alaska",earthquake,,2.7,,,automatic,ak,ak
-2021-10-05T02:43:10.410Z,36.5943333,-121.283,6.71,1.83,md,38,93,0.03036,0.09,nc,nc73633516,2021-10-07T16:55:15.473Z,"14km WNW of Pinnacles, CA",earthquake,0.18,0.42,0.263,36,reviewed,nc,nc
+2021-10-05T02:43:10.410Z,36.5943333,-121.283,6.71,1.83,md,38,93,0.03036,0.09,nc,nc73633516,2021-10-07T18:08:10.044Z,"14km WNW of Pinnacles, CA",earthquake,0.18,0.42,0.263,36,reviewed,nc,nc
 2021-10-05T02:38:20.824Z,30.3282,94.7936,31.01,4.7,mb,,116,6.09,0.76,us,us6000frs4,2021-10-05T02:55:31.040Z,"203 km NNE of Shi Yomi, India",earthquake,8,5.6,0.083,44,reviewed,us,us
 2021-10-05T02:35:45.170Z,41.0191667,-123.4228333,36.16,2.33,md,32,48,0.2604,0.11,nc,nc73633511,2021-10-05T19:18:15.834Z,"20km ENE of Willow Creek, CA",earthquake,0.27,0.46,0.145,31,reviewed,nc,nc
 2021-10-05T02:29:04.601Z,37.3491,-117.1496,10.8,1.1,ml,10,126.47,0.101,0.167,nn,nn00824737,2021-10-06T22:48:22.080Z,"40 km S of Goldfield, Nevada",earthquake,,2.4,1.09,3,reviewed,nn,nn
@@ -2686,7 +2726,7 @@ time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,
 2021-09-30T00:45:12.870Z,19.4101666666667,-155.285,-0.01,2.59,md,19,54,,0.1,hv,hv72734467,2021-09-30T01:11:24.920Z,"6 km SW of Volcano, Hawaii",earthquake,0.15,0.18,0.0711950358117419,3,reviewed,hv,hv
 2021-09-30T00:43:34.570Z,19.4096666666667,-155.273333333333,0.56,1.63,md,13,66,,0.08,hv,hv72734462,2021-09-30T00:55:11.490Z,"5 km SW of Volcano, Hawaii",earthquake,0.26,0.34,0.0264770704710943,4,reviewed,hv,hv
 2021-09-30T00:38:50.790Z,19.4141666666667,-155.282833333333,0.28,2.5,ml,17,55,,0.09,hv,hv72734447,2021-09-30T01:25:18.020Z,"6 km WSW of Volcano, Hawaii",earthquake,0.19,0.23,0.109379480663293,8,reviewed,hv,hv
-2021-09-30T00:38:27.156Z,31.60483693,-104.2947622,7.288427734,2,ml,22,70,0.1869372504,0.4,tx,tx2021tdad,2021-10-01T03:22:20.163Z,"57 km NW of Toyah, Texas",earthquake,1.3584165349999997,1.607860961,0.2,16,reviewed,tx,tx
+2021-09-30T00:38:26.898Z,31.61587891,-104.2926972,6.774267578,1.9,ml,21,60,0.1851302313,0.3,tx,tx2021tdad,2021-10-07T19:59:07.691Z,"58 km NW of Toyah, Texas",earthquake,1.061231216,1.793476513,0.2,10,reviewed,tx,tx
 2021-09-30T00:37:09.070Z,19.414,-155.278,-0.22,2.52,md,26,58,,0.12,hv,hv72734442,2021-09-30T01:43:27.420Z,"5 km SW of Volcano, Hawaii",earthquake,0.16,0.17,0.0149128740768751,5,reviewed,hv,hv
 2021-09-30T00:35:22.561Z,31.66935581,-104.3800525,6.954223633,2.4,ml,34,59,0.1029180519,0.2,tx,tx2021tdac,2021-10-01T23:30:33.137Z,"56 km S of Whites City, New Mexico",earthquake,1.0278170280000003,1.389514045,0.1,17,reviewed,tx,tx
 2021-09-30T00:35:14.510Z,19.4083333333333,-155.277333333333,0.56,2,ml,16,59,,0.06,hv,hv72734432,2021-09-30T00:48:05.070Z,"5 km SW of Volcano, Hawaii",earthquake,0.19,0.2,0.224237438500894,12,reviewed,hv,hv
@@ -3561,6 +3601,7 @@ time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,
 2021-09-27T21:15:35.491Z,56.8389,-154.2498,45.5,1.7,ml,,,,0.39,ak,ak021cevp47x,2021-09-28T00:03:28.282Z,"12 km SSW of Akhiok, Alaska",earthquake,,39.6,,,reviewed,ak,ak
 2021-09-27T21:09:24.090Z,19.4085006713867,-155.276504516602,0.00999999977648258,1.95000005,md,13,88,,0.100000001,hv,hv72729807,2021-09-27T21:12:17.860Z,"5 km SW of Volcano, Hawaii",earthquake,0.17,0.239999995,1.20000005,11,automatic,hv,hv
 2021-09-27T20:52:53.320Z,32.9073333,-116.9418333,-0.18,1.64,ml,54,70,0.07252,0.27,ci,ci39820703,2021-09-27T21:22:01.180Z,"6km NNW of Lakeside, CA",quarry blast,0.46,31.61,0.117,37,reviewed,ci,ci
+2021-09-27T20:43:50.044Z,38.1803,-117.8916,8.1,1.2,ml,7,166.71,0.024,0.0975,nn,nn00823782,2021-10-07T18:22:49.178Z,"30 km SE of Mina, Nevada",earthquake,,1.4,0.08,7,reviewed,nn,nn
 2021-09-27T20:32:57.600Z,19.4141666666667,-155.2775,0.91,2.35,ml,28,60,,0.11,hv,hv72729787,2021-09-28T05:00:46.990Z,"5 km SW of Volcano, Hawaii",earthquake,0.17,0.12,0.134688298373294,10,reviewed,hv,hv
 2021-09-27T20:29:58.432Z,57.2723,-155.0033,32.6,2,ml,,,,0.22,ak,ak021cev6ppj,2021-09-27T20:43:48.558Z,"46 km SW of Karluk, Alaska",earthquake,,3.8,,,automatic,ak,ak
 2021-09-27T20:19:23.420Z,39.4233333,-110.3035,-1.45,1.63,md,7,197,0.01675,0.09,uu,uu60459902,2021-09-27T22:33:42.520Z,"15 km SSE of Sunnyside, Utah",earthquake,0.86,0.6,0.201,7,reviewed,uu,uu
@@ -3606,7 +3647,7 @@ time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,
 2021-09-27T17:03:54.920Z,46.1661666666667,-119.280166666667,-0.3,1.46,ml,11,162,0.1836,0.09,uw,uw61776447,2021-09-27T18:09:00.380Z,"10 km SW of Tri-Cities, Washington",explosion,0.34,31.61,0.14223447943842,8,reviewed,uw,uw
 2021-09-27T16:57:49.100Z,41.6266667,-111.6881667,11.73,0.76,md,6,126,0.09429,0.11,uu,uu60459877,2021-09-27T18:20:19.100Z,"12 km ESE of Millville, Utah",earthquake,1.33,3.31,0.382,3,reviewed,uu,uu
 2021-09-27T16:57:19.450Z,33.0408333,-80.167,5.13,1.96,md,9,98,0.09309,0.04,se,se60135243,2021-09-29T15:07:27.734Z,"2 km NNE of Summerville, South Carolina",earthquake,0.53,1.68,0.127,8,reviewed,se,se
-2021-09-27T16:57:01.746Z,31.64748037,-104.2283651,7.288427734,2,ml,13,85,0.1613523707,0.2,tx,tx2021sytw,2021-10-01T03:41:05.815Z,"55 km NW of Toyah, Texas",earthquake,1.92411056,2.26467582,0.2,17,reviewed,tx,tx
+2021-09-27T16:57:01.725Z,31.64289017,-104.2272559,7.288427734,2,ml,18,85,0.1626569924,0.3,tx,tx2021sytw,2021-10-07T20:01:10.708Z,"54 km NW of Toyah, Texas",earthquake,1.3081384,1.448436256,0.2,8,reviewed,tx,tx
 2021-09-27T16:56:48.050Z,61.1646666666667,-152.2475,3.91,-0.03,ml,7,265,,0.13,av,av91383701,2021-09-28T17:11:27.450Z,"60 km W of Tyonek, Alaska",earthquake,0.74,0.34,0.188903567795108,7,reviewed,av,av
 2021-09-27T16:49:14.620Z,33.0441667,-80.1621667,5.79,2.82,md,16,92,0.09513,0.19,se,se60370861,2021-10-04T18:07:04.040Z,"3 km NNE of Summerville, South Carolina",earthquake,0.37,0.72,0.168,14,reviewed,se,se
 2021-09-27T16:37:44.770Z,35.6556667,-117.5451667,9.81,1.11,ml,24,83,0.0966,0.14,ci,ci39820487,2021-09-28T01:00:41.850Z,"12km ENE of Ridgecrest, CA",earthquake,0.2,0.68,0.139,12,reviewed,ci,ci
@@ -3629,7 +3670,7 @@ time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,
 2021-09-27T15:32:00.070Z,38.517,-119.4063333,3.38,2.88,md,9,137,0.06922,0.05,nc,nc73630116,2021-10-04T14:55:45.040Z,"30km S of Smith Valley, NV",earthquake,0.34,0.63,0.131,45,reviewed,nc,nc
 2021-09-27T15:30:39.142Z,38.1263,141.9171,57.48,4.3,mb,,143,2.74,0.55,us,us6000fqr8,2021-10-04T14:18:51.040Z,"62 km ESE of Ishinomaki, Japan",earthquake,8.3,9,0.178,11,reviewed,us,us
 2021-09-27T15:30:18.458Z,59.5676,-152.0205,35.2,1.9,ml,,,,0.58,ak,ak021ces7oa3,2021-09-27T15:39:57.601Z,"22 km NW of Seldovia, Alaska",earthquake,,6.9,,,automatic,ak,ak
-2021-09-27T15:25:10.040Z,38.516,-119.4081667,3.55,2.3,md,8,136,0.06749,0.05,nc,nc73630111,2021-09-28T06:57:33.750Z,"30km S of Smith Valley, NV",earthquake,0.37,0.64,0.232,22,reviewed,nc,nc
+2021-09-27T15:25:10.040Z,38.516,-119.4081667,3.55,2.3,md,8,136,0.06749,0.05,nc,nc73630111,2021-10-07T19:40:36.813Z,"30km S of Smith Valley, NV",earthquake,0.37,0.64,0.232,22,reviewed,nc,nc
 2021-09-27T15:24:53.280Z,19.176,-155.480166666667,36.44,1.8,md,35,83,,0.13,hv,hv72729122,2021-09-27T22:37:29.140Z,"2 km S of Pāhala, Hawaii",earthquake,0.57,0.76,0.163994563313189,17,reviewed,hv,hv
 2021-09-27T15:22:01.980Z,35.5325,-96.7525,6.77,0.99,ml,25,48,0.1232758091,0.15,ok,ok2021syqt,2021-09-28T13:19:11.623Z,"7 km NW of Prague, Oklahoma",earthquake,,0.5,0.09,7,reviewed,ok,ok
 2021-09-27T15:20:19.864Z,-5.5154,68.5127,10,4.5,mb,,86,13.01,0.78,us,us6000fqr7,2021-10-04T14:03:41.040Z,"Chagos Archipelago region",earthquake,7.9,1.9,0.18,11,reviewed,us,us
@@ -3638,16 +3679,16 @@ time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,
 2021-09-27T15:15:58.220Z,38.834,-122.8181667,1.91,0.46,md,20,59,0.01233,0.03,nc,nc73630106,2021-09-30T20:01:14.362Z,"8km NW of The Geysers, CA",earthquake,0.2,0.35,0.086,4,reviewed,nc,nc
 2021-09-27T15:10:53.130Z,34.1071667,-117.4778333,5.16,1.08,ml,36,64,0.0333,0.13,ci,ci39820383,2021-09-28T00:37:37.326Z,"2km WNW of Fontana, CA",earthquake,0.22,0.24,0.136,22,reviewed,ci,ci
 2021-09-27T15:04:10.792Z,39.3473,-120.1811,11.8,0.6,ml,7,144.26,0.108,0.228,nn,nn00823777,2021-09-28T02:37:38.134Z,"2 km N of Truckee, California",earthquake,,2.8,0.37,2,reviewed,nn,nn
-2021-09-27T15:04:06.060Z,38.1557,-117.8887,6.1,1.3,ml,15,75.55,0.013,0.2599,nn,nn00823739,2021-09-27T15:07:18.565Z,"32 km SE of Mina, Nevada",earthquake,,0.3,0.75,9,automatic,nn,nn
+2021-09-27T15:04:06.050Z,38.179,-117.8996,7.8,1.5,ml,17,78.26,0.028,0.187,nn,nn00823739,2021-10-07T19:12:42.129Z,"29 km SE of Mina, Nevada",earthquake,,0.9,0.32,10,reviewed,nn,nn
 2021-09-27T15:04:01.206Z,36.3523,27.2673,10,4.1,mb,,58,0.703,0.52,us,us7000feuq,2021-10-04T13:25:37.040Z,"31 km SSE of Mandráki, Greece",earthquake,4,1.9,0.369,2,reviewed,us,us
 2021-09-27T15:00:23.119Z,-58.2326,-24.4033,35,4.2,mb,,106,7.803,0.47,us,us6000fqrj,2021-10-04T13:21:17.040Z,"South Sandwich Islands region",earthquake,8.7,1.9,0.16,13,reviewed,us,us
 2021-09-27T15:00:07.430Z,39.4358333,-110.3085,-3.41,1.83,ml,11,215,0.0174,0.16,uu,uu60459867,2021-09-27T16:02:07.520Z,"14 km SSE of Sunnyside, Utah",earthquake,1.17,3.59,0.184,5,reviewed,uu,uu
 2021-09-27T14:51:13.372Z,-22.275,170.5126,35,4.3,mb,,193,2.856,0.89,us,us6000fqr4,2021-10-03T21:06:34.040Z,"283 km ESE of Tadine, New Caledonia",earthquake,10.3,2,0.188,8,reviewed,us,us
 2021-09-27T14:49:27.244Z,34.9873,25.1391,10,4.2,mb,,96,0.362,0.85,us,us6000fqr6,2021-10-03T20:41:01.040Z,"2 km SSW of Pýrgos, Greece",earthquake,4.7,1.9,0.159,13,reviewed,us,us
 2021-09-27T14:45:14.470Z,38.7491684,-122.7146683,-0.06,0.55,md,8,129,0.01475,0.03,nc,nc73630096,2021-09-27T14:46:50.829Z,"4km SW of Anderson Springs, CA",earthquake,0.37,0.76,0.18,3,automatic,nc,nc
-2021-09-27T14:38:48.040Z,38.5156667,-119.4085,3.26,0.98,md,5,160,0.06711,0.04,nc,nc73630091,2021-09-28T06:55:03.308Z,"30km S of Smith Valley, NV",earthquake,0.68,2.73,0.133,5,reviewed,nc,nc
+2021-09-27T14:38:48.040Z,38.5156667,-119.4085,3.26,0.98,md,5,160,0.06711,0.04,nc,nc73630091,2021-10-07T19:03:17.053Z,"30km S of Smith Valley, NV",earthquake,0.68,2.73,0.133,5,reviewed,nc,nc
 2021-09-27T14:37:09.550Z,19.1564998626709,-155.479339599609,28.8400001525879,2.01999998,md,31,132,,0.159999996,hv,hv72729047,2021-09-27T14:40:13.510Z,"5 km S of Pāhala, Hawaii",earthquake,0.85,1.13999999,2.01999998,4,automatic,hv,hv
-2021-09-27T14:32:21.099Z,38.1211,-117.9109,2,1.5,ml,11,120.8,0.042,0.2509,nn,nn00823735,2021-09-27T14:36:06.906Z,"34 km SSE of Mina, Nevada",earthquake,,2.1,0.51,4,automatic,nn,nn
+2021-09-27T14:32:21.511Z,38.1546,-117.9139,7.3,1.6,ml,13,95.22,0.033,0.102,nn,nn00823735,2021-10-07T18:29:06.157Z,"31 km SSE of Mina, Nevada",earthquake,,1.5,0.35,8,reviewed,nn,nn
 2021-09-27T14:29:21.192Z,63.0185,-150.7087,103.2,1.6,ml,,,,0.4,ak,ak021cerm17b,2021-09-27T14:33:10.321Z,"58 km N of Petersville, Alaska",earthquake,,0.8,,,automatic,ak,ak
 2021-09-27T14:22:48.678Z,35.1677,25.188,10,4.4,mb,,220,0.271,0.74,us,us6000fqr5,2021-10-03T20:04:21.040Z,"7 km WNW of Arkalochóri, Greece",earthquake,6.5,2,0.202,7,reviewed,us,us
 2021-09-27T14:17:07.265Z,60.0388,-152.0296,53.4,2.1,ml,,,,0.71,ak,ak021cerjfic,2021-09-27T14:48:44.040Z,"19 km WNW of Happy Valley, Alaska",earthquake,,0.7,,,automatic,ak,ak
@@ -7342,6 +7383,7 @@ time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,
 2021-09-17T11:35:15.726Z,63.4796,-147.7493,15.8,1.4,ml,,,,0.28,ak,ak021by6hjbo,2021-09-17T11:38:14.942Z,"60 km E of Cantwell, Alaska",earthquake,,0.9,,,automatic,ak,ak
 2021-09-17T11:25:54.390Z,44.989,-113.0573333,0.4,1.69,ml,14,142,0.219,0.22,mb,mb80523449,2021-09-17T12:58:24.098Z,"41 km SW of Dillon, Montana",earthquake,0.76,2.45,0.125,12,reviewed,mb,mb
 2021-09-17T11:24:34.910Z,46.6343333,-113.48,4.48,1.27,ml,16,76,0.198,0.2,mb,mb80523444,2021-09-17T12:37:50.170Z,"23 km SE of Clinton, Montana",earthquake,0.48,11.92,0.086,7,reviewed,mb,mb
+2021-09-17T11:23:29.596Z,31.55965804,-104.141711,7.494091797,2,ml,22,55,0.078833256,0.3,tx,tx2021sgbv,2021-10-07T19:52:15.141Z,"42 km NW of Toyah, Texas",earthquake,1.088345709,1.5432771320000003,0.1,12,reviewed,tx,tx
 2021-09-17T11:21:14.797Z,39.4539,-120.3082,11.6,1.1,ml,15,171.57,0.028,0.1371,nn,nn00822603,2021-09-18T02:38:05.329Z,"15 km NNE of Soda Springs, California",earthquake,,1.2,0.33,8,reviewed,nn,nn
 2021-09-17T11:20:04.900Z,39.726,-110.8001667,-3.46,1.15,md,6,184,0.04468,0.24,uu,uu60458017,2021-09-17T17:15:11.130Z,"4 km N of Kenilworth, Utah",earthquake,1.27,1.81,0.089,6,reviewed,uu,uu
 2021-09-17T11:11:00.487Z,62.2993,-150.1335,13.2,1.8,ml,,,,0.49,ak,ak021by6ccys,2021-09-17T11:38:14.814Z,"3 km SSW of Talkeetna, Alaska",earthquake,,0.2,,,automatic,ak,ak
@@ -9661,7 +9703,7 @@ time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,
 2021-09-10T23:00:59.638Z,61.075,-150.2474,22.2,1.1,ml,,,,0.71,ak,ak021bmsnwgb,2021-10-07T16:43:37.375Z,"24 km SW of Anchorage, Alaska",earthquake,,0.2,,,reviewed,ak,ak
 2021-09-10T22:59:38.790Z,33.1355,-117.1551667,-0.2,1.2,ml,29,103,0.03053,0.26,ci,ci39804919,2021-09-10T23:55:05.087Z,"1km SE of San Marcos, CA",quarry blast,0.59,31.61,0.177,11,reviewed,ci,ci
 2021-09-10T22:56:31.629Z,62.153,-150.3076,60.8,1.3,ml,,,,0.44,ak,ak021bmseern,2021-10-07T16:43:33.786Z,"18 km SSW of Trapper Creek, Alaska",earthquake,,0.4,,,reviewed,ak,ak
-2021-09-10T22:56:28.973Z,51.9159,177.1125,10,4,mb,,128,0.904,0.63,us,us7000fbux,2021-10-07T16:43:33.529Z,"286 km ESE of Attu Station, Alaska",earthquake,5.8,1.8,0.122,18,reviewed,us,us
+2021-09-10T22:56:28.973Z,51.9159,177.1125,10,4,mb,,128,0.904,0.63,us,us7000fbux,2021-10-07T16:49:34.699Z,"286 km ESE of Attu Station, Alaska",earthquake,5.8,1.8,0.122,18,reviewed,us,us
 2021-09-10T22:52:59.660Z,33.0653333,-115.0098333,-0.25,1.61,ml,9,84,0.09661,0.29,ci,ci39804911,2021-09-11T00:09:36.825Z,"45km NE of Holtville, CA",quarry blast,0.89,31.61,0.34,3,reviewed,ci,ci
 2021-09-10T22:49:37.320Z,46.4908333333333,-122.440166666667,18.33,0.54,ml,16,130,0.1097,0.09,uw,uw61778536,2021-09-17T00:34:06.400Z,"5 km SE of Mossyrock, Washington",earthquake,0.29,0.79,0.239972486642424,6,reviewed,uw,uw
 2021-09-10T22:49:32.070Z,36.3116667,-120.8908333,8.04,1.72,md,43,105,0.05184,0.05,nc,nc73623291,2021-09-16T22:56:28.810Z,"23km WSW of New Idria, CA",earthquake,0.21,0.4,0.313,34,reviewed,nc,nc
@@ -9812,7 +9854,7 @@ time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,
 2021-09-10T14:12:41.364Z,31.60975028,-104.2367021,6.362939453,2.5,ml,23,67,0.172971284,0.3,tx,tx2021rtmx,2021-09-10T14:54:40.485Z,"53 km NW of Toyah, Texas",earthquake,1.296691415,1.774841545,0.2,13,reviewed,tx,tx
 2021-09-10T14:11:43.777Z,61.8769,-151.1904,66.6,1.5,ml,,,,0.38,ak,ak021bmndbnd,2021-10-07T16:42:03.458Z,"16 km SE of Skwentna, Alaska",earthquake,,0.3,,,reviewed,ak,ak
 2021-09-10T14:06:05.488Z,51.8969,179.76,121.3,3.4,ml,,,,0.62,ak,ak021bmnc653,2021-10-07T16:42:03.166Z,"248 km W of Adak, Alaska",earthquake,,0.3,,,reviewed,ak,ak
-2021-09-10T14:00:03.496Z,51.4036,-175.3653,35,3.7,mb,,209,0.679,0.56,us,us7000fa25,2021-10-07T16:42:02.874Z,"102 km ESE of Adak, Alaska",earthquake,6.2,2,0.084,36,reviewed,us,us
+2021-09-10T14:00:03.496Z,51.4036,-175.3653,35,3.7,mb,,209,0.679,0.56,us,us7000fa25,2021-10-07T16:44:54.155Z,"102 km ESE of Adak, Alaska",earthquake,6.2,2,0.084,36,reviewed,us,us
 2021-09-10T13:57:53.864Z,50.6467,178.9808,27.7,2.3,ml,,,,0.66,ak,ak021bmn1rru,2021-10-07T16:42:12.923Z,"Rat Islands, Aleutian Islands, Alaska",earthquake,,2.5,,,reviewed,ak,ak
 2021-09-10T13:54:09.310Z,35.8535,-117.6943333,8.05,0.17,ml,9,117,0.07278,0.13,ci,ci39803967,2021-09-10T16:54:59.243Z,"21km ESE of Little Lake, CA",earthquake,0.3,0.98,0.193,5,reviewed,ci,ci
 2021-09-10T13:53:18.213Z,60.0395,-139.9603,9.5,1.5,ml,,,,0.32,ak,ak021bmn0u5p,2021-10-07T16:42:12.676Z,"56 km NNW of Yakutat, Alaska",earthquake,,0.3,,,reviewed,ak,ak
@@ -10144,7 +10186,7 @@ time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,
 2021-09-09T19:51:31.040Z,35.8718333,-117.7201667,8.24,1.18,ml,16,63,0.07284,0.1,ci,ci39802783,2021-09-10T00:05:07.960Z,"18km ESE of Little Lake, CA",earthquake,0.21,0.7,0.248,16,reviewed,ci,ci
 2021-09-09T19:38:33.560Z,35.068,-118.3176667,3.5,1.16,ml,17,84,0.07967,0.1,ci,ci39802743,2021-09-10T00:55:36.259Z,"13km W of Mojave, CA",earthquake,0.21,0.63,0.139,19,reviewed,ci,ci
 2021-09-09T19:25:42.980Z,18.1508,-67.206,11,2.86,md,12,167,0.1736,0.11,pr,pr2021252005,2021-09-09T19:56:09.864Z,"8 km W of Hormigueros, Puerto Rico",earthquake,0.52,0.55,0.11,5,reviewed,pr,pr
-2021-09-09T19:23:25.640Z,53.4905,-163.5261,21.99,5.1,mb,,140,1.166,0.85,us,us7000f9t5,2021-10-06T22:31:40.036Z,"151 km S of False Pass, Alaska",earthquake,4.4,4.8,0.04,197,reviewed,us,us
+2021-09-09T19:23:25.640Z,53.4905,-163.5261,21.99,5.1,mb,,140,1.166,0.85,us,us7000f9t5,2021-10-07T19:33:38.832Z,"151 km S of False Pass, Alaska",earthquake,4.4,4.8,0.04,197,reviewed,us,us
 2021-09-09T19:22:29.102Z,61.4891,-151.2511,1.1,1.2,ml,,,,0.8,ak,ak021bl2vgy1,2021-10-06T00:35:01.368Z,"39 km W of Susitna, Alaska",earthquake,,0.3,,,reviewed,ak,ak
 2021-09-09T19:19:40.450Z,62.8998,-150.8321,99.4,1.3,ml,,,,0.46,ak,ak021bl2uunm,2021-10-06T00:35:01.118Z,"45 km N of Petersville, Alaska",earthquake,,0.6,,,reviewed,ak,ak
 2021-09-09T19:19:28.860Z,44.145,-114.3191667,8.18,2.42,ml,16,53,0.312,0.16,mb,mb80522564,2021-09-09T19:48:14.800Z,"14 km SSE of Clayton, Idaho",earthquake,0.51,1.15,0.202,22,reviewed,mb,mb
@@ -11162,68 +11204,3 @@ time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,
 2021-09-07T20:12:50.690Z,33.716,-116.8221667,14.88,0.63,ml,16,177,0.0884,0.07,ci,ci40035880,2021-09-09T17:14:21.615Z,"8km ESE of Valle Vista, CA",earthquake,0.28,0.38,0.059,9,reviewed,ci,ci
 2021-09-07T20:10:54.128Z,59.9967,-140.0651,6.9,1.2,ml,,,,0.58,ak,ak021bhsbovu,2021-09-30T20:37:59.953Z,"53 km NNW of Yakutat, Alaska",earthquake,,0.3,,,reviewed,ak,ak
 2021-09-07T20:10:53.986Z,65.4589,-144.8515,1.1,1,ml,,,,0.7,ak,ak021bhsborb,2021-09-30T20:37:59.722Z,"12 km S of Central, Alaska",earthquake,,0.4,,,reviewed,ak,ak
-2021-09-07T20:10:09.432Z,59.9975,-140.0415,13.3,1,ml,,,,0.66,ak,ak021bhsblfz,2021-09-30T20:38:11.120Z,"53 km NNW of Yakutat, Alaska",earthquake,,0.6,,,reviewed,ak,ak
-2021-09-07T20:00:01.380Z,38.8223343,-122.8003311,2.67,1.06,md,28,31,0.007684,0.02,nc,nc73621846,2021-09-07T20:02:57.625Z,"6km NW of The Geysers, CA",earthquake,0.22,0.41,0.15,6,automatic,nc,nc
-2021-09-07T19:58:53.320Z,46.851,-121.759833333333,-2.29,1.28,ml,16,86,0.02273,0.15,uw,uw61776816,2021-09-07T20:12:19.410Z,"23 km ENE of Ashford, Washington",earthquake,0.28,0.55,0.18234745901048,7,reviewed,uw,uw
-2021-09-07T19:56:33.190Z,19.2066669464111,-155.403167724609,30.6499996185303,1.8,ml,26,162,,0.209999993,hv,hv72695812,2021-09-07T20:02:04.380Z,"7 km E of Pāhala, Hawaii",earthquake,0.94,1.40999997,0.29,3,automatic,hv,hv
-2021-09-07T19:56:16.200Z,19.4895000457764,-155.657501220703,-0.46000000834465,1.89,ml,13,107,,0.159999996,hv,hv72695817,2021-09-07T20:02:10.380Z,"22 km E of Honaunau-Napoopoo, Hawaii",earthquake,0.38,0.920000017,0.72,5,automatic,hv,hv
-2021-09-07T19:55:27.207Z,63.1295,-150.7049,121.8,1.3,ml,,,,0.43,ak,ak021bhrzugv,2021-09-30T20:37:59.247Z,"68 km SE of Denali National Park, Alaska",earthquake,,0.7,,,reviewed,ak,ak
-2021-09-07T19:54:34.533Z,60.1929,-141.3694,0,1.2,ml,,,,0.96,ak,ak021bhrznco,2021-09-30T20:37:59.503Z,"116 km NW of Yakutat, Alaska",ice quake,,0,,,reviewed,ak,ak
-2021-09-07T19:54:06.447Z,55.4635,-158.2755,9.2,1.9,ml,,,,0.57,ak,ak021bhrzl44,2021-09-30T20:38:10.895Z,"73 km SE of Perryville, Alaska",earthquake,,1.4,,,reviewed,ak,ak
-2021-09-07T19:45:00.360Z,39.4396667,-110.3313333,-3.04,1.67,md,8,143,0.01628,0.09,uu,uu60456757,2021-09-07T22:29:34.680Z,"13 km SSE of Sunnyside, Utah",earthquake,0.46,0.76,0.19,7,reviewed,uu,uu
-2021-09-07T19:41:34.340Z,38.1178333,-122.1756667,-0.09,1.65,md,18,73,0.02145,0.15,nc,nc73621841,2021-09-08T18:33:53.638Z,"5km E of Vallejo, CA",quarry blast,0.28,31.61,0.264,22,reviewed,nc,nc
-2021-09-07T19:41:18.720Z,38.1852,-117.7727,10.6,2.4,ml,23,68.82,0.047,0.1399,nn,nn00821531,2021-09-08T02:40:56.189Z,"37 km SE of Mina, Nevada",earthquake,,0.7,0.36,10,reviewed,nn,nn
-2021-09-07T19:36:26.732Z,59.9713,-140.0592,6.6,1.3,ml,,,,0.68,ak,ak021bhrvrta,2021-09-30T20:37:59.030Z,"50 km NNW of Yakutat, Alaska",earthquake,,0.3,,,reviewed,ak,ak
-2021-09-07T19:31:02.189Z,36.23466667,-95.81816667,0,1.22,ml,46,128,0.324836256,0.51,ok,ok2021rokx,2021-09-07T19:53:32.685Z,"5 km SE of Owasso, Oklahoma",quarry blast,,0.6,0.24,19,reviewed,ok,ok
-2021-09-07T19:27:54.682Z,63.5611,-150.8107,12.3,0.5,ml,,,,0.48,ak,ak021bhrtwhc,2021-09-30T20:37:58.816Z,"45 km E of Denali National Park, Alaska",earthquake,,0.4,,,reviewed,ak,ak
-2021-09-07T19:25:57.230Z,38.4158333,-119.5611667,6.61,1.65,md,17,87,0.09246,0.09,nc,nc73621831,2021-09-11T04:44:37.083Z,"25km ENE of Dardanelle, CA",earthquake,0.24,0.69,0.216,19,reviewed,nc,nc
-2021-09-07T19:17:27.174Z,59.9167,-140.2044,2,1.2,ml,,,,0.65,ak,ak021bhrrp7x,2021-09-30T20:38:10.679Z,"49 km NNW of Yakutat, Alaska",earthquake,,15.5,,,reviewed,ak,ak
-2021-09-07T19:16:18.826Z,52.285,-174.3556,155.4,2.1,ml,,,,0.32,ak,ak021bhrri9x,2021-09-30T20:37:58.597Z,"14 km NW of Atka, Alaska",earthquake,,1.1,,,reviewed,ak,ak
-2021-09-07T19:13:09.952Z,59.9668,-140.1774,11.8,2.9,ml,,,,0.73,ak,ak021bhrqt0o,2021-09-30T20:37:58.316Z,"53 km NNW of Yakutat, Alaska",earthquake,,0.1,,,reviewed,ak,ak
-2021-09-07T19:11:17.310Z,61.0545,-148.4417,0,1.2,ml,,,,0.51,ak,ak021bhrqd8z,2021-09-30T20:37:58.096Z,"33 km NNE of Whittier, Alaska",ice quake,,0,,,reviewed,ak,ak
-2021-09-07T19:10:59.056Z,59.984,-140.1495,9.5,1.6,ml,,,,0.77,ak,ak021bhrq9o0,2021-09-30T20:37:57.846Z,"54 km NNW of Yakutat, Alaska",earthquake,,0.2,,,reviewed,ak,ak
-2021-09-07T19:07:35.190Z,19.2123336791992,-155.427337646484,32.7900009155273,2.16,ml,46,136,,0.119999997,hv,hv72695772,2021-09-07T19:13:06.600Z,"5 km E of Pāhala, Hawaii",earthquake,0.47,0.579999983,2.53,13,automatic,hv,hv
-2021-09-07T19:04:54.968Z,31.67055069,-104.3727959,6.568603515999999,1.9,ml,17,69,0.1091185825,0.3,tx,tx2021rokb,2021-09-08T18:22:05.279Z,"56 km S of Whites City, New Mexico",earthquake,1.299084036,1.775305208,0.1,8,reviewed,tx,tx
-2021-09-07T19:04:40.340Z,34.9901667,-118.1815,-0.84,1.29,ml,21,52,0.1176,0.18,ci,ci40035800,2021-09-07T21:28:02.098Z,"7km S of Mojave, CA",quarry blast,0.4,31.61,0.199,6,reviewed,ci,ci
-2021-09-07T19:02:20.050Z,46.012,-112.4696667,-2,1.72,ml,13,105,0.061,0.12,mb,mb80522229,2021-09-07T19:59:14.000Z,"5 km E of Butte, Montana",quarry blast,0.49,31.61,0.2,13,reviewed,mb,mb
-2021-09-07T19:02:04.770Z,33.9023333,-116.7851667,16.53,0.84,ml,36,66,0.06931,0.11,ci,ci40035792,2021-09-09T17:07:19.953Z,"2km S of Cabazon, CA",earthquake,0.17,0.44,0.111,21,reviewed,ci,ci
-2021-09-07T19:01:17.040Z,46.8811667,-112.5101667,15.96,1.1,ml,15,63,0.043,0.12,mb,mb80522224,2021-09-07T20:06:48.780Z,"15 km ESE of Lincoln, Montana",earthquake,0.37,0.38,0.204,5,reviewed,mb,mb
-2021-09-07T19:01:13.601Z,60.0414,-139.9664,9.5,0.9,ml,,,,0.38,ak,ak021bhro8qc,2021-10-06T17:31:50.342Z,"56 km NNW of Yakutat, Alaska",earthquake,,0.8,,,reviewed,ak,ak
-2021-09-07T18:59:58.790Z,46.853,-121.750333333333,1.25,1.17,ml,17,100,0.02106,0.09,uw,uw61776791,2021-09-08T15:10:01.290Z,"23 km ENE of Ashford, Washington",earthquake,0.25,0.45,0.349210807976763,7,reviewed,uw,uw
-2021-09-07T18:58:30.112Z,54.4602,-161.5007,14.7,1.5,ml,,,,0.45,ak,ak021bhrf277,2021-09-30T20:38:10.252Z,"85 km SE of King Cove, Alaska",earthquake,,3.2,,,reviewed,ak,ak
-2021-09-07T18:56:36.840Z,38.5691667,-119.4585,2.94,1.27,md,11,78,0.05093,0.08,nc,nc73621826,2021-09-11T04:40:07.055Z,"26km SSW of Smith Valley, NV",earthquake,0.35,0.76,0.123,10,reviewed,nc,nc
-2021-09-07T18:54:52.420Z,35.9141667,-117.7221667,7.56,0.44,ml,10,69,0.06729,0.05,ci,ci40035784,2021-09-07T21:25:56.389Z,"17km E of Little Lake, CA",earthquake,0.19,0.43,0.213,6,reviewed,ci,ci
-2021-09-07T18:54:15.929Z,36.36733333,-98.16683333,6.87,1.72,ml,59,68,0.03779258381,0.23,ok,ok2021rojr,2021-09-08T13:16:12.797Z,"2 km SSE of Meno, Oklahoma",earthquake,,0.4,0.2,27,reviewed,ok,ok
-2021-09-07T18:53:57.364Z,38.161,-117.8981,12.4,0.4,ml,10,107.97,0.021,0.0747,nn,nn00821519,2021-09-07T18:58:08.496Z,"31 km SE of Mina, Nevada",earthquake,,0.8,0.35,7,automatic,nn,nn
-2021-09-07T18:53:25.716Z,31.66688091,-104.3716873,6.157275391,1.9,ml,15,87,0.1100617123,0.3,tx,tx2021rojr,2021-09-08T18:26:08.550Z,"56 km S of Whites City, New Mexico",earthquake,1.408552842,1.777129975,0.2,8,reviewed,tx,tx
-2021-09-07T18:53:22.781Z,61.0531,-148.3802,0,1.3,ml,,,,0.44,ak,ak021bhrdz3h,2021-09-30T20:37:57.623Z,"35 km NNE of Whittier, Alaska",ice quake,,0,,,reviewed,ak,ak
-2021-09-07T18:53:14.440Z,46.8543333333333,-121.751166666667,1.26,0.4,ml,10,137,0.02097,0.08,uw,uw61776781,2021-09-07T23:38:28.340Z,"23 km ENE of Ashford, Washington",earthquake,0.24,0.5,0.117312131567405,3,reviewed,uw,uw
-2021-09-07T18:52:56.360Z,34.2875,-117.0065,6.54,0.77,ml,14,77,0.07533,0.12,ci,ci37480429,2021-09-07T21:59:53.559Z,"10km WNW of Big Bear Lake, CA",earthquake,0.25,0.52,0.121,8,reviewed,ci,ci
-2021-09-07T18:52:41.020Z,33.9901667,-116.9978333,6.37,0.69,ml,13,143,0.07571,0.16,ci,ci40035760,2021-09-07T21:54:12.256Z,"5km E of Calimesa, CA",earthquake,0.35,0.94,0.047,7,reviewed,ci,ci
-2021-09-07T18:48:38.380Z,39.4336667,-110.3213333,-1.14,1.01,ml,4,182,0.00999,0.02,uu,uu60456752,2021-09-07T22:05:56.310Z,"14 km SSE of Sunnyside, Utah",earthquake,1.55,0.29,0.038,2,reviewed,uu,uu
-2021-09-07T18:47:02.729Z,62.279,-151.2895,77.3,1.3,ml,,,,0.44,ak,ak021bhrcn6r,2021-09-30T20:37:57.368Z,"32 km N of Skwentna, Alaska",earthquake,,0.4,,,reviewed,ak,ak
-2021-09-07T18:42:11.831Z,40.6789,-114.8311,0,0.8,ml,3,208.38,0.316,0.2039,nn,nn00821551,2021-09-08T02:41:22.814Z,"48 km SW of Oasis, Nevada",earthquake,,0,0,1,reviewed,nn,nn
-2021-09-07T18:41:49.266Z,64.778,-150.9221,7.3,0.8,ml,,,,0.94,ak,ak021bhrbgi6,2021-09-30T20:38:10.040Z,"Central Alaska",earthquake,,1.5,,,reviewed,ak,ak
-2021-09-07T18:41:23.076Z,39.1866,141.8615,74.52,4.5,mb,,139,1.714,0.39,us,us7000f904,2021-09-30T19:22:24.040Z,"10 km S of Kamaishi, Japan",earthquake,7.2,8.6,0.131,19,reviewed,us,us
-2021-09-07T18:39:58.242Z,31.66710562,-104.3724967,6.131567383,3.1,ml,19,60,0.109368324,0.2,tx,tx2021rojf,2021-09-29T19:31:52.040Z,"56 km S of Whites City, New Mexico",earthquake,0.9932154277000002,1.524584713,0.1,11,reviewed,tx,tx
-2021-09-07T18:35:25.163Z,68.0314,-162.0305,6.6,2.9,ml,,,,0.87,ak,ak021bhra4e3,2021-09-30T20:37:57.109Z,"35 km E of Red Dog Mine, Alaska",earthquake,,1.3,,,reviewed,ak,ak
-2021-09-07T18:34:35.915Z,60.0237,-139.9329,1.5,1.1,ml,,,,0.64,ak,ak021bhr9xgn,2021-09-30T20:38:09.824Z,"54 km NNW of Yakutat, Alaska",earthquake,,1.6,,,reviewed,ak,ak
-2021-09-07T18:31:43.270Z,45.18,-112.4126667,-2,0.97,ml,8,88,0.224,0.17,mb,mb80522354,2021-09-08T15:16:26.490Z,"18 km ESE of Dillon, Montana",quarry blast,0.57,31.61,0.308,8,reviewed,mb,mb
-2021-09-07T18:29:22.778Z,8.3118,126.6729,74.46,4.6,mb,,99,1.642,1.19,us,us7000f8zw,2021-09-29T19:25:20.040Z,"31 km ENE of Barcelona, Philippines",earthquake,6.8,7.1,0.065,75,reviewed,us,us
-2021-09-07T18:29:14.412Z,31.66985625,-104.3735973,6.131567383,2.1,ml,20,59,0.1084255633,0.3,tx,tx2021roiw,2021-09-08T18:04:30.337Z,"56 km S of Whites City, New Mexico",earthquake,0.9731010738,1.413042187,0.2,12,reviewed,tx,tx
-2021-09-07T18:28:24.640Z,33.5698333,-116.7081667,3.68,0.08,ml,9,88,0.02472,0.11,ci,ci40035712,2021-09-07T21:46:24.205Z,"4km WNW of Anza, CA",earthquake,0.24,0.42,0.093,3,reviewed,ci,ci
-2021-09-07T18:22:53.480Z,37.1435,-121.5371667,1.77,0.88,md,18,52,0.07236,0.13,nc,nc73621821,2021-09-09T06:05:25.113Z,"9km NE of San Martin, CA",earthquake,0.26,0.97,0.124,13,reviewed,nc,nc
-2021-09-07T18:22:03.580Z,51.4052,-176.1719,22.5,1.1,ml,,,,0.18,ak,ak021bhr7adi,2021-09-30T20:38:09.601Z,"61 km SSE of Adak, Alaska",earthquake,,1.8,,,reviewed,ak,ak
-2021-09-07T18:22:00.464Z,64.7066,-146.7768,12.8,0.2,ml,,,,0.22,ak,ak021bhr7a50,2021-10-06T17:31:45.798Z,"14 km ENE of Eielson Air Force Base, Alaska",earthquake,,0.3,,,reviewed,ak,ak
-2021-09-07T18:12:31.615Z,56.7604,-157.9561,83.1,1.7,ml,,,,0.76,ak,ak021bhr57dl,2021-09-30T20:38:09.378Z,"45 km ESE of Port Heiden, Alaska",earthquake,,0.9,,,reviewed,ak,ak
-2021-09-07T18:12:07.893Z,51.4387,-176.063,25.5,1.9,ml,,,,0.4,ak,ak021bhr55nn,2021-09-30T20:37:56.652Z,"62 km SE of Adak, Alaska",earthquake,,2.4,,,reviewed,ak,ak
-2021-09-07T18:09:42.160Z,44.9763333,-112.9861667,6.97,0.65,ml,7,150,0.178,0.12,mb,mb80522349,2021-09-08T15:07:44.940Z,"38 km SW of Dillon, Montana",earthquake,0.75,3.19,0.165,4,reviewed,mb,mb
-2021-09-07T18:09:18.190Z,44.1746666666667,-122.270666666667,-1.49,1.4,ml,8,74,0.1313,0.14,uw,uw61776766,2021-09-07T23:32:46.840Z,"29 km SE of Cascadia, Oregon",explosion,0.36,31.61,0.106091533215878,5,reviewed,uw,uw
-2021-09-07T18:08:43.980Z,56.0785,-149.2115,19.72,3.2,ml,,228,2.517,1.08,us,us7000f8zr,2021-10-06T17:31:45.480Z,"253 km SE of Chiniak, Alaska",earthquake,9.6,10.3,0.047,60,reviewed,us,us
-2021-09-07T18:08:43.710Z,38.8214989,-122.7910004,1.44,0.84,md,10,75,0.01152,0.03,nc,nc73621816,2021-09-07T18:58:10.735Z,"6km NNW of The Geysers, CA",earthquake,0.36,1.01,,1,automatic,nc,nc
-2021-09-07T18:06:55.086Z,60.0393,-139.9964,6.4,1.3,ml,,,,0.7,ak,ak021bhr3yvt,2021-09-30T20:37:56.142Z,"56 km NNW of Yakutat, Alaska",earthquake,,0.3,,,reviewed,ak,ak
-2021-09-07T18:06:18.328Z,63.0108,-150.5709,93.7,1,ml,,,,0.49,ak,ak021bhr3w2z,2021-09-30T20:37:55.906Z,"58 km N of Petersville, Alaska",earthquake,,0.6,,,reviewed,ak,ak
-2021-09-07T18:04:47.220Z,46.292,-111.638,-2,1.7,ml,11,159,0.33,0.16,mb,mb80522219,2021-09-07T20:10:57.540Z,"9 km WSW of Townsend, Montana",quarry blast,0.6,31.61,0.15,4,reviewed,mb,mb
-2021-09-07T18:04:37.610Z,36.4663333,-117.951,10.82,0.56,ml,12,129,0.1074,0.14,ci,ci40035688,2021-09-07T21:23:51.358Z,"17km SE of Lone Pine, CA",earthquake,0.29,0.8,0.162,7,reviewed,ci,ci
-2021-09-07T18:04:37.094Z,60.3185,-151.5178,65.7,0.8,ml,,,,0.31,ak,ak021bhr3i0b,2021-09-30T20:37:55.677Z,"11 km NW of Clam Gulch, Alaska",earthquake,,1.1,,,reviewed,ak,ak
-2021-09-07T18:04:27.440Z,33.7171667,-116.8253333,16.17,0.47,ml,11,104,0.08742,0.06,ci,ci37480421,2021-09-07T21:19:33.148Z,"7km ESE of Valle Vista, CA",earthquake,0.3,0.41,0.128,4,reviewed,ci,ci

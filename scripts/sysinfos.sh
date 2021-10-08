@@ -101,28 +101,35 @@ hw_detail()
 {
     echo "<h2>Hardware Details  (inxi -Fxz) </h2>"
     echo "<pre>"
+    inxi -Fxxxmipr -tc5 -tm5 -usb  -c0  # inxi -Fxpmrz
+    echo "</pre>"
+}
+network_detail()
+{
+    echo "<h2>Hosts scan on 192.168.0.0/24</h2>"
+    echo "<pre>"
     nmap -sn 192.168.0.0/24
     echo
-    echo
-    inxi -Fxxxmipr -tc5 -tm5 -usb  -c0  # inxi -Fxpmrz
     echo "</pre>"
 }
 
 write_page()
 {
     cat <<- _EOF_
+    <!DOCTYPE html>
     <html>
         <head>
         <title>$TITLE</title>
         </head>
         <body>
         <h1>$TITLE</h1>
-        <p>$TIME_STAMP</p>
+        <p><small>$TIME_STAMP</small></p>
         $(system_info)
         $(show_uptime)
         $(drive_space)
         $(home_space)
         $(hw_detail)
+        $(network_detail)
         </body>
     </html>
 _EOF_
@@ -134,7 +141,7 @@ _EOF_
 
 echo "Writing page"
 
-filename=./public/infos/index.html
+filename=./public/Tools/infos/index.html
 
 write_page > $filename
 

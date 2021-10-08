@@ -29,7 +29,7 @@ let motioncount = 0
 
 
 async function getZonAnn() {
-  const response = await fetch('ZonAnn.Ts+dSST.csv')
+  const response = await fetch('data/ZonAnn.Ts+dSST.csv')
   const data = await response.text()
 
   const table = data.split('\n').slice(1)   //  slice delete line 1
