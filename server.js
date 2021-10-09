@@ -15,9 +15,8 @@ const IN_PROD = process.env.NODE_ENV === 'production'  // for https channel...  
 
 //Middlewares 
 
-/*app.use(express.urlencoded({extended: true}));
-app.use(express.json()) // To parse the incoming requests with JSON payloads
-app.use(express.json({limit:'50mb'}));*/
+app.use(express.urlencoded({extended: true, limit: '10mb'}));  //  Must be before  'app.use(express.json)'    , 10Mb to allow image to be sent
+app.use(express.json({limit:'10mb'})); // To parse the incoming requests with JSON payloads
 
 app.use(session({
   name: process.env.SESS_NAME,

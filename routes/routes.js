@@ -6,9 +6,7 @@ const mailman = require('../public/js/mailman')
 var counter = require('../visitorCount')
 
 
-router.use(express.urlencoded({extended: true}));
-router.use(express.json()) // To parse the incoming requests with JSON payloads
-router.use(express.json({limit:'10mb'}));
+
 
 router.get("/", async (req, res) => {
     let client = req.headers['user-agent'] 
@@ -106,23 +104,20 @@ router.get('/weather/:latlon', async (req, res) => {
 router.post('/alert', async (req, res) => {
 
     console.log('post to Alert:')
-    console.log(req.body)
-    const b = (req.body)
-    console.log(b)
+    //console.log(req.body)
+   // let dat = JSON.stringify(req.body)
+   // console.log(dat)
 
     const alert = req.body
     const dest = alert.dest
     const msg = alert.msg
     const image64 = alert.image64
-    console.log(alert)
-
     console.log(dest, msg);
-
-    const answer = await mailman.sendEmail(dest, msg, image64)
-    console.log(answer)
+    
+    mailman.sendEmail(dest, msg, image64)
+   
 
 })
 
 
 module.exports = router;
-

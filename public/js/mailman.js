@@ -7,10 +7,8 @@ const sendEmail = async (mail, msg, image64) => {
     this.admin = process.env.ADM_MAIL;
     this.admpass = process.env.ADM_PASS;
 
-    console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-    console.log ("Sending email from: " + this.admin) //, this.admpass)
-    var transporter = nodemailer.createTransport(smtpTransport({      
-   // var transporter = nodemailer.createTransport({      
+    console.log ("Sending email from: " + this.admin + " to " + mail) //, this.admpass)
+    var transporter = nodemailer.createTransport(smtpTransport({        
         service: 'gmail',
         auth: {
                 user: this.admin,
@@ -41,11 +39,10 @@ const sendEmail = async (mail, msg, image64) => {
         if (error) {
             console.log(error);
         } else {
-            console.log('Email sent: ' + info.response);
-           // return info.response
+            console.log('Email sent: ' + info.response); 
         }
     })
-     
+   
 }
 
 
