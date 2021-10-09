@@ -56,11 +56,18 @@ app.listen(process.env.PORT, () =>{
 
 
 
+ const osu = require('node-os-utils')
 
+ let cpu = osu.cpu
+ 
+ cpu.usage()
+   .then(info => {
+     console.log(info)
+   })
 
-console.log('Launching automation scripts')
+/*console.log('Launching automation scripts')
 require('./serverScripts.js')  // generate infos/index.html
-
+*/
 
 let liveDatas = require('./liveData.js')
 console.log("Setting live data  :  v" + liveDatas.data.version)

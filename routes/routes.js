@@ -8,7 +8,7 @@ var counter = require('../visitorCount')
 
 router.use(express.urlencoded({extended: true}));
 router.use(express.json()) // To parse the incoming requests with JSON payloads
-router.use(express.json({limit:'50mb'}));
+router.use(express.json({limit:'10mb'}));
 
 router.get("/", async (req, res) => {
     let client = req.headers['user-agent'] 

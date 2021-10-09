@@ -20,7 +20,7 @@ async function getISS()
     return datas.iss
 }
 getISS()
-setInterval(getISS, 5000)
+setInterval(getISS, 10000)
 
 
 
@@ -51,7 +51,7 @@ async function getQuakes()
     }
 
 }
-getQuakes()
+//getQuakes()
 setInterval(getQuakes, 24*60*60*1000)  // daily
 
 
