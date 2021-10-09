@@ -1,13 +1,14 @@
 require('dotenv').config();
-const router = require('express').Router()
-const bodyParser = require('body-parser')
+const express = require('express')
+const router = express.Router()
 const fetch = require('node-fetch')
+const mailman = require('../public/js/mailman')
 var counter = require('../visitorCount')
 
 
-
-//router.use(bodyParser.urlencoded({ extended: true }));
-
+router.use(express.urlencoded({extended: true}));
+router.use(express.json()) // To parse the incoming requests with JSON payloads
+router.use(express.json({limit:'10mb'}));
 
 router.get("/", async (req, res) => {
     let client = req.headers['user-agent'] 
@@ -54,7 +55,7 @@ router.get('/empty', (req, res) => {
     res.render('empty')
 })
 
-router.get('/cv', (req, res) => {
+router.get('/cv_yanikbeaulieu', (req, res) => {
     res.render('cv')
 })
 
@@ -102,6 +103,25 @@ router.get('/weather/:latlon', async (req, res) => {
 })
 
 
+router.post('/alert', async (req, res) => {
+
+    console.log('post to Alert:')
+    console.log(req.body)
+    const b = (req.body)
+    console.log(b)
+
+    const alert = req.body
+    const dest = alert.dest
+    const msg = alert.msg
+    const image64 = alert.image64
+    console.log(alert)
+
+    console.log(dest, msg);
+
+    const answer = await mailman.sendEmail(dest, msg, image64)
+    console.log(answer)
+
+})
 
 
 module.exports = router;

@@ -29,7 +29,7 @@ let motioncount = 0
 
 
 async function getZonAnn() {
-  const response = await fetch('ZonAnn.Ts+dSST.csv')
+  const response = await fetch('data/ZonAnn.Ts+dSST.csv')
   const data = await response.text()
 
   const table = data.split('\n').slice(1)   //  slice delete line 1
@@ -230,10 +230,13 @@ async function sendAlert()
     const options = {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+       // 'Content-Type':  'application/json; charset=UTF-8'  // 'application/json' //'text/html'  
+        'Accept': 'application/json'
       },
       body: JSON.stringify(data)
     };
+    
+    console.log('Sending alert email')
     const response = await fetch('/alert', options);
     const json = await response.json();
     console.log(json);
