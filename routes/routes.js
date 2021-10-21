@@ -3,7 +3,7 @@ const fetch = require('node-fetch')
 const mailman = require('../public/js/mailman')
 var counter = require('../visitorCount')
 
-const Sysmon = require('../systemMonitor.js')
+const Sysmon = require('../scripts/systemMonitor.js')
 const sysmon = new Sysmon()
 const sysInfo = sysmon.getSysInfo()
 console.log(sysInfo)
