@@ -1,11 +1,12 @@
-require('dotenv').config();
-const express = require('express')
-const router = express.Router()
+const router = require('express').Router()
 const fetch = require('node-fetch')
 const mailman = require('../public/js/mailman')
 var counter = require('../visitorCount')
 
-
+const Sysmon = require('../systemMonitor.js')
+const sysmon = new Sysmon()
+const sysInfo = sysmon.getSysInfo()
+console.log(sysInfo)
 
 
 router.get("/", async (req, res) => {
@@ -21,12 +22,14 @@ router.get("/", async (req, res) => {
     var ip = req.socket.remoteAddress
     console.log(ip)
     let count = await counter.increaseCount()
-    res.render('index', { page: 'Home', menuId: 'home', hitCount: count })
+    res.render('index', { menuId: 'home', hitCount: count, sysInfo: sysInfo })
 })
 
 router.get('/index', async (req, res) => {
     let count = await counter.getCount()
-    res.render('index',  { page: 'Home', menuId: 'home', hitCount: count })
+
+
+    res.render('index',  { menuId: 'home', hitCount: count , sysInfo: sysInfo})
 })
 
 router.get("/iGrow", (req, res) => {

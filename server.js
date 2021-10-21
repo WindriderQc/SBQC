@@ -3,66 +3,62 @@ const express = require('express'),
 session = require('express-session'),
 serveIndex = require('serve-index'),
 path = require('path'),
-nodeTools = require('./nodeTools')
+rateLimit = require('express-rate-limit'),
+nodeTools = require('./nodeTools'),
+Logger = require('./logger'),
+moment = require('moment')
 //const cors = require('cors')
+
+
+const IN_PROD = process.env.NODE_ENV === 'production'  // for https channel...  IN_PROD will be true if in production environment
+
+const PORT = process.env.PORT  || 5000
+
+const sessionOptions = {
+                          name: process.env.SESS_NAME,
+                          resave: false,
+                          saveUninitialized: false,
+                          secret: process.env.SESS_SECRET,
+                          cookie: {
+                              secure: IN_PROD,
+                              maxAge: Number(process.env.SESS_LIFETIME),
+                              sameSite: true
+                          }
+                        }
+
 
 const app = express()
 app.set('view engine', 'ejs')
 
-const IN_PROD = process.env.NODE_ENV === 'production'  // for https channel...  IN_PROD will be true if in production environment
-//let corsOptions = {    origin: '*',    optionsSuccessStatus: 200  }  
+
+const logger = new Logger()
+//logger.on('message', (data) => console.log('Called Listener: ', data))    //  exemple de trigger sur un event
+logger.log('Server launching....' + moment().format('LLLL'))
 
 
-//Middlewares 
+//Middlewares  & routes
+app
+  .use(express.urlencoded({extended: true, limit: '10mb'}))  //  Must be before  'app.use(express.json)'    , 10Mb to allow image to be sent
+  .use(express.json({limit:'10mb'})) // To parse the incoming requests with JSON payloads
+  //.use(rateLimit({ windowMs: 2 * 1000, max: 1 }))
+  .use(session(sessionOptions))
+  .use(express.static(path.resolve(__dirname, 'public') , { maxAge: 1000*60*60 })) // maxAge allow client to cache data for 1h
+  .use('/',         require('./routes/routes'))
+  .use('/checkins', require('./routes/checkins.routes'))
+  .use('/data',     require('./routes/data.routes'))
+  .use('/Tools',    serveIndex(path.resolve(__dirname, 'public/Tools'), {  'icons': true,  'stylesheet': 'public/css/indexStyles.css' } )) // use serve index to nav folder  (Attention si utiliser sur le public folder, la racine (/) du site sera index au lieu de html
+  .use('/Projects', serveIndex(path.resolve(__dirname, 'public/Projects'), {  'icons': true,  'stylesheet': 'public/css/indexStyles.css' }))
+  //.use(cors({    origin: '*',    optionsSuccessStatus: 200  }  ))
 
-app.use(express.urlencoded({extended: true, limit: '10mb'}));  //  Must be before  'app.use(express.json)'    , 10Mb to allow image to be sent
-app.use(express.json({limit:'10mb'})); // To parse the incoming requests with JSON payloads
-
-app.use(session({
-  name: process.env.SESS_NAME,
-  resave: false,
-  saveUninitialized: false,
-  secret: process.env.SESS_SECRET,
-  cookie: {
-      secure: IN_PROD,
-      maxAge: Number(process.env.SESS_LIFETIME),
-      sameSite: true
-  }
-}))
-//app.use(cors(corsOptions))
-
-// Import routes & Route middleware
-app.use(express.static(path.resolve(__dirname, 'public') , { maxAge: 1000*60*60 })) // maxAge allow client to cache data for 1h
-app.use('/',         require('./routes/routes'))
-app.use('/checkins', require('./routes/checkins.routes'))
-app.use('/data',     require('./routes/data.routes'))
-
-// Index served
-const indexOptions = {  'icons': true,  'stylesheet': 'public/css/indexStyles.css' }
-app.use('/Tools', serveIndex(path.resolve(__dirname, 'public/Tools'), indexOptions )) // use serve index to nav folder  (Attention si utiliser sur le public folder, la racine (/) du site sera index au lieu de html
-app.use('/Projects', serveIndex(path.resolve(__dirname, 'public/Projects'), indexOptions))
-
-
-
-
-// Launching Application
-app.listen(process.env.PORT, () =>{
-    console.log('\n\nServer is not running at port %s', process.env.PORT)
+// Launching server
+  .listen(PORT, () =>{  
+    console.log('\n\nServer is not running at port %s', PORT)
     console.log('Press Ctrl + C to exit\n')
     nodeTools.readFile("greetings.txt")
- })
+  })
 
 
 
-
- const osu = require('node-os-utils')
-
- let cpu = osu.cpu
- 
- cpu.usage()
-   .then(info => {
-     console.log(info)
-   })
 
 /*console.log('Launching automation scripts')
 require('./serverScripts.js')  // generate infos/index.html

@@ -237,7 +237,7 @@ async function sendAlert()
     };
   
     console.log('Sending alert email')
-    console.log(dest, msg)
+    console.log(dest, msg )
     const response = await fetch('/alert', options); 
     const json = await response.json();
     console.log(json); 

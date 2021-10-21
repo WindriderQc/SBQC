@@ -8,7 +8,11 @@ const sendEmail = async (mail, msg, image64) => {
     this.admpass = process.env.ADM_PASS;
 
     console.log ("Sending email from: " + this.admin + " to " + mail) //, this.admpass)
-    var transporter = nodemailer.createTransport(smtpTransport({        
+    var transporter = nodemailer.createTransport(smtpTransport({    
+        //host: 'mail.specialblend.xyz ,   
+        //port: 587,
+        //secure: false ,// true for 465, false for other ports
+        // tls:{rejectUnauthorized:false},   //  this allows to send from localhost
         service: 'gmail',
         auth: {
                 user: this.admin,
@@ -30,8 +34,6 @@ const sendEmail = async (mail, msg, image64) => {
             {   // data uri as an attachment
                 path: image64
             }]
-               
-
     }
      
     
@@ -48,4 +50,4 @@ const sendEmail = async (mail, msg, image64) => {
 
 module.exports = {
     sendEmail
-  }
+}

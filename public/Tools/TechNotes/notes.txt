@@ -328,5 +328,16 @@ dtparam=act_led_activelow=off
 
 
 
+JAVASCRIPT:
+
+  const str = JSON.stringify(people, null, '\t') //  the null, '\t' is to prettyfy the string
+
+
+
+
+
+HTML:
+
+ `blabla: ${data}`       funky char instead of ' '  to use variable into text
 
 

@@ -16,7 +16,7 @@ router.get('/api', (request, response) => {
     });
 });
 
-router.post('/api', (req, res) => {  //  TODO : je crois que bodyparser n'est plus requis... bug corrigé
+router.post('/api', (req, res) => { 
 
     console.log('\npost to /checkins/api')
     const data = req.body

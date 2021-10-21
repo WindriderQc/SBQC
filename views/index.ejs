@@ -37,7 +37,7 @@
         <br> HitCount: <%- hitCount %> 
       </div> 
 
-      <h3><%= page %></h3><br>
+      <h3><%= sysInfo.hostname %></h3><br>
 
       <div class="row">   
 
@@ -50,8 +50,8 @@
         </div>
         
         <div class="col-sm-9"> 
-          <p>Notes</p>
-
+          <h3>Notes</h3>
+          <p><%= JSON.stringify(sysInfo) %></p>
 
         </div>
         
