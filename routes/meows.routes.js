@@ -13,7 +13,7 @@ router.get('/', (req, res) => {
 })
   
 router.get('/mews', async (req, res, next) => {
-    const mewsdb =  req.app.locals.meows
+    const mewsdb =  req.app.locals.mews
 
     mewsdb
         .find()
@@ -32,7 +32,8 @@ router.get('/v2/mews', async (req, res, next) => {
     skip = skip < 0 ? 0 : skip;
     limit = Math.min(50, Math.max(1, limit))
 
-    const mewsdb =  req.app.locals.collections['mews']
+   // const mewsdb =  req.app.locals.collections['mews']
+    const mewsdb =  req.app.locals.mews
 
     Promise.all([
         mewsdb.countDocuments(),
