@@ -843,3 +843,25 @@ sudo addgroup yb tty
 
 
 Changing the computer name is easy: just edit /etc/hostname , reboot and then edit /etc/hosts . Then reboot again.
+
+
+
+
+
+
+
+
+
+        Distance of Orbit from 
+        the Sun (kilometers)                    Diameter (kilometers)     
+
+ Sun                                                     1 392 700  
+ Mercury        57 900 000                    4 840    
+ Venus         108 000 000                   12 200     
+ Earth           150 000 000                    12 757  
+ Mars            228 000 000                    6 787  
+ Jupiter         778 000 000                    142 870  
+ Saturn      1 427 000 000                    120 670  
+ Uranus     2 870 000 000                    51 000 
+ Neptune   4 496 000 000                     49 200  
+ Pluto         5 946 000 000                    290   
