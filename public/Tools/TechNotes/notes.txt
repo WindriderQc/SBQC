@@ -209,6 +209,13 @@ sudo service motion start
 
 
 
+motion:
+pour regler bug de log:  sudo chmod 777  /var/log/motion/
+
+
+
+
+
 
 
 
@@ -255,6 +262,33 @@ nmap -sV -p 22 192.168.0.1-255
 
 
 
+Get public IP:
+
+dig +short myip.opendns.com @resolver1.opendns.com
+
+
+
+Systemd:
+
+cd /lib/systemd/system
+sudo nano *.service
+
+[Unit]
+Description=hello_env.js - making your environment variables rad
+Documentation=https://example.com
+After=network.target
+
+[Service]
+Environment=NODE_PORT=3001
+Type=simple
+User=ubuntu
+ExecStart=/usr/bin/node /home/ubuntu/hello_env.js
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+
+
 
 
 
@@ -295,6 +329,48 @@ UUID=14D82C19D82BF81E /hdd/nomdudisk    auto nosuid,nodev,nofail,x-gvfs-show 0 0
 
 Pour tester: (ou reboot)
 sudo mount -a
+
+
+
+
+
+
+
+
+
+I wanted to share hdd partition, which is already auto mounted on Mint machine, to be available over wlan (primarily to android phone) and here is what I did:
+1. Start Nemo, navigate to File system - etc - samba folder
+2. Run Terminal there
+3. type: sudo gedit smb.conf
+4. add this line: usershare owner only = false
+to the Global Settings section... look bellow..
+5. Save and exit
+6. In Terminal type and run this: sudo service smbd restart
+7. Close Terminal
+8. Go back to Nemo (explorer) - navigate to File system - Media-
+9. Pick the partition you want to share, right click on it and choose "Sharing options" from the menu.
+10. Click on "Share this folder" and other options if you want/need
+
+And that's it.
+I hope that this will help someone not to loose an hour or so, searching for solution. :mrgreen:
+
+
+example:
+#======================= Global Settings =======================
+
+[global]
+
+## Browsing/Identification ###
+
+# Change this to the workgroup/NT-domain name your Samba server will part of
+workgroup = WORKGROUP
+usershare owner only = false
+
+force user = yb
+
+
+
+
 
 
 
@@ -361,3 +437,409 @@ HTML:
  `blabla: ${data}`       funky char instead of ' '  to use variable into text
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//  DEPLOY.txt
+
+
+FlyingHQ server:   ssh yb@104.129.129.22
+
+
+
+  // Install Node.js
+curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+  //  Test Node installation
+node -v
+node hello.js
+curl http://localhost:3000
+
+
+
+  git clone
+  npm install
+
+
+
+  // Install PM2
+sudo npm install pm2@latest -g
+
+
+pm2 start hello.js  --watch    -> replace hello.js by any application to be launched   watch = replace nodemon, this can be put in package.json
+pm2 startup systemd   -> insure startup at boot
+
+pm2 save
+pm2 log
+
+sudo systemctl start pm2-yb
+systemctl status pm2-yb
+
+//sudo service pm2-root status 
+//sudo service pm2-yb status 
+
+
+
+   // Install Nginx
+sudo apt update
+sudo apt install nginx
+cd /etc/nginx/sites-available
+sudo xed default
+
+ex:
+    server {
+        location / {
+                proxy_pass http://localhost:3000;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                proxy_set_header Host $host;
+                proxy_cache_bypass $http_upgrade;
+        }
+        location /cams/babypi {
+            proxy_pass http://192.168.0.181:8081;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                proxy_set_header Host $host;
+                proxy_cache_bypass $http_upgrade;
+
+        }
+        location /cams/grottepi {
+            proxy_pass http://192.168.0.252:8082;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                proxy_set_header Host $host;
+                proxy_cache_bypass $http_upgrade;
+
+        }
+    }
+
+
+
+
+
+  
+
+
+
+
+
+
+    npm install mosquitto
+    cd /etc/mosquitto/conf.d
+    sudo nano mosquitto.conf
+    //
+        pid_file /var/run/mosquitto.pid
+
+        allow_anonymous false
+        password_file /etc/mosquitto/passwordfile
+
+        listener 1883
+
+
+        listener 9001
+        protocol websockets
+
+
+        log_dest file /var/log/mosquitto/mosquitto.log
+    //
+
+
+
+
+
+    sudo mosquitto_passwd -c passwordfile yb
+    mosquitto_passwd -b passwordfile user password   -> to add more user to the created password file
+    mosquitto_passwd -D passwordfile user   -> to delete user
+
+
+
+
+
+
+
+
+
+
+// Notes.txt
+
+    server:   ssh yb@104.129.129.22
+
+editing ~/.ssh/config to add an entry to make this work for anything that uses SSH with your account (including scp, sftp, and rsync among others).
+
+Host specialblend
+  Hostname 104.129.129.22
+  User yb
+
+
+
+
+
+ const sky_url = `https://api.darksky.net/forecast/7d6708021ee4840eb38d457423ab8a9a/${lat},${lon}`
+API_KEY=7d6708021ee4840eb38d457423ab8a9a
+
+
+
+
+
+
+
+https://myaccount.google.com/lesssecureapps
+
+Must be on to allow using the gmail api from unsecure app.    should get back to https or remember to activate this.
+
+
+
+
+
+
+
+
+
+
+
+nmap -sV -p 22 192.168.0.1-255
+
+
+curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+sudo apt-get install -y nodejs
+node -v
+
+
+
+sudo apt-get install preload
+
+
+
+
+
+
+sudo apt-get install motion
+
+sudo nano /etc/motion/motion.conf
+
+Find the following lines and make the following changes.  (Ctrl+W is search in nano)
+
+daemon off -> daemon on (this will run allow the program to run as a service)
+stream_localhost on -> stream_localhost off 
+
+Now we need to enable the motion daemon by editing the motion file:
+sudo nano /etc/default/motion
+Make the following change:
+start_motion_daemon=no -> start_motion_daemon=yes
+
+Next we need to make sure the motion capture directory is writable
+
+sudo chmod 777 /var/lib/motion
+
+Now make sure the camera is connected and start the service with the command:
+
+sudo service motion start
+
+
+
+
+ls ~/.ssh
+ssh-keygen -t rsa -b 4096 -C "yanikbeaulieu@hotmail.com"
+sudo apt install xclip
+xclip -sel clip < ~/.ssh/id_rsa.pub
+
+log to github and paste ssh key in settings
+
+
+
+
+
+
+find . -type f -iname \*.avi -delete
+
+rm -r /path/to/dir/*
+
+
+
+
+df          // list all disk n space
+
+
+sudo systemctl enable ssh
+
+
+sudo nano /etc/samba/samba.conf
+sudo service smbd restart
+
+
+
+/* install node.js v12 */
+
+curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+sudo apt install nodejs
+
+
+
+/* Install VS Code   */
+
+curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+sudo install -o root -g root -m 644 packages.microsoft.gpg /usr/share/keyrings/
+sudo sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list'
+
+sudo apt-get install apt-transport-https
+sudo apt-get update
+sudo apt-get install code # or code-insiders
+
+
+
+
+chrome://flags/#unsafely-treat-insecure-origin-as-secure
+
+
+
+/* virtual terminal */
+
+$ tmux
+......
+Connection fails for some reason
+Reconect
+
+$ tmux ls
+0: 1 windows (created Tue Aug 23 12:39:52 2011) [103x30]
+
+$ tmux attach -t 0
+
+
+
+
+ps -ef | grep node       //  list all node process running
+
+
+
+git commit -am "test" && git push
+
+
+
+
+
+The line below is used to turn off the power LED
+sudo sh -c 'echo 0 > /sys/class/leds/led1/brightness'
+
+The line below is used to turn off the action LED
+sudo sh -c 'echo 0 > /sys/class/leds/led0/brightness'
+
+
+add to /boot/config.txt
+# Disable Ethernet LEDs
+dtparam=eth_led0=14
+dtparam=eth_led1=14
+
+# Disable the PWR LED
+dtparam=pwr_led_trigger=none
+dtparam=pwr_led_activelow=off
+
+# Disable the Activity LED
+dtparam=act_led_trigger=none
+dtparam=act_led_activelow=off
+
+
+
+
+
+cd c:\ABC
+git init .
+git config --global user.name <yourGitHubAccount>
+git config --global user.email <yourGitHubEmailAccount>
+git add .
+
+git status
+# edit .gitignore to ignore folder you don't want
+
+git commit -m "first commit"
+git remote add origin https://github.com/<yourGitHubAccount>/<yourRepo.git>
+git push -u origin master
+
+
+
+
+// Generate random key
+node
+require('crypto').randomBytes(64).toString('hex')
+
+
+
+
+
+// Stats de l'Ordi
+
+inxi -Fxz
+
+
+
+// nvidia fix
+sudo xed /etc/default/grub
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash rcutree.rcu_idle_gp_delay=1 acpi_osi=! acpi_osi='Linux'"
+save and
+sudo update-grub 
+
+
+
+
+
+// initial linux server setup
+adduser sammy
+usermod -aG sudo sammy
+
+exit and login with sammy... :)
+
+
+
+
+
+sudo apt install mosquitto
+mosquitto -d
+yb@flyinghq:~$ mosquitto_sub -t "test"
+mosquitto_pub -m "message from mosquitto_pub client" -t "test"
+
+
+
+
+chmod +x ./hello.js
+pm2 start hello.js
+
+
+
+
+
+
+
+// Setup Platform.io
+
+curl -fsSL https://raw.githubusercontent.com/platformio/platformio-core/master/scripts/99-platformio-udev.rules | sudo tee /etc/udev/rules.d/99-platformio-udev.rules
+
+sudo service udev restart
+sudo usermod -a -G tty yb
+sudo addgroup yb dialout
+sudo addgroup yb tty
+
+
+
+
+
+
+Changing the computer name is easy: just edit /etc/hostname , reboot and then edit /etc/hosts . Then reboot again.
