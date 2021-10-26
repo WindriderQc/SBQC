@@ -24,7 +24,7 @@ const sessionOptions = {
                           saveUninitialized: true,
                           secret: process.env.SESS_SECRET,
                           cookie: {
-                              secure: IN_PROD,
+                              secure: IN_PROD, // Please note that secure: true is a recommended option. However, it requires an https-enabled website, i.e., HTTPS is necessary for secure cookies. If secure is set, and you access your site over HTTP, the cookie will not be set.
                               maxAge: Number(process.env.SESS_LIFETIME),
                               sameSite: true
                           }

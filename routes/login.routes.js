@@ -26,7 +26,8 @@ router.post('/login', async (req, res) => {
         
             result.message = error.details[0].message
             console.log(result.message)
-            return res.status(400).send(result)
+            //return res.status(400).send(result)
+            return res.render('partials/loginnomatch', {alertMsg: "Oups: " + result.message})
         }
     
         // Check if user exist
@@ -34,7 +35,8 @@ router.post('/login', async (req, res) => {
         if (!user) {
             result.message = "Email is not found"
             console.log(result.message)
-            return res.status(400).send(result)
+            //return res.status(400).send(result)
+            return res.render('partials/loginnomatch', {alertMsg: "User not found. Please register or contact your admin."})
         }
 
         // Check password
@@ -42,7 +44,8 @@ router.post('/login', async (req, res) => {
         if (!validPass) {
             result.message = "Email or password is wrong"
             console.log(result.message)
-            return res.status(400).send(result)
+            //return res.status(400).send(result)
+            return res.render('partials/loginnomatch', {alertMsg: "Sorry, email or password incorrect. Please try again."})
         }
         else console.log('Login success: ' + user)
         
@@ -94,7 +97,7 @@ router.post('/login', async (req, res) => {
         }
 
         else
-            res.render('partials/loginnomatch')
+        res.render('partials/loginnomatch', { alertMsg: 'Sorry, something wrong with authentification. Please contact your admin.'})
     }
     catch (err) {
         console.log(err)

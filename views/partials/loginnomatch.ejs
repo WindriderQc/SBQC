@@ -3,7 +3,7 @@
 
 <head>
     <%- include('head') %> 
-    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="/css/login.css">
 </head>
 
 
@@ -53,7 +53,7 @@ function validate() {
             <div class="form-label-group">
               <input type="password" id="inputpassword" name="inputpassword" class="form-control" placeholder="Password" required>
               <label for="inputpassword">Password</label>
-              <div class="alert alert-danger" role ="alert"><div class="form-control-feedback">Sorry, email or password incorrect. Please try again.</div> </div>
+              <div class="alert alert-danger" role ="alert"><div class="form-control-feedback"><%= alertMsg %></div> </div>
             </div>
 
             <div class="custom-control custom-checkbox mb-3">
