@@ -2,15 +2,11 @@
 <html lang="en">
 
 <head>
-  <!-- <meta name="google-site-verification" content="ZxzvcpuiKsVz7ls-msP04CTmjAzew6l8TzIwLERDP0Q" />  -->
-
- <%- include('partials/head') %> 
-
- <script src="https://www.amcharts.com/lib/4/core.js"></script>
- <script src="https://www.amcharts.com/lib/4/charts.js"></script>
- <script src="https://www.amcharts.com/lib/4/themes/animated.js"></script>
-
- <!-- <script language="JavaScript" src="http://www.geoplugin.net/javascript.gp" type="text/javascript"></script> -->
+    <!-- <meta name="google-site-verification" content="ZxzvcpuiKsVz7ls-msP04CTmjAzew6l8TzIwLERDP0Q" />  -->
+    <%- include('partials/head') %> 
+    <script src="https://www.amcharts.com/lib/4/core.js"></script>
+    <script src="https://www.amcharts.com/lib/4/charts.js"></script>
+    <script src="https://www.amcharts.com/lib/4/themes/animated.js"></script>
 </head>
 
 <style>
@@ -59,7 +55,7 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top" id="mainNav">  <%- include('partials/nav') %>  </nav>
 
 <div class="content-wrapper">
-  <div class="container-fluid bg-3 text-center">  
+<div class="container-fluid bg-3 text-center">  
 <!-- Begin Container  -->    
      
         <div class="row">
@@ -97,165 +93,11 @@
                </div>
                <p><small>chrome://flags/#unsafely-treat-insecure-origin-as-secure</small></p>
             </div>
-            <div class="col-sm-6">  
-               <div class="card">
-                    <!--  <img src="" id='rainbow' width ="480" />    -->
-
-                    <p>
-                        The weather here at <span id="lat_id"></span>&deg;,
-                        <span id="lon_id"></span>&deg; is <span id="summary"></span> with
-                        a temperature of <span id="temp"></span>&deg; C. The concentration of
-                        particulate matter (<span id="aq_parameter"></span>) is
-                        <span id="aq_value"></span> <span id="aq_units"></span> last read on
-                        <span id="aq_date"></span>.
-                    </br>
-                    <span id="lon"></span>.
-                    <span id="lat"></span>.
-
-                        <script>
-/*                          document.getElementById('lon').innerHTML = geoplugin_longitude()
-                          document.getElementById('lat').innerHTML = geoplugin_latitude()
-
-                          $.getJSON('http://www.geoplugin.net/json.gp?jsoncallback=?', function(data) {
-                            console.log(JSON.stringify(data, null, 2));
-                          });
-                        */ 
-                          
-                          
-
-                          function update(id, data){
-                            fetch('http://localhost:3001/api/user/' + id, {
-                              method: 'PATCH',
-                              body: JSON.stringify({ data })
-                            }).then((response) => {
-                              response.json().then((response) => {
-                                console.log(response);
-                              })
-                            }).catch(err => {
-                              console.error(err)
-                            })
-
-                          }
-                        
-                        </script>
-                      </p>  
-                    
-
-
-               </div>
-
-          
-            </div>
           
          </div>
 
-<script src="js/motionCam.js"></script>
 
-<script>
-  
-  
-let lat, lon;
-
-async function gotLocation(pos)
-{
-    let lat, lon, accuracy, weather, air
-  
-    lat = pos.coords.latitude
-    lon = pos.coords.longitude
-    accuracy = pos.coords.accuracy
-    console.log('Your current position is:');
-    console.log(`Latitude : ${lat}`);
-    console.log(`Longitude: ${lon}`);
-    console.log(`More or less ${accuracy} meters.`);
-
-    document.getElementById('lat_id').textContent = lat.toFixed(2)
-    document.getElementById('lon_id').textContent = lon.toFixed(2)
-    
-
-
-    try {
-      const api_url = `weather/${lat.toFixed(7)},${lon.toFixed(7)}`
-      const response = await fetch(api_url)
-      const data = await response.json()
-      console.log(data)
-      
-
-      for(measure of data.air_quality.results[0].measurements) {
-        if(measure["parameter"] == "um010") 
-          air = measure
-      } 
- 
-     // air = data.air_quality.results[0].measurements[0]
-      document.getElementById('summary').textContent = data.weather.weather[0].description
-      document.getElementById('temp').textContent = data.weather.main.feels_like
-      document.getElementById('aq_parameter').textContent = air.parameter
-      document.getElementById('aq_value').textContent = air.value
-      document.getElementById('aq_units').textContent = air.unit
-      document.getElementById('aq_date').textContent = air.lastUpdated
-    } 
-    catch (error) {
-      cliError(error)
-      air = { value: -1 };
-      document.getElementById('aq_value').textContent = 'NO READING'
-    }
-
-
-    
-  /**  const options = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ lat, lon, weather, air })
-    };
-
-    const db_response = await fetch('/api', options)
-    const db_json = await db_response.json()
-    console.log(db_json)*/
-}  
-
-
-
-function cliWarning(warn) {
-    console.warn(`WARNING(${warn.code}): ${warn.message}`)
-    //console.log(warn)
-}
-function cliError(err) {
-   console.error(`ERROR(${err.code}): ${err.message}`)
-   //console.log(err)
-}
-
-
-
-const options = {
-    enableHighAccuracy: true,
-   // timeout: 5000,
-    maximumAge: 0
-}
-
-
-
-
-// Geo Locate
-
-if ('geolocation' in navigator) {
-    console.log('geolocation available')
-    
-    //POST  https://www.googleapis.com/geolocation/v1/geolocate?key=process.env.GEO_API
-
-
-    navigator.geolocation.getCurrentPosition(gotLocation, (pos) => {
-      console.log(pos)
-    }, options);
-  } else {
-    console.log('geolocation not available');
-  }
-
-
-</script>
-
-
-        
+     
 <!-- <div class="card">
   <div class="embed-responsive embed-responsive-4by3">
       <div id='clientCam_id'></div>
@@ -274,15 +116,31 @@ if ('geolocation' in navigator) {
 </div> -->
 
 
-
-
-  
-
-
 <!-- End Container  -->
-  </div>
+</div>
 </div>
 
 <%- include('partials/footer') %>
+
+<script src="js/motionCam.js"></script>
+<script>
+
+let lat, lon, accuracy
+const locate = async () => {
+ if(Tools.isGeoLocAvailable()) { 
+      const {coords} = await Tools.geoLocate() 
+      lat = coords.latitude
+      lon = coords.longitude
+      accuracy = coords.accuracy  
+      console.log('Your current position is:');
+      console.log(`Latitude : ${lat}`);
+      console.log(`Longitude: ${lon}`);
+      console.log(`More or less ${accuracy} meters.`);
+  }  
+}
+locate()
+ 
+
+</script>
 </body>
 </html>

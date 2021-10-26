@@ -3,31 +3,23 @@
 
 <head> <%- include('partials/head') %> </head>
 
-
 <body class="fixed-nav sticky-footer bg-light sidenav-toggled" id="page-top">
   
 <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top" id="mainNav">    <%- include('partials/nav') %>  </nav>
 
 <div class="content-wrapper">
-    <div class="container-fluid bg-3 text-center">  
+<div class="container-fluid bg-3 text-center">  
+<!-- Begin Container  -->  
     
-    
-        
+
         <div class="card mb-3">
 
             <div class="card-body" >
                 <div id='mapLabel'></div>
-                <!-- <iframe width="1500" height="800"
-                        src="https://app.powerbi.com/view?r=eyJrIjoiZWI1M2M5MDgtYzk0ZC00YzhkLTgzZWItNGQ4NmQ1MGIyZDg0IiwidCI6IjFjMDE1NjcxLTU2MGYtNDNhNy1iYTczLWZiZmRhMTAxN2Q3NCJ9"
-                        frameborder="0" allowFullScreen="true"></iframe>
-                -->
-                <script src="earth.js"></script>
             </div>
             <div class="card-footer small text-muted">  </div>
         </div>
-
-
-            
+ 
         <div class="card mb-3">
 
             <div class="card-body" >
@@ -37,10 +29,11 @@
         </div>
 
 
- <!-- End Container  -->
+<!-- End Container  -->
 </div>
 </div>
 
-<%- include('partials/footer') %>
+<%- include('partials/footer') %> 
+<script src="earth.js"></script>
 </body>
 </html>

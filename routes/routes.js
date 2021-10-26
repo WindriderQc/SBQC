@@ -9,8 +9,10 @@ const sysInfo = sysmon.getSysInfo()
 console.log(sysInfo)
 
 
+// free routes
+
 router.get("/", async (req, res) => {
-    let client = req.headers['user-agent'] 
+    let client = req.headers['user-agent']   //  TODO: send dans BD ces infos pour un checkin log de qui vient sur root /
     console.log(client)
     let content = req.headers['Content-Type'] 
     console.log(content)
@@ -27,9 +29,11 @@ router.get("/", async (req, res) => {
 
 router.get('/index', async (req, res) => {
     let count = await counter.getCount()
-
-
     res.render('index',  { menuId: 'home', hitCount: count , sysInfo: sysInfo})
+})
+
+router.get('/login', (req, res) => {
+    res.render('partials/login') 
 })
 
 router.get("/iGrow", (req, res) => {
@@ -65,29 +69,52 @@ router.get('/specs', (req, res) => {
 })
 
 
+//  Session validation & logged in routes
+const hasSessionID = (req, res, next) => {
+    console.log(req.session)
+    if (!req.session.userToken) {
+        res.redirect('/login')
+    } else {
+        next()
+    }
+}
+
+
+router.get('/vip', hasSessionID,  (req, res) => {
+    res.render('fundev', { name: req.session.email })    
+})
+
+router.get('/fundev', hasSessionID,  (req, res) => {
+    res.render('fundev', { name: req.session.email })    
+})
+
+
+
+
+
+
+
+//  API extra   --   TODO:  doit surement etre dans des routes séparées
+
+
+
 router.get('/weather/:latlon', async (req, res) => {
 
     const latlon = req.params.latlon.split(',');
     const lat = latlon[0];
     const lon = latlon[1];
-   // console.log(lat, lon);
-
+    const weatherURL = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&&units=metric&APPID=${process.env.WEATHER_API}`
+    const aq_url = `https://api.openaq.org/v2/latest?has_geo=true&coordinates=${lat},${lon}&radius=5000&order_by=lastUpdated`   //  TODO: last updated change tjrs la structure des data car pas les meme sensors par site...  mais ca garantie des données actualisée....
+    // console.log(lat, lon);
        
-    const weather_response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&&units=metric&APPID=${process.env.WEATHER_API}`);
+    const weather_response = await fetch(weatherURL);
     const weather = await weather_response.json()
-    console.log(weather)
-    console.log()
+  
+    weather ? console.log(weather + "\n") : console.log("Get Weather error")
 
-    
-    const aq_url = `https://api.openaq.org/v2/latest?has_geo=true&coordinates=${lat},${lon}&radius=5000&order_by=lastUpdated`
-    //console.log( aq_url)
     const aq_response = await fetch(aq_url);
-    
     const aq_data = await aq_response.json();
-    /*console.log()
-    
-    console.log()
-    console.log(aq_data)*/
+    console.log("\n\n" + aq_data)
 
 
     if(aq_data) 
@@ -119,8 +146,10 @@ router.post('/alert', async (req, res) => {
     
     mailman.sendEmail(dest, msg, image64)
    
-
 })
+
+
+
 
 
 module.exports = router;

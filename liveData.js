@@ -11,16 +11,22 @@ const api_url = 'https://api.wheretheiss.at/v1/satellites/25544';
 
 async function getISS() 
 {
-    const response = await fetch(api_url)
-    const data = await response.json()
-    const { latitude, longitude } = data
-    datas.iss = { latitude, longitude }
-   //console.log(liveData.iss)
+    try {
+        const response = await fetch(api_url)
+        const data = await response.json()
+        const { latitude, longitude } = data
+        datas.iss = { latitude, longitude }
+        //console.log(liveData.iss)
  
-    return datas.iss
+        return datas.iss
+    } catch (error) {
+        console.log (error)
+        return error
+    }
+  
 }
 getISS()
-setInterval(getISS, 10000)
+setInterval(getISS, 30000)
 
 
 

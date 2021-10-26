@@ -1,4 +1,7 @@
-const fs = require('fs').promises;
+const fs = require('fs').promises
+const fsSync = require('fs')
+const moment = require('moment')
+
 
 exports.readFile = async (filePath) =>{
     try {
@@ -9,6 +12,7 @@ exports.readFile = async (filePath) =>{
         console.error(`Got an error trying to read the file: ${error.message}`);
       }
 }
+
 
 exports.deleteFile = async (filePath) =>{
   try {
@@ -22,6 +26,7 @@ exports.deleteFile = async (filePath) =>{
            you want to remove the file before executing your code. */
 }
 
+
 exports.moveFile = async (source, destination) =>{  
   try {
     await fs.rename(source, destination);
@@ -32,6 +37,7 @@ exports.moveFile = async (source, destination) =>{
   // filename must be included in destination as rename is supported   TODO:  ptete mettre filename comme parametre a la function
 }
 
+
 exports.saveFile = async (source, destination) =>{  
   try {
     await fs.writeFile(destination, source);
@@ -39,4 +45,26 @@ exports.saveFile = async (source, destination) =>{
   } catch (error) {
     console.error(`Got an error trying to move the file: ${error.message}`);
   }
+}
+
+
+// Check is path or file is valid
+exports.isExisting = async (path) => {
+  if(fsSync.existsSync(path))    return true
+  else return false
+}
+
+
+
+exports.isObjEmpty =  (obj) => {
+  for(let i in obj) return false
+  return true
+}
+
+
+exports.TimeDiff = (startTime, endTime, format) => {
+
+  startTime = moment(startTime, 'YYYY-MM-DD HH:mm:ss');
+  endTime = moment(endTime, 'YYYY-MM-DD HH:mm:ss');
+  return endTime.diff(startTime, format);
 }

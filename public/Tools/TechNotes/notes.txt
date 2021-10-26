@@ -427,6 +427,8 @@ JAVASCRIPT:
 
   const str = JSON.stringify(people, null, '\t') //  the null, '\t' is to prettyfy the string
 
+   "<pre>"+JSON.stringify(info,null, '\t') +"</pre>"         pre   is required
+
 
 
 
