@@ -1,3 +1,5 @@
+const session = require('express-session');
+
 const router = require('express').Router(),
  moment = require('moment'),
  bcrypt = require('bcryptjs'),
@@ -7,9 +9,70 @@ const router = require('express').Router(),
 
 User = require('../models/userModel')
 
-  
 
-router.post('/login', async (req, res) => {  
+
+
+router.get("/register", (req, res) => {
+    res.render('partials/register');
+})
+
+
+router.post("/register", async (req, res) => {
+    const result = {
+        user: req.body.name,
+        email: req.body.email,
+        message: ""
+    }
+
+    //  Validate entry form before user creation
+    const { error } = registerValidation(req.body)
+    if (error) {
+        result.message = error.details[0].message
+        return res.status(400).send(result)
+    }
+
+    const emailExist = await User.findOne({ email: req.body.email })
+    if (emailExist) {
+        console.log('user exist')
+        console.log(emailExist)
+        result.message = "Email already exists"
+        return res.status(400).send(result)  //  TODO: replace par un login.ejs ou register.ejs avec alert msg
+    }
+
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10)
+    const hashPassword = await bcrypt.hash(req.body.password, salt)
+
+    const user = new User({
+        name : req.body.name,
+        email : req.body.email,
+        password: hashPassword
+    })
+        
+
+    try {
+        const savedUser =  await user.save()
+        console.log(savedUser)
+        result.user = savedUser.name + " - " + savedUser._id
+        result.message = 'Success'
+        res.redirect('../')
+    } 
+    catch (err) {   
+        console.log(result)
+        res.redirect('/login/register')   
+    }
+
+
+    
+})
+
+
+router.get('/', (req, res) => {
+    res.render('partials/login') 
+})
+
+router.post('/', async (req, res) => {  
     
     console.log('login request: ' + req.body.email)
 
@@ -79,25 +142,14 @@ router.post('/login', async (req, res) => {
 
         console.log('login response: ' + result.message);
         if (result.token.length > 5) {
-            //const str = JSON.stringify(result.token) 
-            //console.log(result)
+       
             req.session.userToken = result.token
             req.session.email = result.email
-            
-            
-            //res.redirect('vip/fundev')
 
-            console.log(req.baseUrl)
-
-            req.session.save((err) => { if(!err) res.redirect('../fundev') })
-
-           // res.render('fundev', { name: req.session.email });
-         // res.redirect('/fundev')
-           //res.header("auth-token", result.token).render('fundev', { name: req.session.email });
+            req.session.save((err) => {     if(!err)  res.redirect('../fundev')       })    //res.header("auth-token", result.token).render('fundev', { name: req.session.email });
+        
         }
-
-        else
-        res.render('partials/loginnomatch', { alertMsg: 'Sorry, something wrong with authentification. Please contact your admin.'})
+        else res.render('partials/loginnomatch', { alertMsg: 'Sorry, something wrong with authentification. Please contact your admin.'})
     }
     catch (err) {
         console.log(err)
@@ -106,6 +158,14 @@ router.post('/login', async (req, res) => {
 })
 
 
+router.get('/logout', verify, (req, res) => {
+    req.session.destroy(err => {
+        if (err) res.send('error destroying session')
+        console.log('logout & session destroy')
+        res.clearCookie(process.env.SESS_NAME)
+        res.redirect('../')
+    })
+})
 
 
 

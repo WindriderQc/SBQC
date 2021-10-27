@@ -40,11 +40,9 @@ const Tools = {
         },
   
         
-
     randomScalingFactor: () => {
             return Math.round(Math.random() * 100)
         },
-
 
 
     randomData: () => {
@@ -57,6 +55,11 @@ const Tools = {
         },
 
 
+    random_hex_color_code: () => {
+        let randomColor = Math.floor(Math.random()*16777215).toString(16);
+        return "#" + randomColor
+        },
+    
 
     randomValue : (data) => {
             return Math.max.apply(null, data) * Math.random()
@@ -181,7 +184,7 @@ const Tools = {
     } 
     catch (e) {  console.log(e)   }
     }
-          
+ 
 
 }
 

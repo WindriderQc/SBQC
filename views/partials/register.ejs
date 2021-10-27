@@ -1,0 +1,96 @@
+<!--LOGIN PAGE-->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="Indoor Farming App">
+  <meta name="author" content="">
+  <title>iGrow</title>
+  <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon">
+
+  <!-- jQuery first, then Popper.js, then Bootstrap JS & CSS-->
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"  integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="  crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+  <link rel="stylesheet" type="text/css" href="../css/login.css">
+
+</head>
+
+
+
+<script>  // Disable submit button until all form inputs have data
+
+$(document).ready(function() {
+  validate();
+  $('input').on('keyup', validate);
+});
+
+function validate() {
+  var inputsWithValues = 0;
+
+  // get all input fields except for type='submit'
+  var myInputs = $("input:not([type='submit'])");
+
+  myInputs.each(function(e) {
+    // if it has a value, increment the counter
+    if ($(this).val()) {
+      inputsWithValues += 1;
+    }
+  });
+
+  if (inputsWithValues == myInputs.length) {
+    $("input[type=submit]").prop("disabled", false);
+  } else {
+    $("input[type=submit]").prop("disabled", true);
+  }
+}
+</script>
+
+
+<body class="bg-light">
+<div class="container">
+
+    <div class="row">
+      <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
+        <div class="card card-signin my-5">
+          <div class="card-body">
+            <h5 class="card-title text-center">Register</h5>
+            <form class="form-signin" action =/login/register method="post" >
+
+              <div class="form-label-group">
+                <input type="text" id="name_id" name="name" class="form-control" placeholder="User name" required autofocus>
+                <label for="name_id">User name</label>
+              </div>
+
+              <div class="form-label-group">
+                <input type="email" id="email_id" name="email" class="form-control" placeholder="Email address" required >
+                <label for="email_id">Email address</label>
+              </div>
+
+              <div class="form-label-group">
+                <input type="password" id="password_id" name="password" class="form-control" placeholder="Password" required>
+                <label for="password_id">Password</label>
+              </div>
+
+              <button class="btn btn-lg btn-warning btn-block text-uppercase" type="submit" value="Login">Register</button>
+            </form>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="text-center">
+      <p><small>SpecialBlend Production</small></p>
+    </div>
+
+</div>
+
+</body>
+
+</html>

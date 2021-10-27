@@ -9,7 +9,7 @@ async function initCount() { 
     console.log(data.toString());
     visitorCount = data
   }
-  catch(err) {  console.error(`Got an error trying to write to a file: ${err.message}`); } 
+  catch(err) {  console.error(`Got an error trying to read to a file: ${err.message}`); } 
    
 }
 

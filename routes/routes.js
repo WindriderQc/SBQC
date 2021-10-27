@@ -1,7 +1,7 @@
 const router = require('express').Router()
 const fetch = require('node-fetch')
 const mailman = require('../public/js/mailman')
-var counter = require('../visitorCount')
+var counter = require('../scripts/visitorCount')
 
 const Sysmon = require('../scripts/systemMonitor.js')
 const sysmon = new Sysmon()
@@ -30,10 +30,6 @@ router.get("/", async (req, res) => {
 router.get('/index', async (req, res) => {
     let count = await counter.getCount()
     res.render('index',  { menuId: 'home', hitCount: count , sysInfo: sysInfo})
-})
-
-router.get('/login', (req, res) => {
-    res.render('partials/login') 
 })
 
 router.get("/iGrow", (req, res) => {
@@ -79,10 +75,6 @@ const hasSessionID = (req, res, next) => {
     }
 }
 
-
-router.get('/vip', hasSessionID,  (req, res) => {
-    res.render('fundev', { name: req.session.email })    
-})
 
 router.get('/fundev', hasSessionID,  (req, res) => {
     res.render('fundev', { name: req.session.email })    

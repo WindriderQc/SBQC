@@ -2,7 +2,7 @@ require('dotenv').config();
 const router = require('express').Router()
 const fetch = require('node-fetch')
 
-const liveData = require('../liveData')
+const liveData = require('../scripts/liveData')
 
 router.get('/', async (req, res) => {
 
