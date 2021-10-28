@@ -433,6 +433,40 @@ JAVASCRIPT:
 
 
 
+/*//  NeDB 
+const Datastore = require('nedb')
+const picDb = new Datastore('pics.db');
+picDb.loadDatabase();
+
+router.get('/api', (request, response) => {
+    picDb.find({}, (err, data) => {
+        if (err) { response.end(); return; }
+        response.json(data);
+    });
+});
+
+// delete complete DB
+function resetNeDB() {
+    console.log("reset DB.")
+    var database = getDb()
+
+    database.remove({}, { multi: true }, (err, numRemoved) => {
+        database.loadDatabase((err) => {
+            // db erase done
+        })
+    })
+
+}
+database.find({io_id:io_id}).sort({tstamp:-1}).limit(1).exec( (err, latest) =>{
+        if(err) { console.log(err); res.end(); return } 
+        var r = latest
+        topAlarms.push(r)
+        return r
+})
+*/
+
+
+
 
 HTML:
 

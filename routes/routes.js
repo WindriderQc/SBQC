@@ -8,6 +8,9 @@ const sysmon = new Sysmon()
 const sysInfo = sysmon.getSysInfo()
 console.log(sysInfo)
 
+const apiUrl = process.env.NODE_ENV.trim() === 'production' ?  'https://www.specialblend.xyz' : 'http://localhost:3001';
+console.log('API url: ' + apiUrl)
+
 
 // free routes
 
@@ -63,6 +66,48 @@ router.get('/cv_yanikbeaulieu', (req, res) => {
 router.get('/specs', (req, res) => {
     res.render('specs')
 })
+
+router.get('/settings',  async (req, res) => {
+    
+    try {
+        const response = await fetch(apiUrl + "/users/")
+        const users = await response.json()
+        console.log(users)
+        res.render('settings', {users: users.data})
+    } 
+    catch (err) {   console.log(err)    }
+    
+})
+
+//  APIs
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+const userController = require('../controllers/userController')
+
+router.post("/users/test", async (req, res) => {
+    console.log("test");
+    res.header("auth-test", "yoyo").send("test good");  //  testing custom header 
+    })
+
+router.route('/users')
+    .get(userController.index)
+    .post(userController.new)  
+
+router.route('/users/deleteViaEmail').post(userController.deleteViaEmailbody)    
+
+
+router.route('/users/:user_id')
+    .get(userController.view)
+    .patch(userController.update)
+    .put(userController.update)
+    .delete(userController.delete)
+
+router.route('/users/viaEmail/:email')
+    .get(userController.viaEmail)
+    .delete(userController.deleteViaEmail)
+
+
+
 
 /*router.get('/logout', (req, res) => {
     res.render('partials/logout')

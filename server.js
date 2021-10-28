@@ -127,6 +127,7 @@ app
   .use(session(sessionOptions))
   .use(express.static(path.resolve(__dirname, 'public') , { maxAge: 1000*60*60 })) // maxAge allow client to cache data for 1h
   .use('/',         require('./routes/routes'))
+  //.use('/users',     require('./routes/users.routes'))
   .use('/checkins', require('./routes/checkins.routes'))
   .use('/data',     require('./routes/data.routes'))
   .use('/login',     require('./routes/login.routes'))

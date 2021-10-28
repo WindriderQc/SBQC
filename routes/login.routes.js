@@ -1,4 +1,4 @@
-const session = require('express-session');
+//const session = require('express-session');
 
 const router = require('express').Router(),
  moment = require('moment'),
@@ -176,3 +176,4 @@ router.get('/out', (req, res) => {
 
 // Export API routes
 module.exports = router
+
