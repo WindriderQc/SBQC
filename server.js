@@ -9,7 +9,7 @@ const express = require('express'),
   nodeTools = require('./scripts/nodeTools'),
   moment = require('moment')
 //rateLimit = require('express-rate-limit'),
-//const cors = require('cors')
+const cors = require('cors')
 //Logger = require('./logger'),
 
 /*const logger = new Logger()
@@ -118,7 +118,7 @@ message: error.message
 
 //Middlewares  & routes
 app
-  //.use(cors({    origin: '*',    optionsSuccessStatus: 200  }  ))
+  .use(cors({    origin: '*',    optionsSuccessStatus: 200  }  ))
   .use(express.urlencoded({extended: true, limit: '10mb'}))  //  Must be before  'app.use(express.json)'    , 10Mb to allow image to be sent
   .use(express.json({limit:'10mb'})) // To parse the incoming requests with JSON payloads
   //.use(rateLimit({ windowMs: 2 * 1000, max: 1 }))  // useful for api to prevent too many requests...

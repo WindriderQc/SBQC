@@ -146,7 +146,9 @@ router.post('/', async (req, res) => {
             req.session.userToken = result.token
             req.session.email = result.email
 
-            req.session.save((err) => {     if(!err)  res.redirect('../fundev')       })    //res.header("auth-token", result.token).render('fundev', { name: req.session.email });
+            req.session.save((err) => {     
+                if(!err)  res.header('credentials', 'include').redirect('../fundev')    //res.header("auth-token", result.token).render('fundev', { name: req.session.email });    
+            })   
         
         }
         else res.render('partials/loginnomatch', { alertMsg: 'Sorry, something wrong with authentification. Please contact your admin.'})
