@@ -51,7 +51,7 @@ const sessionOptions = {
   store: mongoStore,
   cookie: {
       secure: IN_PROD, // Please note that secure: true is a recommended option. However, it requires an https-enabled website, i.e., HTTPS is necessary for secure cookies. If secure is set, and you access your site over HTTP, the cookie will not be set.
-      maxAge: Number(process.env.SESS_LIFETIME),   //  TODO: Bug...  le cookie est pas saved apres le login avec ce maxAge.
+      //maxAge: Number(process.env.SESS_LIFETIME),    //  TODO: désactivé pour BUG:  apres un logout (destroy session), plus capable de ravoir un cookie envoyé apres le login....
       sameSite: true
   }
 }
@@ -150,7 +150,7 @@ app
 
 
 let liveDatas = require('./scripts/liveData.js')
-const intervals = { quakes:1000*60*60*24*7, iss: 1000*10 }
+const intervals = { quakes:1000*60*60*24*7, iss: 1000*30 }
 liveDatas.setAutoUpdate(intervals)
 console.log("Setting live data  :  v" + liveDatas.data.version)
 console.log("Intervals: ", intervals)

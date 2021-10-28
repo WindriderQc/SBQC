@@ -64,6 +64,10 @@ router.get('/specs', (req, res) => {
     res.render('specs')
 })
 
+/*router.get('/logout', (req, res) => {
+    res.render('partials/logout')
+})*/
+
 
 //  Session validation & logged in routes
 const hasSessionID = (req, res, next) => {

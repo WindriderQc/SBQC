@@ -160,13 +160,16 @@ router.post('/', async (req, res) => {
 })
 
 
-router.get('/logout', verify, (req, res) => {
-    req.session.destroy(err => {
+router.get('/out', (req, res) => {
+
+    res.clearCookie(process.env.SESS_NAME)
+    res.redirect('../')
+   /* req.session.destroy(err => {
         if (err) res.send('error destroying session')
-        console.log('logout & session destroy')
+        console.log('Session destroyed and logged out')
         res.clearCookie(process.env.SESS_NAME)
         res.redirect('../')
-    })
+    })*/
 })
 
 
