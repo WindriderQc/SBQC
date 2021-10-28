@@ -1,8 +1,7 @@
 require('dotenv/config')
 const express = require('express'),
   session = require('express-session'),
-  MongoDBStore = require('connect-mongodb-session')(session);
-  cookieParser = require("cookie-parser"),
+  MongoDBStore = require('connect-mongodb-session')(session),
   serveIndex = require('serve-index'),
   path = require('path'),
   mongoose = require('mongoose'),
@@ -124,7 +123,7 @@ app
   .use(express.urlencoded({extended: true, limit: '10mb'}))  //  Must be before  'app.use(express.json)'    , 10Mb to allow image to be sent
   .use(express.json({limit:'10mb'})) // To parse the incoming requests with JSON payloads
   //.use(rateLimit({ windowMs: 2 * 1000, max: 1 }))  // useful for api to prevent too many requests...
-  .use(cookieParser())  //  recommanded before app.use(session())
+  
   .use(session(sessionOptions))
   .use(express.static(path.resolve(__dirname, 'public') , { maxAge: 1000*60*60 })) // maxAge allow client to cache data for 1h
   .use('/',         require('./routes/routes'))
