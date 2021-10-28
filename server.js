@@ -27,6 +27,8 @@ console.log('env prod:' + IN_PROD)
 const app = express()
 app.set('view engine', 'ejs')
 
+if(IN_PROD) app.set('trust proxy', true)    //  this is insure cookie persistence in production otherwise the cookie is not sent back after login (may be in relation with Nginx config)
+
 const mongoStore = new MongoDBStore({  
   uri: process.env.MONGO_URL,  
   collection: 'mySessions', 
@@ -50,7 +52,7 @@ const sessionOptions = {
   store: mongoStore,
   cookie: {
       secure: IN_PROD, // Please note that secure: true is a recommended option. However, it requires an https-enabled website, i.e., HTTPS is necessary for secure cookies. If secure is set, and you access your site over HTTP, the cookie will not be set.
-     // maxAge: Number(process.env.SESS_LIFETIME),   //  TODO: Bug...  le cookie est pas saved apres le login avec ce maxAge.
+      maxAge: Number(process.env.SESS_LIFETIME),   //  TODO: Bug...  le cookie est pas saved apres le login avec ce maxAge.
       sameSite: true
   }
 }
