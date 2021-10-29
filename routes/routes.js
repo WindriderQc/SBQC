@@ -109,10 +109,6 @@ router.route('/users/viaEmail/:email')
 
 
 
-/*router.get('/logout', (req, res) => {
-    res.render('partials/logout')
-})*/
-
 
 //  Session validation & logged in routes
 const hasSessionID = (req, res, next) => {
@@ -132,12 +128,7 @@ router.get('/fundev', hasSessionID,  (req, res) => {
 
 
 
-
-
-
 //  API extra   --   TODO:  doit surement etre dans des routes séparées
-
-
 
 router.get('/weather/:latlon', async (req, res) => {
 
