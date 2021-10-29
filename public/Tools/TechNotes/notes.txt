@@ -162,6 +162,28 @@ DB_CONNECTION=mongodb://127.0.0.1:27017/IoT
 
 
 
+Corruption recover:
+
+sudo service mongod stop
+sudo apt purge mongodb-org*
+sudo rm -r /var/log/mongodb
+sudo rm -r /var/lib/mongodb
+wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | sudo apt-key add -
+echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.4.list
+sudo apt update
+
+
+sudo apt-get install mongodb-org=4.4.8 mongodb-org-server=4.4.8 mongodb-org-shell=4.4.8 mongodb-org-mongos=4.4.8 mongodb-org-tools=4.4.8
+or
+sudo apt install mongodb-org
+sudo systemctl enable mongod
+sudo systemctl start mongod
+mongosh     //  test if working
+
+
+
+
+
 
 
 
