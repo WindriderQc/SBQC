@@ -1,41 +1,34 @@
 const fs = require('fs').promises;
 
-
 let visitorCount = 0
  
+
 async function initCount() { 
   try {
     const data = await fs.readFile('visitCounter.txt')
-    console.log(data.toString());
+    console.log('Visitor count loaded: ', data.toString());
     visitorCount = data
   }
   catch(err) {  console.error(`Got an error trying to read to a file: ${err.message}`); } 
    
 }
-
-
-(async function () {
-
-  await initCount()
-
-})();
-
-
-
+(async function () {  await initCount()  })();
 
 
 
 exports.increaseCount = async () =>{
     try {
       visitorCount++
-      await fs.writeFile('visitCounter.txt', visitorCount) 
-      console.log(visitorCount.toString())
-      return visitorCount.toString()
+      let str = visitorCount.toString()
+      await fs.writeFile('visitCounter.txt', str) 
+      console.log(str)
+      return str
     } catch (error) {
       console.error(`Got an error trying to write to a file: ${error.message}`);
     }
   
 }
+
 
 exports.getCount = () => {  return visitorCount.toString()  }
 

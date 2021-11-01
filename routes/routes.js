@@ -1,7 +1,7 @@
 const router = require('express').Router()
 const fetch = require('node-fetch')
 const mailman = require('../public/js/mailman')
-var counter = require('../scripts/visitorCount')
+let counter = require('../scripts/visitorCount')
 
 const sysmon = new (require('../scripts/systemMonitor'))()
 console.log(sysmon.getinfo())
