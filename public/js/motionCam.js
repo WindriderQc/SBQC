@@ -23,6 +23,7 @@ const FRAME_TRIGGER = 10
 //let capturer;
 //let btn;
 
+let isInspect = false
 let motioncount = 0
 
 
@@ -52,7 +53,7 @@ function setup()
 
   video = createCapture(VIDEO);
   video.size(width, height);
-  //video.hide();
+  video.hide();
   video.parent(document.getElementById('cam_id'))
 
   //btn = document.getElementById('recBtn')
@@ -64,6 +65,31 @@ function setup()
 
   // Create an empty image the same size as the video
   prevFrame = createImage(width, height, RGB)
+
+  const inspectDiv = document.getElementById('inspectBtn')  
+  const inspectBtn = createButton('Inspect')
+  inspectBtn.parent(inspectDiv)
+  inspectBtn.style('font-size', '30px');
+  //inspectBtn.style('background-color', color(0,0,0));
+  //inspectBtn.style('color', color(255,255,255));
+  //inspectBtn.style('border-radius', '12px');
+  inspectBtn.addClass('btn-secondary')
+  inspectBtn.addClass('btn')
+  inspectBtn.addClass('px-3')
+
+  inspectBtn.mousePressed( () => { 
+      isInspect = !isInspect
+      //change button style
+      if(isInspect) {
+        inspectBtn.removeClass('btn-secondary')
+        inspectBtn.addClass('btn-danger')
+      }  
+      else {
+        inspectBtn.removeClass('btn-danger')
+        inspectBtn.addClass('btn-secondary')
+      }
+  })
+
 
    
   const button = document.getElementById('submit')
@@ -102,70 +128,76 @@ function captureEvent(video)
 
 function draw() 
 {
-    image(prevFrame, 0, 0);
-     
-    loadPixels();
-    
-    video.loadPixels()
-    prevFrame.loadPixels()
 
-    let pixelCount = 0
+    if(isInspect) {
 
-    // Begin loop to walk through every pixel
-    for (let x = 0; x < width; x ++ )     {
-        for (let y = 0; y < height; y ++ )     {
-          // Step 1, what is the location into the array
-          let loc = (x + y * width) * 4
-          // Step 2, what is the previous color
-          let r1 = prevFrame.pixels[loc ]
-          let g1 = prevFrame.pixels[loc + 1]
-          let b1 = prevFrame.pixels[loc + 2]
-          // Step 3, what is the current color
-          let r2 = video.pixels[loc   ]
-          let g2 = video.pixels[loc + 1]
-          let b2 = video.pixels[loc + 2]
+        image(prevFrame, 0, 0);
+        
+        loadPixels();
+        
+        video.loadPixels()
+        prevFrame.loadPixels()
 
-          // Step 4, compare colors (previous vs. current)
-          let diff = dist(r1, g1, b1, r2, g2, b2)
+        let pixelCount = 0
 
-          // Step 5, How different are the colors?
-          // If the color at that pixel has changed, then there is motion at that pixel.
-          if (diff > threshold) { 
-            // If motion, display black
-            //pixels[loc] = 0;
-            //pixels[loc+1] = 0;
-            //pixels[loc+2] = 0;
-            pixels[loc+3] = 255;
+        // Begin loop to walk through every pixel
+        for (let x = 0; x < width; x ++ )     {
+            for (let y = 0; y < height; y ++ )     {
+              // Step 1, what is the location into the array
+              let loc = (x + y * width) * 4
+              // Step 2, what is the previous color
+              let r1 = prevFrame.pixels[loc ]
+              let g1 = prevFrame.pixels[loc + 1]
+              let b1 = prevFrame.pixels[loc + 2]
+              // Step 3, what is the current color
+              let r2 = video.pixels[loc   ]
+              let g2 = video.pixels[loc + 1]
+              let b2 = video.pixels[loc + 2]
 
-            pixelCount++;
-          } else {
-              // If not, display white
-              pixels[loc] = 255;
-              pixels[loc+1] = 255;
-              pixels[loc+2] = 255;
-              pixels[loc+3] = 255;
-          }
+              // Step 4, compare colors (previous vs. current)
+              let diff = dist(r1, g1, b1, r2, g2, b2)
+
+              // Step 5, How different are the colors?
+              // If the color at that pixel has changed, then there is motion at that pixel.
+              if (diff > threshold) { 
+                // If motion, display black
+                //pixels[loc] = 0;
+                //pixels[loc+1] = 0;
+                //pixels[loc+2] = 0;
+                pixels[loc+3] = 255;
+
+                pixelCount++;
+              } else {
+                  // If not, display white
+                  pixels[loc] = 255;
+                  pixels[loc+1] = 255;
+                  pixels[loc+2] = 255;
+                  pixels[loc+3] = 255;
+              }
+            }
         }
-    }
-    updatePixels();
+        updatePixels();
 
 
 
-      if(pixelCount >= (DETECTION_PCT * width * height))
-      {
-          if(motioncount > FRAME_TRIGGER) {
-            
-              motioncount = 0
-              console.log('motion detection')
-              if(document.getElementById("alertEnable").checked)  
-                sendAlert()
-          }  
-          else motioncount++
-      }
+        if(pixelCount >= (DETECTION_PCT * width * height))
+        {
+            if(motioncount > FRAME_TRIGGER) {
+              
+                motioncount = 0
+                console.log('motion detection')
+                if(document.getElementById("alertEnable").checked)  
+                  sendAlert()
+            }  
+            else motioncount++
+        }
 
-      // Save frame for the next cycle
-      prevFrame.copy(video, 0, 0, video.width, video.height, 0, 0, video.width, video.height);
+        // Save frame for the next cycle
+        prevFrame.copy(video, 0, 0, video.width, video.height, 0, 0, video.width, video.height);
       
+
+    }
+    
     
 
     /*if(capturer) {
@@ -177,10 +209,10 @@ function draw()
 
 async function sendAlert()
 {
-    //image(video, 0, 0)
-    video.loadPixels();
+    image(video, 0, 0)  // gets the video image instead of pixel analysis for a cleaner email
+    p5Canvas.loadPixels();
     
-    const image64 = video.elt.toDataURL();
+    const image64 = p5Canvas.elt.toDataURL();
     const dest = document.getElementById('dest_id').value
     const msg = 'Motion Detected!'
 

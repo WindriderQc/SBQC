@@ -20,16 +20,35 @@
         <div class="row">
             <div class="col-sm-6">
 
-               <div class="card">
+               <div class="card m-3">
                     <div id=p5canvas></div>
-                    <input id='dest_id' value='yanik.beaulieu@gmail.com'>
-                    <div class="form-check">
-                      <input type="checkbox" class="form-check-input" id="alertEnable" >
-                      <label class="form-check-label" for="alertEnable">Motion Alert</label>
-                    </div>
+                </div>
+            </div>
+
+            <div class='col-sm-4'>
+              <div class="card m-3">
+
+                <div class="m-4 p-3" id=inspectBtn></div>
+
+                <div class="form-check m-3">
+                  <input type="checkbox" class="form-check-input" id="alertEnable" />
+                  <label class="form-check-label" for="alertEnable">Motion Alert</label>
                 </div>
 
-                <div class="card">
+                <input class='m-3' id='dest_id' value='yanik.beaulieu@gmail.com' />
+               
+              </div>
+            </div>
+        </div>
+
+        <div class='row m-3'>
+
+        </div>
+        
+        <div class='row'>
+          <div class="col-sm-6">
+       
+                <div class="card m-3">
                     <section class="style_a_creer_Coco">
 
                       <%- include('partials/rgbSlider') %> 
