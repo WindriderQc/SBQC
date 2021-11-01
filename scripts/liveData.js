@@ -58,6 +58,26 @@ if (!nodeTools.isExisting(quakesPath)) {
 
 
 
+async function getZonAnn() {
+    const response = await fetch('https://data.giss.nasa.gov/gistemp/tabledata_v4/ZonAnn.Ts+dSST.csv')
+    const data = await response.text()
+  
+    const table = data.split('\n').slice(1)   //  slice delete line 1
+    
+    table.forEach(row => {
+      const columns = row.split(',')
+      const year = columns[0]
+      const temp = columns[1]
+  
+      //console.log(year, temp)
+      datas.yearTemp = {year, temp}
+      return (datas.yearTemp)
+    })
+
+  }
+
+  console.log('about to fetch ZoneAnn')
+  getZonAnn() 
 
 
 

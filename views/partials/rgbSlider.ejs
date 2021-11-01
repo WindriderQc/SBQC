@@ -1,3 +1,5 @@
+<link rel="stylesheet" href="css/slider.css" />
+
 <div class="sliderContainer">
     <div class="red">Red</div>
     <label for="red" class=" ">
@@ -17,6 +19,8 @@
     <label for="blue" class=" ">
       <input class="slider" id="blue" type="range" min="0" max="255" step="1" value="0">
     </label> 
+
+    <input hidden id=rgbval_id value="">
   </div>
 
 
@@ -26,16 +30,19 @@
   
 
   <script>
-    var sliderR = document.getElementById("red");
-    var sliderG = document.getElementById("green");
-    var sliderB = document.getElementById("blue");
+    let sliderR = document.getElementById("red");
+    let sliderG = document.getElementById("green");
+    let sliderB = document.getElementById("blue");
 
-    var output = document.getElementById("rgb");
+    let output = document.getElementById("rgb");
       
-    var brightness = {r: 0, g: 0, b: 0};   // useless - code reminder
+   // let brightness = {r: 0, g: 0, b: 0};   // useless - code reminder
 
     function updateOutput() {
-      output.innerHTML = sliderR.value + ',' + sliderG.value +',' + sliderB.value;
+      let value = sliderR.value + ',' + sliderG.value +',' + sliderB.value
+      output.innerHTML = value
+      document.getElementById('rgbval_id').value = value
+     // console.log(document.getElementById('rgbval_id').value)
     }
     updateOutput()
     

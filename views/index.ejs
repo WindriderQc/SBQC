@@ -27,37 +27,56 @@
 </style>
 
 <body class="fixed-nav sticky-footer bg-light " id="page-top">
-    <div id="canvasDiv" ></div>
-  <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top" id="mainNav">    <%- include('partials/nav') %>  </nav>
+<div id="canvasDiv" ></div>
+<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top" id="mainNav">    <%- include('partials/nav') %>  </nav>
 
-  <div class="content-wrapper">
-    <div class="container-fluid text-center">  
-
-      <div class="text-right h6 text-muted small">  
-        <br> HitCount: <%- hitCount %> 
-      </div> 
-
-      <h3><%= sysInfo.hostname %></h3><br>
-
-      <div class="row">   
-
-        <div class="col-sm-12">
-          <!-- <div class="row"><iframe width="320" height="240" src="Projects/NOC/s1/index.html" frameborder="0" ></iframe></div>-->
-          <h3>Sys Info</h3>
-          <p><%= JSON.stringify(sysInfo) %></p>
-        </div>  
-    
-      </div>
-
+<div class="content-wrapper">
+<div class="container-fluid text-center">  
+ <!-- Begin Container  -->  
+  
   <div id=screen_id></div>
- 
+  <div id='speech'></div>
+
   <div class="row">
-    <div id='speech'></div>
-       
+    <div class="col sm-12">
+      <div class="h3"> Welcome to a special blend of javascript and WebGL mini-project.  </div> 
+    </div>     
+  </div>  
+
+
+     
+  <div class="row">
+    <div class="col-sm-12">
+      <div class='card m-5'>
+          <div>
+          <!-- <div class="row"><iframe width="320" height="240" src="Projects/NOC/s1/index.html" frameborder="0" ></iframe></div>-->
+            <h3><%= sysInfo.data.hostname %></h3>
+            <div class='text-left'>
+              <p>
+              OS: <%= sysInfo.data.ver %> <%= sysInfo.data.arch %>  <%= sysInfo.data.platform %> platform version <%= sysInfo.data.release %> </br>
+              Free Memory:  <%= (sysInfo.data.freemem / 1000000000).toFixed(2) %>  /  <%= (sysInfo.data.totalmem / 1000000000).toFixed(2) %> Gb</br>
+              CPUs: <%= sysInfo.cpus.length %> <%= sysInfo.cpus[0].model %> at <%= sysInfo.cpus[0].speed %> speed
+              </p>
+            </div>
+          </div> 
+      </div>
+    </div>
+  </div>  
+
+      
+
+
+  <div class="row">       
          <!--   <iframe width="640" height="480" src="Projects/NOC/sAll/index.html" frameborder="0" ></iframe> -->
   </div>  
 
-  
+  <div class="row">
+    <div class="col sm-11">
+    </div>  
+    <div class="col sm-1 text-right">
+      <div class="h6 text-muted small">  HitCount: <%- hitCount %>  </div> 
+    </div>     
+  </div>  
 
 
   

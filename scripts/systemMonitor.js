@@ -2,9 +2,10 @@ const os = require('os')
 
 class SystemMonitor {
     constructor() {
-        setInterval(this.getSysInfo, 5000) 
+        this.updateSysInfo()
+        setInterval(this.updateSysInfo, 5000) 
     }
-    getSysInfo() {
+    updateSysInfo() {
         let ver = os.version()
         let platform = os.platform()
         let release = os.release()
@@ -17,10 +18,15 @@ class SystemMonitor {
         let hostname = os.hostname()
         let cpus = os.cpus()
 
-        this.info =  {ver, platform, release, arch, freemem, totalmem, uptime, userInfo, homeDir, hostname, cpus}
+        let data =  {ver, platform, release, arch, freemem, totalmem, uptime, userInfo, homeDir, hostname}
+        this.info = {data, cpus}
         return this.info
     }
 
+
+    getinfo() {
+        return this.info
+    }
 
 }
 

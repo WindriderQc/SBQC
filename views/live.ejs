@@ -4,51 +4,10 @@
 <head>
     <!-- <meta name="google-site-verification" content="ZxzvcpuiKsVz7ls-msP04CTmjAzew6l8TzIwLERDP0Q" />  -->
     <%- include('partials/head') %> 
-    <script src="https://www.amcharts.com/lib/4/core.js"></script>
-    <script src="https://www.amcharts.com/lib/4/charts.js"></script>
-    <script src="https://www.amcharts.com/lib/4/themes/animated.js"></script>
+       
 </head>
 
-<style>
-    .sliderContainer {
-      width: 100%;
-    }
-    
-    .slider {
-      -webkit-appearance: none;
-      width: 100%;
-      height: 15px;
-      border-radius: 5px;
-      background: #d3d3d3;
-      outline: none;
-      opacity: 0.7;
-      -webkit-transition: .2s;
-      transition: opacity .2s;
-    }
-    
-    .slider:hover {
-      opacity: 1;
-    }
-    
-    .slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 25px;
-      height: 25px;
-      border-radius: 50%;
-      background: #4CAF50;
-      cursor: pointer;
-    }
-    /*
-    .slider::-moz-range-thumb {
-      width: 25px;
-      height: 25px;
-      border-radius: 50%;
-      background: #4CAF50;
-      cursor: pointer;
-    }*/
 
-</style>
 
 <body class="fixed-nav sticky-footer bg-light sidenav-toggled" id="page-top">
   
@@ -98,7 +57,7 @@
 
 
      
-<!-- <div class="card">
+ <div class="card">
   <div class="embed-responsive embed-responsive-4by3">
       <div id='clientCam_id'></div>
       <script>
@@ -111,9 +70,9 @@
           }
 
       </script>
-      
+      <div><img src="" id='rainbow' width ="480" /></div>
   </div>
-</div> -->
+</div> 
 
 
 <!-- End Container  -->
@@ -124,6 +83,7 @@
 
 <script src="js/motionCam.js"></script>
 <script>
+console.log(document.getElementById('rgbval_id').value)
 
 let lat, lon, accuracy
 const locate = async () => {
@@ -140,7 +100,6 @@ const locate = async () => {
 }
 locate()
  
-
 </script>
 </body>
 </html>

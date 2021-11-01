@@ -3,10 +3,8 @@ const fetch = require('node-fetch')
 const mailman = require('../public/js/mailman')
 var counter = require('../scripts/visitorCount')
 
-const Sysmon = require('../scripts/systemMonitor.js')
-const sysmon = new Sysmon()
-const sysInfo = sysmon.getSysInfo()
-console.log(sysInfo)
+const sysmon = new (require('../scripts/systemMonitor'))()
+console.log(sysmon.getinfo())
 
 const apiUrl = process.env.NODE_ENV.trim() === 'production' ?  'https://www.specialblend.xyz' : 'http://localhost:3001';
 console.log('API url: ' + apiUrl)
@@ -27,12 +25,12 @@ router.get("/", async (req, res) => {
     var ip = req.socket.remoteAddress
     console.log(ip)
     let count = await counter.increaseCount()
-    res.render('index', { menuId: 'home', hitCount: count, sysInfo: sysInfo })
+    res.render('index', { menuId: 'home', hitCount: count, sysInfo: sysmon.getinfo() })
 })
 
 router.get('/index', async (req, res) => {
     let count = await counter.getCount()
-    res.render('index',  { menuId: 'home', hitCount: count , sysInfo: sysInfo})
+    res.render('index',  { menuId: 'home', hitCount: count , sysInfo: sysmon.getinfo()})
 })
 
 router.get("/iGrow", (req, res) => {

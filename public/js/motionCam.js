@@ -4,8 +4,6 @@ const gifLength = 180
 let p5Canvas
 let canvas
 
-let pg
-
 var CAMERA_URL = ""
 
 var imageStream = null
@@ -28,46 +26,10 @@ const FRAME_TRIGGER = 10
 let motioncount = 0
 
 
-async function getZonAnn() {
-  const response = await fetch('data/ZonAnn.Ts+dSST.csv')
-  const data = await response.text()
-
-  const table = data.split('\n').slice(1)   //  slice delete line 1
-  
-  table.forEach(row => {
-    const columns = row.split(',')
-    const year = columns[0]
-    const temp = columns[1]
-
-    //console.log(year, temp)
-  })
-  
-
-
-
-}
 
 
 function setup() 
 {
-
-
-  /*catchRainbow()
-    .then(response => {
-      console.log('got it')
-    })
-    .catch(error => {
-      console.log('error!'); 
-      console.log(error)
-    })
-*/
-    //  https://data.giss.nasa.gov/gistemp/tabledata_v4/ZonAnn.Ts+dSST.csv
-
-  console.log('about to fetch ZoneAnn')
-  getZonAnn() 
-
-
-
 
   const canvasDiv = document.getElementById('p5canvas');
   const w = canvasDiv.offsetWidth;
@@ -90,7 +52,7 @@ function setup()
 
   video = createCapture(VIDEO);
   video.size(width, height);
-  video.hide();
+  //video.hide();
   video.parent(document.getElementById('cam_id'))
 
   //btn = document.getElementById('recBtn')
@@ -143,32 +105,28 @@ function draw()
     image(prevFrame, 0, 0);
      
     loadPixels();
-    prevFrame.loadPixels();
+    
     video.loadPixels()
+    prevFrame.loadPixels()
 
     let pixelCount = 0
 
     // Begin loop to walk through every pixel
-    for (var x = 0; x < width; x ++ ) 
-    {
-        for (var y = 0; y < height; y ++ ) 
-        {
-
+    for (let x = 0; x < width; x ++ )     {
+        for (let y = 0; y < height; y ++ )     {
           // Step 1, what is the location into the array
-          var loc = (x + y * width) * 4;
-          
+          let loc = (x + y * width) * 4
           // Step 2, what is the previous color
-          var r1 = prevFrame.pixels[loc ]; 
-          var g1 = prevFrame.pixels[loc + 1];
-          var b1 = prevFrame.pixels[loc + 2];
-
+          let r1 = prevFrame.pixels[loc ]
+          let g1 = prevFrame.pixels[loc + 1]
+          let b1 = prevFrame.pixels[loc + 2]
           // Step 3, what is the current color
-          var r2 = video.pixels[loc   ]; 
-          var g2 = video.pixels[loc + 1];
-          var b2 = video.pixels[loc + 2];
+          let r2 = video.pixels[loc   ]
+          let g2 = video.pixels[loc + 1]
+          let b2 = video.pixels[loc + 2]
 
           // Step 4, compare colors (previous vs. current)
-          var diff = dist(r1, g1, b1, r2, g2, b2);
+          let diff = dist(r1, g1, b1, r2, g2, b2)
 
           // Step 5, How different are the colors?
           // If the color at that pixel has changed, then there is motion at that pixel.
@@ -219,10 +177,10 @@ function draw()
 
 async function sendAlert()
 {
-    image(video, 0, 0)
-    p5Canvas.loadPixels();
+    //image(video, 0, 0)
+    video.loadPixels();
     
-    const image64 = p5Canvas.elt.toDataURL();
+    const image64 = video.elt.toDataURL();
     const dest = document.getElementById('dest_id').value
     const msg = 'Motion Detected!'
 
@@ -250,6 +208,17 @@ async function catchRainbow() {
   const blob = await response.blob()
   document.getElementById('rainbow').src = URL.createObjectURL(blob)
 }
+
+
+catchRainbow()
+    .then(response => {
+      console.log('got it')
+    })
+    .catch(error => {
+      console.log('error!'); 
+      console.log(error)
+    })
+
 
 /*
 function record() 
