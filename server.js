@@ -63,20 +63,8 @@ const sessionOptions = {
 
 
 // mongoose with local DB
-mongoose.connect( process.env.MONGO_URL, { family: 4, useNewUrlParser: true, useUnifiedTopology: true })// family: 4    skip  default IPV6 connection  and accelerate connection.
+require('./mongoCollections')
 
-mongoose.connection.on('error', console.error.bind(console, 'conn error:'))
-
-mongoose.connection.once('open', function() { 
-    console.log('Mongoose connected to db: ' + process.env.MONGO_URL) 
-   
-    mongoose.connection.db.listCollections().toArray( (err, collections) => {   //trying to get collection names
-        console.log("LocalDB collections:")
-        console.log(collections); // [{ name: 'dbname.myCollection' }]
-       // module.exports.Collection = collections;
-    });
-
-})
 
 //Mongodb Client setup  with CloudDB
 /*const mongo = require('./mongo')
