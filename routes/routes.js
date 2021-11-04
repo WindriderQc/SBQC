@@ -65,16 +65,24 @@ router.get('/specs', (req, res) => {
     res.render('specs')
 })
 
+
+const User = require('../models/userModel');
+
 router.get('/settings',  async (req, res) => {
     
-    try {
+    User.get((err, users)=> { 
+        if(err) console.log(err)
+        res.render('settings', {users: users})
+    })
+
+   /*try {
         const response = await fetch(apiUrl + "/users/")
         const users = await response.json()
         console.log(users)
         res.render('settings', {users: users.data})
     } 
     catch (err) {   console.log(err)    }
-    
+    */
 })
 
 //  APIs

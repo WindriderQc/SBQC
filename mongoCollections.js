@@ -1,14 +1,16 @@
 const mongoose = require('mongoose')
 
+const dbURL = process.env.MONGO_URL
+
 let _collections 
 let isReady = false
 // mongoose with local DB
-mongoose.connect( process.env.DB_CONNECTION, { family: 4, useNewUrlParser: true, useUnifiedTopology: true }, (err)=>{ if (err) console.log(err)})// family: 4    skip  default IPV6 connection  and accelerate connection.
+mongoose.connect( dbURL, { family: 4, useNewUrlParser: true, useUnifiedTopology: true }, (err)=>{ if (err) console.log(err)})// family: 4    skip  default IPV6 connection  and accelerate connection.
 
 mongoose.connection.on('error', console.error.bind(console, 'conn error:'))
 
 mongoose.connection.once('open', function() { 
-    console.log('Mongoose connected to db: ' + process.env.DB_CONNECTION) 
+    console.log('Mongoose connected to db: ' + dbURL) 
    
     mongoose.connection.db.listCollections().toArray( (err, col) => {   //trying to get collection names
         if(err) console.log(err)
