@@ -6,11 +6,9 @@ let socket_
 
 function init(server) 
 {
-    if (io_) {   console.warn("Already initialized and Trying to init Socket.io again!")
-      return io_
-    }
+    if (io_) {   console.warn("Already initialized and Trying to init Socket.io again!");  return io_     }
+    
     console.log('Launching socket server...')
-
     const io  = socket(server)
        
     io.on('connection', (socket) => {
@@ -18,18 +16,9 @@ function init(server)
     
         socket_ = socket
         
-        socket.on('mouse', (data) => {
-            console.log(data)
-            socket.broadcast.emit('mouse', data)
-            // io.sockets.emit()  will emit back to sender as well.  could be used if data is modified by server
-        });
-
-       /* socket.on('iss', (data) => {
-            console.log(data)
-            socket.broadcast.emit('iss', data)
-            // io.sockets.emit()  will emit back to sender as well.  could be used if data is modified by server
-        });*/
-    
+        socket.on('mouse', (data) => { // example used to share mouse movement between client - DrawTogether project
+            socket.broadcast.emit('mouse', data) // io.sockets.emit()  will emit back to sender as well.  could be used if data is modified by server
+        })
     })
 
     io_ = io
@@ -37,18 +26,10 @@ function init(server)
 }
 
 
+function get_io() { assert.ok(io_, "IO has not been initialized. Please called init first.");   return io_  }
 
-function get_io() {
-  assert.ok(io_, "IO has not been initialized. Please called init first.")
-  return io_
-}
-
-function get_socket() {
-    assert.ok(socket_, "Socket has not been initialized. Please called init first.")
-    return socket_
-  }
+function get_socket() { assert.ok(socket_, "Socket has not been initialized. Please called init first."); return socket_  }
   
-
 
 
 module.exports = {

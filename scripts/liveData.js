@@ -4,9 +4,7 @@ const socketio = require('../socket')
 
 
 
-let datas = {version: "1.0"}
-
-//  TODO : merge avec du socket.io pour broadcaster les updated Data.
+let datas = { version: 1.0 }
 
 
 async function getISS() 
@@ -18,14 +16,14 @@ async function getISS()
         const data = await response.json()
         const { latitude, longitude } = data
         datas.iss = { latitude, longitude }
-        console.log(datas.iss)
-    } catch (error) {
+
+        let io = socketio.get_io()
+        io.sockets.emit('iss', datas.iss)
+    } 
+    catch (error) {
         console.log(error)
         datas.iss = {latitude:0,longitude:0}
     } 
-
-    let io = socketio.get_io()
-    io.sockets.emit('iss', datas.iss)
 
     return datas.iss
 }

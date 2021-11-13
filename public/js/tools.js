@@ -2,26 +2,11 @@
 //si  RacineCarré de (x^2 + y^2)    <= Rayon
 
 const Tools = {
-
-    getParamValue: (paramName) =>{
-            var url = window.location.search.substring(1) //get rid of "?" in querystring
-            var qArray = url.split('&') //get key-value pairs
-            for (var i = 0; i < qArray.length; i++) 
-            {
-                var pArr = qArray[i].split('=') //split key and value
-                if (pArr[0] == paramName) 
-                    return pArr[1]; //return value
-            }
-            return ""
-        },
-
-
-        
+    
     sleep: (ms) =>{
             return new Promise(resolve => setTimeout(resolve, ms))
         },
    
-
       
     fillForm: (formId, data) => {
             const { elements } = document.getElementById(formId)
@@ -66,8 +51,7 @@ const Tools = {
         },
 
   
-
-    postData : async (url = '', data='') => {  
+    postData : async (url = '', data='') => {   //  Used to send command to ESP-01 from client
             let option = {
             method: 'POST',
             headers: {
@@ -184,7 +168,7 @@ const Tools = {
 
     },
     
-
+    //  P5 libraries must be loaded in order to use these functions, usually within setup() and draw() 
     p5: {
 
         displayGrid: (r,l, color = 0, weight = 1) => {  //  smallest weight = 1 pixel         
