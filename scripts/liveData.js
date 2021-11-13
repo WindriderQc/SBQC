@@ -1,32 +1,34 @@
 const fetch = require('node-fetch')
 const nodeTools = require('./nodeTools') //nodeTools.readFile("greetings.txt")
+const socketio = require('../socket')
+
+
 
 let datas = {version: "1.0"}
 
+//  TODO : merge avec du socket.io pour broadcaster les updated Data.
 
-const iss_api_url = 'https://api.wheretheiss.at/v1/satellites/25544';
 
 async function getISS() 
 {
-    
+    const iss_api_url = 'https://api.wheretheiss.at/v1/satellites/25544';
+
     try {
         const response = await fetch(iss_api_url)
         const data = await response.json()
         const { latitude, longitude } = data
         datas.iss = { latitude, longitude }
+        console.log(datas.iss)
     } catch (error) {
         console.log(error)
         datas.iss = {latitude:0,longitude:0}
     } 
 
+    let io = socketio.get_io()
+    io.sockets.emit('iss', datas.iss)
+
     return datas.iss
 }
-getISS()
-
-
-
-
-
 
 
 const CSVToJSON = require('csvtojson');
@@ -50,53 +52,77 @@ async function getQuakes()
 
 }
 
-if (!nodeTools.isExisting(quakesPath)) {
-    console.log("No Earthquakes datas, requesting data to API now and will actualize daily.", path);
-    getQuakes()
-}
 
 
 
-
-async function getZonAnn() {
+async function getZonAnn() 
+{
     const response = await fetch('https://data.giss.nasa.gov/gistemp/tabledata_v4/ZonAnn.Ts+dSST.csv')
     const data = await response.text()
   
     const table = data.split('\n').slice(1)   //  slice delete line 1
     
     table.forEach(row => {
-      const columns = row.split(',')
-      const year = columns[0]
-      const temp = columns[1]
-  
-      //console.log(year, temp)
-      datas.yearTemp = {year, temp}
-      return (datas.yearTemp)
+        const columns = row.split(',')
+        const year = columns[0]
+        const temp = columns[1]
+    
+        //console.log(year, temp)
+        datas.yearTemp = {year, temp}
+        return (datas.yearTemp)
     })
-
-  }
-
-  console.log('about to fetch ZoneAnn')
-  getZonAnn() 
+}
 
 
 
-exports.data = datas
+function init()
+{
+    console.log('about to fetch ZoneAnn')
+    getZonAnn() 
 
-exports.issLocation = async () => 
+    if (!nodeTools.isExisting(quakesPath)) {
+        console.log("No Earthquakes datas, requesting data to API now and will actualize daily.", path);
+        getQuakes()
+    }
+
+    getISS()
+}
+
+
+async function issLocation() 
 {
     const data = await getISS()
     return data
 }
 
-exports.quakes = async () => 
+async function quakes()
 {
     const data = await getQuakes()
     return data
 }
 
-exports.setAutoUpdate = (intervals) => 
+
+
+
+function setAutoUpdate(intervals, updateNow) 
 {
+    if(updateNow) {
+        getQuakes()
+        getISS()
+    }
+
     setInterval(getQuakes,intervals.quakes) // 24*60*60*1000)  // daily
     setInterval(getISS, intervals.iss) //10*1000)             // every 10sec
 }
+
+
+module.exports = {
+    init,
+    setAutoUpdate,
+    datas,
+    issLocation, 
+    quakes
+  };
+
+  
+

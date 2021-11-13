@@ -11,6 +11,14 @@
 <div class="container-fluid bg-3 text-center">  
 <!-- Begin Container  -->  
     
+<p>
+    City: <input id ="city" value = "Toronto"></input>
+    <button id="submit">submit</button>
+    <p id="temp"> Temp :  0</p> 
+    <p id="humid">Humid:  0</p>
+    <input type="checkbox" id="gridCheck" onclick="setGrid()">
+  </p>
+
 
         <div class="card mb-3">
 
@@ -34,6 +42,9 @@
 </div>
 
 <%- include('partials/footer') %> 
-<script src="earth.js"></script>
+
+<%- include('partials/p5') %> 
+
+<script src="js/earth.js"></script>
 </body>
 </html>

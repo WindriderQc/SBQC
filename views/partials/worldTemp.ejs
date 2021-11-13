@@ -1,6 +1,5 @@
-<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/p5.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/addons/p5.dom.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.js"></script>
 
 <canvas id="chart" width="800" height="400"></canvas>
 
@@ -11,7 +10,7 @@ async function getData() {
     const ys = [];
     const response = await fetch('data/ZonAnn.Ts+dSST.csv'); // https://data.giss.nasa.gov/gistemp/tabledata_v4/ZonAnn.Ts+dSST.csv
     const data = await response.text();
-    const table = data.split('\n').slice(1);
+    const table = data.split('\n').slice(1);   //  slice delete line 1
     table.forEach(row => {
         const cols = row.split(',');
         const year = cols[0];

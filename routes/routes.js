@@ -4,10 +4,16 @@ const mailman = require('../public/js/mailman')
 let counter = require('../scripts/visitorCount')
 
 const sysmon = new (require('../scripts/systemMonitor'))()
-console.log(sysmon.getinfo())
+console.log("SysInfo: ", sysmon.getinfo().data)
+console.log("CPU: ", sysmon.getinfo().cpus.length)
 
 const apiUrl = process.env.NODE_ENV.trim() === 'production' ?  'https://www.specialblend.xyz' : 'http://localhost:3001';
 console.log('API url: ' + apiUrl)
+
+
+
+let liveDatas = require('../scripts/liveData.js')
+
 
 
 // free routes
@@ -37,8 +43,9 @@ router.get("/iGrow", (req, res) => {
     res.send('Hello')
 })
 
+//const liveData = require('liveData')
 router.get('/earth', (req, res) => {
-    res.render('earth')
+    res.render('earth', {liveData: liveDatas.datas} )
 })
 
 router.get('/natureCode', (req, res) => {

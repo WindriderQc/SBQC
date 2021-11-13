@@ -21,6 +21,7 @@
   "dependencies": {
     "@hapi/joi": "^17.1.1",
     "@types/p5": "^0.9.1",
+    "assert": "^2.0.0",
     "bad-words": "^3.0.4",
     "bcryptjs": "^2.4.3",
     "connect-mongodb-session": "^3.1.1",
@@ -43,6 +44,7 @@
     "nodemailer": "^6.4.16",
     "nodemailer-smtp-transport": "^2.4.2",
     "serve-index": "^1.9.1",
+    "socket.io": "^4.3.2",
     "uuid": "^8.3.2"
   },
   "devDependencies": {

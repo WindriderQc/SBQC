@@ -16,12 +16,14 @@ mongoose.connection.once('open', function() {
         if(err) console.log(err)
         console.log("LocalDB collections:")
        
-        _collections = col
-        console.log(_collections) // [{ name: 'dbname.myCollection' }]
+        _collections = col  
+        _collections.forEach((collection) =>{
+             console.log(collection.name)
+        }) //console.log(_collections) // [{ name: 'dbname.myCollection' }]
+        console.log()
+        
         isReady = true
-       // module.exports.Collections = _collections;
     });
-
 })
 
 

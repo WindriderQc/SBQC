@@ -90,7 +90,7 @@ app
 let liveDatas = require('./scripts/liveData.js')
 const intervals = { quakes:1000*60*60*24*7, iss: 1000*30 }
 liveDatas.setAutoUpdate(intervals)
-console.log("Setting live data  :  v" + liveDatas.data.version)
+console.log("Setting live data  :  v" + liveDatas.datas.version)
 console.log("Intervals: ", intervals)
 
 

@@ -5,8 +5,8 @@ const express = require('express'),
   serveIndex = require('serve-index'),
   path = require('path'),
   //mongoose = require('mongoose'),
-  nodeTools = require('./scripts/nodeTools'),
-  moment = require('moment')
+  nodeTools = require('./scripts/nodeTools')
+
 //rateLimit = require('express-rate-limit'),
 const cors = require('cors')
 //Logger = require('./logger'),
@@ -29,16 +29,16 @@ app.set('view engine', 'ejs')
 if(IN_PROD) app.set('trust proxy', true)    //  this is insure cookie persistence in production otherwise the cookie is not sent back after login (may be in relation with Nginx config)
 
 const mongoStore = new MongoDBStore({  
-  uri: process.env.MONGO_URL,  
-  collection: 'mySessions', 
-  connectionOptions: {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      // serverSelectionTimeoutMS: 10000
-  }
-}, (err)=> console.error(err))
+    uri: process.env.MONGO_URL,  
+    collection: 'mySessions', 
+    connectionOptions: {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        // serverSelectionTimeoutMS: 10000
+    }
+}, (err) => { if(err) console.log( 'MongoStore connect error: ', err) } );
 
-mongoStore.on('error', function(error) {  console.log(error) });
+mongoStore.on('error', (error) => console.log('MongoStore Error: ', error) );
 
 
 
@@ -85,22 +85,7 @@ mongo.connectDb('test', async (mongodb) =>{    // dbServ, test, admin, local
 })
 */
 
-/*
-// Set default API response  
-//app.get('/', (req, res) => {  res.send('SBQC\n')  })
-app.get('/', function (req, res) {
-res.json({
-    status: 'dbServ node server active',
-    message: 'Welcome to SBQC DB server'
-})
-})
-app.use((error, req, res, next) => {
-res.status(500);
-res.json({
-message: error.message
-})
-})
-*/
+
 
 
 
@@ -121,8 +106,28 @@ app
   .use('/Tools',    serveIndex(path.resolve(__dirname, 'public/Tools'), {  'icons': true,  'stylesheet': 'public/css/indexStyles.css' } )) // use serve index to nav folder  (Attention si utiliser sur le public folder, la racine (/) du site sera index au lieu de html
   .use('/Projects', serveIndex(path.resolve(__dirname, 'public/Projects'), {  'icons': true,  'stylesheet': 'public/css/indexStyles.css' }))
 
+/*
+// Set default API response  
+//app.get('/', (req, res) => {  res.send('SBQC\n')  })
+app.get('/', function (req, res) {
+    res.json({
+        status: 'dbServ node server active',
+        message: 'Welcome to SBQC DB server'
+    })
+})
+app.use((error, req, res, next) => {
+    res.status(500);
+    res.json({
+        message: error.message
+    })
+})
+*/
 
-  app.listen(PORT, () =>{  
+app.get('/kart', (req, res) => {  res.render('./public/Projects/Kart/index.html') })
+
+
+
+const server = app.listen(PORT, () =>{  
     console.log(`\n\nServer running in ${IN_PROD ? "Production" : "Developpement"} mode at port ${PORT}`)
     console.log(`(Nginx may change public port)`)
     console.log('Press Ctrl + C to exit\n')
@@ -130,16 +135,18 @@ app
   })
 
 
-  app.get('/kart', (req, res) => {  res.render('./public/Projects/Kart/index.html') })
-
-//console.log('Launching automation scripts')
-//require('./scripts/serverScripts.js')  // generate infos/index.html
+const socket = require('./socket')
+socket.init(server)
 
 
 let liveDatas = require('./scripts/liveData.js')
-const intervals = { quakes:1000*60*60*24*7, iss: 1000*30 }
-liveDatas.setAutoUpdate(intervals)
-console.log("Setting live data  :  v" + liveDatas.data.version)
+const intervals = { quakes:1000*60*60*24*7, iss: 1000*5 }
+liveDatas.init()
+liveDatas.setAutoUpdate(intervals, false)
+console.log("Setting live data  :  v" + liveDatas.datas.version)
 console.log("Intervals: ", intervals)
 
 
+
+//console.log('Launching automation scripts')
+//require('./scripts/serverScripts.js')  // generate infos/index.html

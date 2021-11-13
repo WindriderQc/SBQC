@@ -20,7 +20,7 @@ function setup()
         // p.parent(document.getElementById('speech'))
          createP(speechRec.resultString);
       }
-      else console.log(speechRec)
+      else console.log("SpeechRec: ",  speechRec)
    }
 
 }
@@ -32,7 +32,7 @@ mouth.onLoad = voiceReady;
 function voiceReady() 
 {
    console.log('Speech recognition supported 😊')
-   console.log(mouth.voices) 
+   console.log('Voices: ', mouth.voices) 
    mouth.setVoice(1)
    mouth.setRate(1)
    mouth.setPitch(1)
