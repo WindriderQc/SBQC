@@ -4,9 +4,6 @@
 <head>
   
   <%- include('partials/head') %> 
- 
-  <script type="text/javascript" src="js/p5.speech.js"></script>
-  <script type="text/javascript" src="js/nestor.js"></script>
   
 </head>
 
@@ -37,11 +34,13 @@
   <div id=screen_id></div>
   <div id='speech'></div>
 
-  <div class="row">
-    <div class="col sm-12">
-      <div class="h3"> Welcome to a special blend of javascript and WebGL mini-project.  </div> 
-    </div>     
-  </div>  
+    <div class="row">
+        <div class="col sm-2"></div>
+            <div class="col sm-8">
+                <div class="h3"> Welcome to a special blend of visuals, data gathering and games mini-projects using javascript and WebGL.  </div> 
+            </div>  
+        <div class="col sm-2"></div>   
+    </div>  
 
 
      
@@ -86,6 +85,11 @@
 
 
 <%- include('partials/footer') %>
+
+<%- include('partials/p5') %> 
+<script type="text/javascript" src="js/p5.speech.js"></script>
+<script type="text/javascript" src="js/nestor.js"></script>
+
 </body>
 </html>
 

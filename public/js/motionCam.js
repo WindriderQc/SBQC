@@ -28,6 +28,8 @@ let motioncount = 0
 
 
 
+let capture;
+
 
 function setup() 
 {
@@ -42,7 +44,8 @@ function setup()
 
   //frameRate(30)
 
-
+  capture = createCapture(VIDEO);
+  capture.parent(document.getElementById('clientCam_id'))
 
 
   CAMERA_URL = "http://192.168.0.33/cams/blackpi";
@@ -207,7 +210,7 @@ function draw()
 
 
 
-async function sendAlert()
+async function sendAlert()  //  TODO: pkoi pas utiliser la version dans TOols?
 {
     image(video, 0, 0)  // gets the video image instead of pixel analysis for a cleaner email
     p5Canvas.loadPixels();

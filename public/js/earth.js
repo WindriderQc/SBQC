@@ -16,7 +16,7 @@ float yPos = (_radius) * Mathf.Sin(latitude);
 
 
 var mapimg;
-var mapStyle = 'mapbox/dark-v9';   //  mapbox/dark-v9   //  'windrider/cjs5io5kz1mvq1fqjb1x3e0ta'
+var mapStyle = 'mapbox/dark-v9';   //  mapbox/dark-v9   
 
 var ww = 1200;
 var hh = 800;
@@ -26,7 +26,7 @@ var zoom = 1; //  used in gathering Map and Coordinates system conversion
 
 var api = '//api.openweathermap.org/data/2.5/weather?q=';
 var inputCity;
-var appid = '&APPID=' + '3acd322267c6cf3b8b697d7a4e9f78cb';  // Personal API key   //  TODO  :  provide key through session or get data from server api
+var appid = '&APPID=' + weatherAPI;  // Personal API key  
 var units = '&units=metric';
   /*
   var op = 'WND';  // Weather map layer
@@ -53,7 +53,7 @@ var CityY = 0.0000;
 function preload() 
 {
   //mapimg = loadImage('https://api.mapbox.com/styles/v1/' + mapStyle + '/static/' +                
-  //                   clon + ',' + clat + ',' + zoom + '/' +  ww + 'x' + hh + '?access_token=pk.eyJ1Ijoid2luZHJpZGVyIiwiYSI6ImNqczVldmR3bzBmMWU0NHRmbjlta2Y0aDEifQ.FWOdvqw-IBlcJrBKKML7iQ', printMap);
+  //                   clon + ',' + clat + ',' + zoom + '/' +  ww + 'x' + hh + '?access_token=TOKEN', printMap);
   // mapimg.save('darkmap1200x800', 'png');   //  save image from API
   mapimg = loadImage('img/darkmap1200x800.png')
   earthquakes = loadStrings('data/quakes.csv')   

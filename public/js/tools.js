@@ -1,5 +1,4 @@
-// find if a point (x,y) is within a circle:
-//si  RacineCarré de (x^2 + y^2)    <= Rayon
+//  Client-side Javascript tools + p5.js and data gathering 
 
 const Tools = {
     
@@ -226,3 +225,6 @@ const Tools = {
     }
 
 }
+
+// find if a point (x,y) is within a circle:
+//si  RacineCarré de (x^2 + y^2)    <= Rayon

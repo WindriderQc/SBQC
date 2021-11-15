@@ -53,7 +53,7 @@ router.get('/natureCode', (req, res) => {
 })
 
 router.get('/legacy', (req, res) => {
-    res.render('legacy')
+    res.render('legacy', {weatherAPI: process.env.WEATHER_API})
 })
 
 router.get('/live', (req, res) => {

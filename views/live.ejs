@@ -75,16 +75,6 @@
  <div class="card">
   <div class="embed-responsive embed-responsive-4by3">
       <div id='clientCam_id'></div>
-      <script>
-          let capture;
-
-          function setup() 
-          {
-              capture = createCapture(VIDEO);
-              capture.parent(document.getElementById('clientCam_id'))
-          }
-
-      </script>
       <div><img src="" id='rainbow' width ="480" /></div>
   </div>
 </div> 
@@ -96,8 +86,13 @@
 
 <%- include('partials/footer') %>
 
+<%- include('partials/p5') %> 
+
+
 <script src="js/motionCam.js"></script>
 <script>
+
+
 console.log(document.getElementById('rgbval_id').value)
 
 let lat, lon, accuracy
