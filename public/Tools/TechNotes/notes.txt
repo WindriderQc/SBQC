@@ -923,3 +923,36 @@ Changing the computer name is easy: just edit /etc/hostname , reboot and then ed
  Uranus     2 870 000 000                    51 000 
  Neptune   4 496 000 000                     49 200  
  Pluto         5 946 000 000                    290   
+
+
+
+example of REST file
+
+POST http://localhost:3001/api/user/login Content-Type: application/json
+
+{
+"name": "yb", "email": "yb@sbqc.com", "password": "passpass :)"
+}
+
+###
+
+GET http://localhost:5000/api/ 
+
+###
+
+GET http://localhost:3001/api/posts/ auth-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZTMzYWJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1nd82w7YYYV0
+
+###
+
+POST https://www.googleapis.com/geolocation/v1/geolocate?key=KEYYYYYYYYYYYYYYYYYYYYYYYYYYYY Content-Type: application/json
+
+{
+"homeMobileCountryCode": 418, "homeMobileNetworkCode": 581, "radioType": "gsm", "carrier": "Vodafone", "considerIp": "true", "cellTowers": [
+
+// See the Cell Tower Objects section below.
+], "wifiAccessPoints": [
+
+// See the WiFi Access Point Objects section below.
+]
+
+}
