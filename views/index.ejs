@@ -82,18 +82,16 @@
     <div class="row">
         <div class="col sm-8">
             <div>
-                <!-- <row>
-                    <image src="img/earth3d.png" height="80px"></image>
-                </row> -->
-                <row><h3> Welcome to a special blend of visuals, data gathering and games mini-projects using javascript and WebGL. </h3>
-                </row>
-                
+                <!-- <row>   <image src="img/earth3d.png" height="80px"></image>    </row> -->
+                <h3> Welcome to a special blend of visuals, data gathering and games mini-projects using javascript and WebGL. </h3>   
             </div> 
         </div>  
-        <div class="col sm-4">
-            <div class='card m-5 bg-transparent'>
-                <h4><%= sysInfo.data.hostname %></h4>
-                <div class='text-left ml-2'>
+    </div>  
+
+    <div class="row">
+        <div class="col sm-4 my-5 py-5">
+            <div class='card m-5 bg-transparent px-4 py-2 text-left ml-2'>
+                <h5>Hostname: <%= sysInfo.data.hostname %></h5>
                     <p>
                     <small>
                     OS: <%= sysInfo.data.ver %> <%= sysInfo.data.arch %>  <%= sysInfo.data.platform %> platform version <%= sysInfo.data.release %> </br>
@@ -101,20 +99,14 @@
                     CPUs: <%= sysInfo.cpus.length %> <%= sysInfo.cpus[0].model %> at <%= sysInfo.cpus[0].speed %> speed
                     </small>
                     </p>
-                </div>
             </div>
-
         </div>   
     </div>  
 
 
-     
-    <div class="row">
-        <div class="col-sm-12">
-           
-        </div>
 
-    </div>  
+     
+
 
   
     <div class="row">
@@ -123,7 +115,12 @@
             <div class="h6 text-muted small">  HitCount: <%- hitCount %>  </div> 
         </div>     
     </div>  
+    <div class="row">
+        <div class="col-sm-12">
+           
+        </div>
 
+    </div>  
 
     <div>
         <h3>Leave your mark!</h3>
