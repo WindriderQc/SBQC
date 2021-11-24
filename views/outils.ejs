@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head> <%- include('partials/head') %>
+
+<style>
+
+        /* unvisited link */
+    a:link {
+        color: rgba(88,79,63,255);
+    }
+
+    /* visited link */
+    a:visited {
+        color: rgba(88,79,63,255);
+    }
+
+    /* mouse over link */
+    a:hover {
+        color: rgba(142,140,98,255);
+    }
+
+    /* selected link */
+    a:active {
+        color: orange;
+    }
+</style>
+
+</head>
+
+<body class="fixed-nav sticky-footer bg-light sidenav-toggled" id="page-top">
+  
+<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top" id="mainNav">  <%- include('partials/nav') %>  </nav>
+
+<div class="content-wrapper">
+    <div class="container-fluid bg-3 text-center">  
+    <!-- Begin Container  -->      
+            
+    <div class="row">
+    
+        <div class="col-sm-4">
+            <div class="card mb-3">
+  
+                <div class="card-header" style="background-color: rgba(118, 190,70, 255);">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="float-left"> <i class="fas fa-palette"></i> </div>
+                        </div>
+                        <div class="col-md-6"> <h4> Color Finder </h4> </div>
+                        <div class="col-md-3">
+                            <div class="float-right"> <i class="fas fa-palette"></i> </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body"> <a href="/colorfinder"><i class="fas fa-eye-dropper fa-7x"></i></a> </div>
+                <div class="card-footer small text-muted">Drag and drop any image file and get color HEX code of selected pixel. </div>
+            </div>
+        </div>
+    
+        <div class="col-sm-4">
+            <div class="card mb-3">
+
+                <div class="card-header" style="background-color: rgba(118, 190,70, 255);"">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="float-left"> <i class="fas fa-glasses"></i> </div>
+                        </div>
+                        <div class="col-md-6"> <h4> Tech notes </h4> </div>
+                        <div class="col-md-3">
+                            <div class="float-right"> <i class="fas fa-glasses"></i> </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body"> <a href="/technotes"> <i class="far fa-sticky-note fa-7x"></i> </a> </div> 
+                <div class="card-footer small text-muted"> Collections of notes and tools information took along these projects.  </div>
+            </div>
+        </div>
+    
+        <div class="col-sm-4">
+            <div class="card mb-3">
+                <div class="card-header" style="background-color: rgba(118, 190,70, 255);">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="float-left"><i class="fas fa-tachometer-alt"></i> </div>
+                        </div>
+                        <div class="col-md-6"> <h4> Server Spec </h4> </div>
+                        <div class="col-md-3">
+                            <div class="float-right"> <i class="fas fa-tachometer-alt"></i> </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body"> <a href="/serverspec"> <i class="far fa-clipboard fa-7x"></i> </a> </div>
+                <div class="card-footer small text-muted"> Server specifications recorded at last boot.<br> <br> </div>
+            </div>
+        </div>
+    
+    </div>
+               
+    <!-- End Container  -->
+    </div>
+    </div>
+    
+    <%- include('partials/footer') %>
+    <%- include('partials/p5') %> 
+
+</body>
+</html>

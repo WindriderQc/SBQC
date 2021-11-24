@@ -52,6 +52,10 @@ router.get('/natureCode', (req, res) => {
     res.render('natureCode')
 })
 
+router.get('/outils', (req, res) => {
+    res.render('outils')
+})
+
 router.get('/legacy', (req, res) => {
     res.render('legacy', {weatherAPI: process.env.WEATHER_API})
 })
@@ -72,7 +76,16 @@ router.get('/specs', (req, res) => {
     res.render('specs')
 })
 
-
+//Tools
+router.get('/colorfinder', (req,res) => {
+    res.render('colorfinder')
+})
+router.get('/technotes', (req,res) => {
+    res.render('technotes')
+})
+router.get('/serverspec', (req,res) => {
+    res.render('serverspec')
+})
 
 //  APIs
 

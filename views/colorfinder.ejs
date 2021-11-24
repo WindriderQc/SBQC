@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <%- include('partials/head') %>  
+  <title>Color code Finder</title>
+ 
+  
+  <style>
+    #dropzone {
+      padding: 12px;
+      border-style: dashed;
+      font-size: 24pt;
+    }
+  </style> 
+</head>
+
+
+<body class="fixed-nav sticky-footer bg-light sidenav-toggled" id="page-top">
+  
+<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top" id="mainNav">  <%- include('partials/nav') %>  </nav>
+
+<div class="content-wrapper">
+<div class="container-fluid bg-3 text-center">  
+<!-- Begin Container  -->   
+
+<div id="canvas"></div>    
+
+<row> 
+    <div class='col-sm-12 mt-4 px-5 py-1'>   
+        <div id="dropzone"> Drag your img file here. </div> 
+        <div id="colorLabel"></div>
+    </div>
+</row>
+
+<!-- End Container  -->
+</div>
+</div>
+
+
+<script>
+
+//TODO:  ajouter un param Title au ejs partial/head
+
+
+class ColorPick {
+    constructor() {
+        this.pointColor = color('black')
+    }
+
+    // will actualize the color a
+    updateRender(showIndicator=false, indicatorSize=15)
+    {
+        // lets get the image from canvas
+        let canvasImage = get()
+
+        //get the color at the mouse position
+        let newColor = canvasImage.get(mouseX, mouseY);     // pixel color can be set the same way
+
+        this.pointColor = newColor
+      
+
+        if(showIndicator) 
+        { 
+            fill(this.pointColor)  //change the fill to color at mouse pos
+            rect(mouseX, mouseY, indicatorSize, indicatorSize) //draw a rectangle with that color
+        }   
+        return this.pointColor
+    }
+
+
+}
+
+
+
+let colorPick 
+let colorLabel
+
+let dropzone
+
+let img
+
+function preload() 
+{
+    img = loadImage('img/forest.jpg')
+}
+
+function setup()
+{
+    const lbl = document.getElementById('colorLabel')
+
+    let text = createP('color at mouse pos: ')   
+    //  text.position(10, 780)
+    text.parent(lbl)
+
+    colorLabel = createP('') 
+    colorLabel.parent(lbl)
+  
+    const can = createCanvas(1024,768)
+    can.parent(document.getElementById('canvas'))
+
+    colorPick = new ColorPick()
+
+    dropzone = select('#dropzone')
+    dropzone.dragOver(highlight)
+    dropzone.dragLeave(unhighlight)
+    dropzone.drop(gotFile, unhighlight)
+
+} 
+
+function gotFile(file) 
+{
+    createP(file.name + ' ' + file.size)
+    img = createImg(file.data, 'invalid image file')
+    //img.size(100, 100);
+}
+
+function highlight() 
+{
+    dropzone.style('background-color', '#ccc')
+}
+
+function unhighlight() 
+{
+    dropzone.style('background-color', '#fff')
+}
+
+function draw()
+{
+    background(255)
+    image(img, 0, 0)
+
+    colorPick.updateRender(true, 30) 
+    colorLabel.html(colorPick.pointColor)
+}
+
+function mousePressed() {
+
+}
+
+function keyPressed() {
+
+}
+
+</script>
+
+<%- include('partials/footer') %>
+<%- include('partials/p5') %> 
+
+</body>
+</html>
