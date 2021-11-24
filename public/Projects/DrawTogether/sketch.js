@@ -1,5 +1,6 @@
 /// <reference path="../p5.global-mode.d.ts" />
 
+// TODO:  add disclaimer about localhost socket.io is required or implement secure on cloud server
 let socket;
 
 function setup() 
@@ -11,13 +12,12 @@ function setup()
 
     socket.on('mouse', alienDrawing)
 
-    socket.on('iss', (data) => { console.log(data) })
+    socket.on('iss', (data) => { console.log('ISS location:', data) })
 } 
 
 function draw() 
 { 
    
-
 }
 
 function mouseDragged() 

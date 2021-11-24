@@ -66,8 +66,8 @@ const sessionOptions = {
 require('./mongoCollections')
 
 
-//Mongodb Client setup  with CloudDB
-/*const mongo = require('./mongo')
+//Mongodb Client setup  with CloudDB  // TODO: used for posts book but should be uniformized to one DB.  the use of collection in app.locals seem different
+const mongo = require('./mongo')
 
 mongo.connectDb('test', async (mongodb) =>{    // dbServ, test, admin, local 
 
@@ -83,7 +83,7 @@ mongo.connectDb('test', async (mongodb) =>{    // dbServ, test, admin, local
     app.locals.collections.server.insertOne({ name: "dbServer boot", date: Date.now() })   //   TODO:  Server may not exist
 
 })
-*/
+
 
 
 

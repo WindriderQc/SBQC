@@ -16,66 +16,135 @@
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 0;
+    z-index: -1;
 } 
+
+
+    
+    .error-message {
+      background: #ff9b9b;
+      color: white;
+      border-radius: 5px;
+      padding: 10px;
+    }
+    
+    .mew-form, .loading {
+      width: 50%;
+      margin: 0 auto;
+    }
+    
+    .loading {
+      text-align: center;
+    }
+    
+    .mews {
+      width: 60%;
+      margin: 0 auto;
+    }
+    
+    .mews > div {
+      background: hsla(0, 0%, 95%, 80%);
+      padding: 12px;
+      border-radius: 4px;
+    }
+    
+    .mews > div > h4 {
+      word-wrap: break-word;
+    }
+    
+    .mews > div > p {
+      word-wrap: break-word;
+    }
+    
+    .mews > div:not(:last-child) {
+      margin-bottom: 8px;
+    }
+    
+    .button-container {
+      display: flex;
+      justify-content: center;
+      margin: 1em;
+    }
+
 </style>
 
-<body class="fixed-nav sticky-footer bg-light " id="page-top">
+<body class="fixed-nav sticky-footer bg-transparent " id="page-top">
 <div id="canvasDiv" ></div>
-<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top" id="mainNav">    <%- include('partials/nav') %>  </nav>
+<nav class="navbar navbar-expand-lg navbar-light bg-transparent fixed-top" id="mainNav">    <%- include('partials/nav') %>  </nav>
 
-<div class="content-wrapper">
-<div class="container-fluid text-center">  
+<div class="content-wrapper bg-transparent">
+<div class="container-fluid text-center ">  
  <!-- Begin Container  -->  
   
   <div id=screen_id></div>
   <div id='speech'></div>
 
     <div class="row">
-        <div class="col sm-2"></div>
-            <div class="col sm-8">
-                <div class="h3"> Welcome to a special blend of visuals, data gathering and games mini-projects using javascript and WebGL.  </div> 
-            </div>  
-        <div class="col sm-2"></div>   
+        <div class="col sm-8">
+            <div>
+                <!-- <row>
+                    <image src="img/earth3d.png" height="80px"></image>
+                </row> -->
+                <row><h3> Welcome to a special blend of visuals, data gathering and games mini-projects using javascript and WebGL. </h3>
+                </row>
+                
+            </div> 
+        </div>  
+        <div class="col sm-4">
+            <div class='card m-5 bg-transparent'>
+                <h4><%= sysInfo.data.hostname %></h4>
+                <div class='text-left ml-2'>
+                    <p>
+                    <small>
+                    OS: <%= sysInfo.data.ver %> <%= sysInfo.data.arch %>  <%= sysInfo.data.platform %> platform version <%= sysInfo.data.release %> </br>
+                    Free Memory:  <%= (sysInfo.data.freemem / 1000000000).toFixed(2) %>  /  <%= (sysInfo.data.totalmem / 1000000000).toFixed(2) %> Gb</br>
+                    CPUs: <%= sysInfo.cpus.length %> <%= sysInfo.cpus[0].model %> at <%= sysInfo.cpus[0].speed %> speed
+                    </small>
+                    </p>
+                </div>
+            </div>
+
+        </div>   
     </div>  
 
 
      
-  <div class="row">
-    <div class="col-sm-12">
-      <div class='card m-5'>
-          <div>
-          <!-- <div class="row"><iframe width="320" height="240" src="Projects/NOC/s1/index.html" frameborder="0" ></iframe></div>-->
-            <h3><%= sysInfo.data.hostname %></h3>
-            <div class='text-left'>
-              <p>
-              OS: <%= sysInfo.data.ver %> <%= sysInfo.data.arch %>  <%= sysInfo.data.platform %> platform version <%= sysInfo.data.release %> </br>
-              Free Memory:  <%= (sysInfo.data.freemem / 1000000000).toFixed(2) %>  /  <%= (sysInfo.data.totalmem / 1000000000).toFixed(2) %> Gb</br>
-              CPUs: <%= sysInfo.cpus.length %> <%= sysInfo.cpus[0].model %> at <%= sysInfo.cpus[0].speed %> speed
-              </p>
-            </div>
-          </div> 
-      </div>
-    </div>
-  </div>  
+    <div class="row">
+        <div class="col-sm-12">
+           
+        </div>
 
-      
-
-
-  <div class="row">       
-         <!--   <iframe width="640" height="480" src="Projects/NOC/sAll/index.html" frameborder="0" ></iframe> -->
-  </div>  
-
-  <div class="row">
-    <div class="col sm-11">
     </div>  
-    <div class="col sm-1 text-right">
-      <div class="h6 text-muted small">  HitCount: <%- hitCount %>  </div> 
-    </div>     
-  </div>  
-
 
   
+    <div class="row">
+        <div class="col sm-11"></div>  
+        <div class="col sm-1 text-right">
+            <div class="h6 text-muted small">  HitCount: <%- hitCount %>  </div> 
+        </div>     
+    </div>  
+
+
+    <div>
+        <h3>Leave your mark!</h3>
+        <form class="mew-form ">
+            <div class="error-message "></div>
+            <label for="name">Name</label>
+            <input class="form-control" type="text" id="name" name="name">
+            <label for="content">Post</label>
+            <textarea class="form-control" type="text" id="content" name="content"></textarea>
+            <button class="form-control bg-warning my-1" id="poster">Send Your Salutations</button>
+        </form>
+        <div class="mews"></div>
+        <div class="button-container">
+        <!-- <button id="loadMoreButton" class="button-primary" style="visibility: hidden">Load More Mews</button> -->
+            <p id="loadMore">Loading...</p>
+        </div>
+        <div class="loading">
+            <img src="img/loading.gif" alt="">
+        </div>
+    </div>
+
  <!-- End Container  -->
 </div>
 </div>
@@ -225,5 +294,149 @@ function draw()
         }
     }
    
+}
+
+
+
+
+
+
+
+const form = document.querySelector('form'); // grabbing an element on the page
+const errorElement = document.querySelector('.error-message');
+const loadingElement = document.querySelector('.loading');
+const mewsElement = document.querySelector('.mews');
+const loadMoreElement = document.querySelector('#loadMore');
+
+const apiUrl =  <%- JSON.stringify(apiUrl) %>;
+//const API_URL = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') ? 'http://localhost:3001/meows/v2/mews' : 'https://meower-api.now.sh/v2/mews';
+const API_URL =  apiUrl + '/meows/v2/mews' 
+
+
+let skip = 0;
+let limit = 20;  //   TODO:  si le limit est plus petit que window et y apas de scroll....   le scroll event launch pas
+let loading = false;
+let finished = false;
+
+errorElement.style.display = 'none';
+
+document.addEventListener('scroll', () => {
+  const rect = loadMoreElement.getBoundingClientRect();
+  if (rect.top < window.innerHeight && !loading && !finished) {
+    loadMore();
+  }
+});
+
+listAllMews();
+
+form.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const formData = new FormData(form);
+  const name = formData.get('name');
+  const content = formData.get('content');
+
+  if (name.trim() && content.trim()) {
+    errorElement.style.display = 'none';
+    form.style.display = 'none';
+    loadingElement.style.display = '';
+
+    const mew = {
+      name,
+      content
+    };
+    
+    fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify(mew),
+      headers: {
+        'content-type': 'application/json'
+      }
+    }).then(response => {      
+      if (!response.ok) {
+        const contentType = response.headers.get('content-type');
+        if (contentType.includes('json')) {
+          return response.json().then(error => Promise.reject(error.message));
+        } else {
+          return response.text().then(message => Promise.reject(message));
+        }
+      }
+    }).then(() => {
+      form.reset();
+      setTimeout(() => {
+        form.style.display = '';
+      }, 10000);
+      setTimeout(listAllMews, 1500) //  timeout prevent to launch before rateLimit  ..  TODO: weird    //listAllMews();
+    }).catch(errorMessage => {
+      form.style.display = '';
+      errorElement.textContent = errorMessage;
+      errorElement.style.display = '';
+      loadingElement.style.display = 'none';
+    });
+  } else {
+    errorElement.textContent = 'Name and content are required!';
+    errorElement.style.display = '';
+  }
+});
+
+function loadMore() {
+  skip += limit;
+  listAllMews(false);
+}
+
+function listAllMews(reset = true) {
+  loading = true;
+  if (reset) {
+    console.log('reset')
+    mewsElement.innerHTML = '';
+    skip = 0;
+    finished = false;
+  }
+
+  const url = `${API_URL}?skip=${skip}&limit=${limit}`
+
+  fetch(url)
+    .then(response => response.json())
+    .then(result => {
+      result.mews.forEach(mew => {
+        const div = document.createElement('div');
+        
+        const r = document.createElement('div');
+        r.classList.add("row")
+        const col1 = document.createElement('div');
+        col1.classList.add('col-sm-3')
+        
+        const header = document.createElement('h4');
+        header.textContent = mew.name;
+        
+       
+        const col2 = document.createElement('div');
+        col2.classList.add('col-sm-9')
+
+        const contents = document.createElement('p');
+        contents.textContent = mew.content;
+
+        const date = document.createElement('small');
+        date.textContent = new Date(mew.created);
+
+
+        col1.appendChild(header)
+        col2.appendChild(contents);
+        col2.appendChild(date);
+        r.appendChild(col1)
+        r.appendChild(col2)
+        div.appendChild(r);
+      
+
+        mewsElement.appendChild(div);
+      });
+      loadingElement.style.display = 'none';
+      if (!result.meta.has_more) {
+        loadMoreElement.style.visibility = 'hidden';
+        finished = true;
+      } else {
+        loadMoreElement.style.visibility = 'visible';
+      }
+      loading = false;
+    });
 }
   </script>
