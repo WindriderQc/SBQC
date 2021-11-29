@@ -103,7 +103,25 @@
             </div>
         </div>
     </div>
-               
+           
+    
+    <!--    Sys Info   -->
+    <div class='row'>
+        <div class='col sm-4 my-5 py-5'>
+            <div class='card m-5 bg-transparent px-4 py-2 text-left ml-2'>
+                <h5>Hostname: <%= sysInfo.data.hostname %></h5>
+                    <p>
+                    <small>
+                    OS: <%= sysInfo.data.ver %> <%= sysInfo.data.arch %>  <%= sysInfo.data.platform %> platform version <%= sysInfo.data.release %> </br>
+                    Free Memory:  <%= (sysInfo.data.freemem / 1000000000).toFixed(2) %>  /  <%= (sysInfo.data.totalmem / 1000000000).toFixed(2) %> Gb</br>
+                    CPUs: <%= sysInfo.cpus.length %> <%= sysInfo.cpus[0].model %> at <%= sysInfo.cpus[0].speed %> speed
+                    </small>
+                    </p>
+            </div>
+        </div>   
+    </div>  
+
+    
     <!-- End Container  -->
     </div>
     </div>

@@ -1,146 +1,105 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang='en'>
 
 <head>
-  
   <%- include('partials/head') %> 
-  
+  <link rel='stylesheet' href='css/mews.css'>
+  <link rel='stylesheet' href='css/rockPaperScissor.css'>
 </head>
 
-<style>
-    #canvasDiv {
-    position:absolute;  /*fixed */
-    padding:0;
-    margin:0;
-    top:0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-} 
 
+<body class='fixed-nav sticky-footer bg-transparent ' id='page-top'>
+<div id='canvasDiv' ></div>
+<nav class='navbar navbar-expand-lg navbar-light bg-transparent fixed-top' id='mainNav'>    <%- include('partials/nav') %>  </nav>
 
-    
-    .error-message {
-      background: #ff9b9b;
-      color: white;
-      border-radius: 5px;
-      padding: 10px;
-    }
-    
-    .mew-form, .loading {
-      width: 50%;
-      margin: 0 auto;
-    }
-    
-    .loading {
-      text-align: center;
-    }
-    
-    .mews {
-      width: 60%;
-      margin: 0 auto;
-    }
-    
-    .mews > div {
-      background: hsla(0, 0%, 95%, 80%);
-      padding: 12px;
-      border-radius: 4px;
-    }
-    
-    .mews > div > h4 {
-      word-wrap: break-word;
-    }
-    
-    .mews > div > p {
-      word-wrap: break-word;
-    }
-    
-    .mews > div:not(:last-child) {
-      margin-bottom: 8px;
-    }
-    
-    .button-container {
-      display: flex;
-      justify-content: center;
-      margin: 1em;
-    }
-
-</style>
-
-<body class="fixed-nav sticky-footer bg-transparent " id="page-top">
-<div id="canvasDiv" ></div>
-<nav class="navbar navbar-expand-lg navbar-light bg-transparent fixed-top" id="mainNav">    <%- include('partials/nav') %>  </nav>
-
-<div class="content-wrapper bg-transparent">
-<div class="container-fluid text-center ">  
+<div class='content-wrapper bg-transparent'>
+<div class='container-fluid text-center '>  
  <!-- Begin Container  -->  
   
   <div id=screen_id></div>
   <div id='speech'></div>
 
-    <div class="row">
-        <div class="col sm-8">
+    <div class='row'>
+        <div class='col sm-8'>
             <div>
-                <!-- <row>   <image src="img/earth3d.png" height="80px"></image>    </row> -->
+                <!-- <row>   <image src='img/earth3d.png' height='80px'></image>    </row> -->
                 <h3> Welcome to a special blend of visuals, data gathering and games mini-projects using javascript and WebGL. </h3>   
             </div> 
         </div>  
     </div>  
 
-    <div class="row">
-        <div class="col sm-4 my-5 py-5">
-            <div class='card m-5 bg-transparent px-4 py-2 text-left ml-2'>
-                <h5>Hostname: <%= sysInfo.data.hostname %></h5>
-                    <p>
-                    <small>
-                    OS: <%= sysInfo.data.ver %> <%= sysInfo.data.arch %>  <%= sysInfo.data.platform %> platform version <%= sysInfo.data.release %> </br>
-                    Free Memory:  <%= (sysInfo.data.freemem / 1000000000).toFixed(2) %>  /  <%= (sysInfo.data.totalmem / 1000000000).toFixed(2) %> Gb</br>
-                    CPUs: <%= sysInfo.cpus.length %> <%= sysInfo.cpus[0].model %> at <%= sysInfo.cpus[0].speed %> speed
-                    </small>
-                    </p>
-            </div>
-        </div>   
-    </div>  
-
-
-
-     
-
-
-  
-    <div class="row">
-        <div class="col sm-11"></div>  
-        <div class="col sm-1 text-right">
-            <div class="h6 text-muted small">  HitCount: <%- hitCount %>  </div> 
-        </div>     
-    </div>  
-    <div class="row">
-        <div class="col-sm-12">
-           
+    <div class='row'>
+        <div class='col-sm-12'>   
+                </br></br></br></br></br></br></br></br></br></br></br></br></br>
         </div>
+    </div>
+  
 
+<!--     Game    -->
+    <div class='row'>
+        <div class='col-sm-12'>
+            <div class='card game-canvas bg-transparent'>
+                <div class='card-header '>
+                    <h1>Rock Paper Scissors</h1> 
+                </div>
+                
+            
+                <div class='score-board'>
+                    <div id='user-label' class='badge'>user</div>
+                    <div id='computer-label' class='badge'>comp</div>
+                    <span id='user-score'>0</span>:<span id='computer-score'>0</span>
+                </div>
+        
+                <div class='result'> <p></p> </div>
+            
+                <div class='choices'>
+                    <div class='choice' id='r'>
+                        <img src='img/rock.png' alt=''>
+                    </div>
+                    <div class='choice' id='p'>
+                        <img  src='img/paper.png' alt=''>
+                    </div>
+                    <div class='choice' id='s'>
+                        <img src='img/scissors.png' alt=''>
+                    </div>
+                </div>
+            
+                <p id='action-message'>Why not play with me? </p>
+            </div>  
+        </div>
+    </div>  
+
+
+
+ <!--     Visitor Book   -->   
+    <div class='row mt-5'>
+        <div class='col sm-11'></div>  
+        <div class='col sm-1 text-right'>
+            <div class='h6 text-muted small'>  HitCount: <%- hitCount %>  </div> 
+        </div>     
     </div>  
 
     <div>
         <h3>Leave your mark!</h3>
-        <form class="mew-form ">
-            <div class="error-message "></div>
-            <label for="name">Name</label>
-            <input class="form-control" type="text" id="name" name="name">
-            <label for="content">Post</label>
-            <textarea class="form-control" type="text" id="content" name="content"></textarea>
-            <button class="form-control bg-warning my-1" id="poster">Send Your Salutations</button>
+        <form class='mew-form  mb-3 '>
+            <div class='error-message '></div>
+            <label for='name'>Name</label>
+            <input class='form-control' type='text' id='name' name='name'>
+            <label for='content'>Post</label>
+            <textarea class='form-control' type='text' id='content' name='content'></textarea>
+            <button class='form-control bg-warning my-1' id='poster'>Send Your Salutations</button>
         </form>
-        <div class="mews"></div>
-        <div class="button-container">
-        <!-- <button id="loadMoreButton" class="button-primary" style="visibility: hidden">Load More Mews</button> -->
-            <p id="loadMore">Loading...</p>
+        <div class='mews'></div>
+        <div class='button-container'>
+        <!-- <button id='loadMoreButton' class='button-primary' style='visibility: hidden'>Load More Mews</button> -->
+            <p id='loadMore'>Loading...</p>
         </div>
-        <div class="loading">
-            <img src="img/loading.gif" alt="">
+        <div class='loading'>
+            <img src='img/loading.gif' alt=''>
         </div>
     </div>
+
+
 
  <!-- End Container  -->
 </div>
@@ -150,8 +109,9 @@
 <%- include('partials/footer') %>
 
 <%- include('partials/p5') %> 
-<script type="text/javascript" src="js/p5.speech.js"></script>
-<script type="text/javascript" src="js/nestor.js"></script>
+<script type='text/javascript' src='js/p5.speech.js'></script>
+<script type='text/javascript' src='js/nestor.js'></script>
+<script type='text/javascript' src='js/rockPaperScissor.js'></script>
 
 </body>
 </html>
@@ -402,7 +362,7 @@ function listAllMews(reset = true) {
     },
     redirect: 'follow', // manual, *follow, error
     referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-    body: JSON.stringify(data) // body data type must match "Content-Type" header
+    body: JSON.stringify(data) // body data type must match 'Content-Type' header
     */
   }
 
@@ -414,7 +374,7 @@ function listAllMews(reset = true) {
         const div = document.createElement('div');
         
         const r = document.createElement('div');
-        r.classList.add("row")
+        r.classList.add('row')
         const col1 = document.createElement('div');
         col1.classList.add('col-sm-3')
         
