@@ -4,13 +4,12 @@ sudo systemctl start ssh
 
 sudo sed -i '/preserve_hostname: false/c\preserve_hostname: true' /etc/cloud/cloud.cfg && sudo hostnamectl set-hostname flyingHQ     //  this will set the hostname and insure it stays onto cloud VM
 
-FlyingHQ server:   ssh yb@104.129.129.22
 
+/* Install node.js */
 
-/* Install node.js v15 */
+curl -fsSL https://deb.nodesource.com/setup_current.x | sudo -E bash -
+sudo apt-get install -y nodejs
 
-curl -sL https://deb.nodesource.com/setup_15.x | sudo -E bash -
-sudo apt install -y nodejs
   //  Test Node installation
 node -v
 node hello.js
@@ -44,9 +43,7 @@ cd /etc/nginx/sites-available
 sudo xed default
 
 ex:
-
             server {
-
 
                   location / {
                   proxy_pass http://localhost:3001;
@@ -57,28 +54,8 @@ ex:
                   proxy_cache_bypass $http_upgrade;
                   }
 
-                  location /cams/babypi {
-                  proxy_pass http://10.0.0.74:8081;
-                        proxy_http_version 1.1;
-                        proxy_set_header Upgrade $http_upgrade;
-                        proxy_set_header Connection 'upgrade';
-                        proxy_set_header Host $host;
-                        proxy_cache_bypass $http_upgrade;
-
-                  }
-
-                  location /cams/keeper {
-                  proxy_pass http://192.168.0.33:8081;
-                        proxy_http_version 1.1;
-                        proxy_set_header Upgrade $http_upgrade;
-                        proxy_set_header Connection 'upgrade';
-                        proxy_set_header Host $host;
-                        proxy_cache_bypass $http_upgrade;
-
-                  }
-
-                  location /cams/blackpi {
-                        proxy_pass http://192.168.0.252:8083;
+                  location /cams/raspi {
+                        proxy_pass http://192.168.0.666:8083;
 
 
                         proxy_http_version 1.1;
@@ -155,7 +132,7 @@ Link to connect to local DB in Compass:
 mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&ssl=false
 
 Link to connect to cloud MongoDB or local in node.js:
-DB_CONNECTION=mongodb+srv://yb:!!!PASSWORD!!!@cluster0-b2xaf.mongodb.net/test?retryWrites=true&w=majority
+DB_CONNECTION=mongodb+srv://USER:!!!PASSWORD!!!@cluster0-XXXX.mongodb.net/test?retryWrites=true&w=majority
 DB_CONNECTION=mongodb://127.0.0.1:27017/IoT
 
 
