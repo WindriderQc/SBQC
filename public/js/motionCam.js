@@ -109,7 +109,7 @@ function setup()
         },
         body: JSON.stringify(data)
       }
-      const response = await fetch('/api', options)
+      const response = await fetch('/checkins/api', options)
       const json = await response.json()
       console.log(json)
 

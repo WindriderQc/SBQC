@@ -22,6 +22,7 @@ async function getISS()
     } 
     catch (error) {
         console.log(error)
+        console.log('Better luck next time...  Keep Rolling! ')
         datas.iss = {latitude:0,longitude:0}
     } 
 

@@ -9,7 +9,7 @@ function init(server)
     if (io_) {   console.warn("Already initialized and Trying to init Socket.io again!");  return io_     }
     
     console.log('Launching socket server...')
-    const io  = socket(server)
+    const io  = socket(server, { cors: { origin: '*' } })
        
     io.on('connection', (socket) => {
         console.log('New Connection: ', socket.id )

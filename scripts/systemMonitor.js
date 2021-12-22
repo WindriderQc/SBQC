@@ -3,7 +3,7 @@ const os = require('os')
 class SystemMonitor {
     constructor() {
         this.updateSysInfo()
-        setInterval(this.updateSysInfo, 5000) 
+        setInterval(this.updateSysInfo, 15000) 
     }
     updateSysInfo() {
         let ver = os.version()

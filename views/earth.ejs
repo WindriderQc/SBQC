@@ -18,9 +18,9 @@
         
 
         <p>
-                The weather here is <span id="summary"></span> with a temperature of <span id="temp"></span>&deg; C. <br>
-                The concentration of particulate matter (<span id="aq_parameter"></span>) is <span id="aq_value"></span> <span id="aq_units"></span> <br>
-                <small> Last read on <span id="aq_date"></span></small> 
+            At location: <span id="summary"></span> with a temperature of <span id="temp"></span>&deg; C. <br>
+            Concentration of particulate matter - (<span id="aq_parameter"></span>) <span id="aq_value"></span> <span id="aq_units"></span> <br>
+            <small> Last read on <span id="aq_date"></span></small> 
         </p>  
 
 
@@ -29,7 +29,7 @@
                 <div class="card-body" >
                         <div id="sketch-holder">
                 </div>
-                <div class="card-footer small text-muted">  </div>
+                <div class="card-footer small text-muted">Press 's' to save canvas to png  </div>
         </div>
 
 
@@ -64,7 +64,8 @@
 
 let iss   // International Space Station location     
 
-let socket = io.connect('http://localhost:3001')
+const apiUrl =  <%- JSON.stringify(apiUrl) %>;
+let socket = io.connect(apiUrl)
 
 socket.on('iss', (data) => { 
     iss = data
@@ -247,15 +248,24 @@ function setup()
   canvas.parent('sketch-holder');
   //  var cnv = createCanvas(windowWidth, windowHeight);
   // cnv.style('display', 'block');  //  prevents scrool bar to show...
-
-  socket = io.connect('http://localhost:3001')
- 
+  
 }
 
 /* function windowResized()    //  called everytime the browser window is resized. 
 {
   resizeCanvas(windowWidth, windowHeight);
 } */
+
+function keyPressed() {
+  if (key === 's') {
+   saveCanvas('earth3d', 'png');
+  } 
+}
+
+function mouseClicked() {
+ // 
+} 
+
 
 function draw() 
 {

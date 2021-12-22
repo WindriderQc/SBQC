@@ -12,7 +12,6 @@ let userScore = 0
 let computerScore = 0
 
 
-
 function getComputerChoice() {
     const choices = ['r', 'p', 's']
     const randomNum =  Math.floor(Math.random() *3)
@@ -49,18 +48,16 @@ function lose(userchoice, computerchoice) {
     setTimeout(()=> playerMove.classList.remove('red-glow'), 400)
 }
 
-function draw(userchoice, computerchoice) {
+function nobodywins(userchoice, computerchoice) {   
     const playerMove = document.getElementById(userchoice)
-
+    
     result_p.innerHTML =  `${convertToWord(computerchoice)} equals ${convertToWord(userchoice)},  It's a Draw...  ⚖️`
     playerMove.classList.add('gray-glow')
     setTimeout(()=> playerMove.classList.remove('gray-glow'), 400)
 }
 
-
 function game(userChoice)  {
     const computerChoice = getComputerChoice()
-
     //console.log("user choice => " + userChoice)
     //console.log("computer choice => " + computerChoice)
 
@@ -81,10 +78,9 @@ function game(userChoice)  {
         case "pp":
         case "ss":
             console.log("IT'S A DRAW")
-            draw(userChoice, computerChoice)
+            nobodywins(userChoice, computerChoice)
             break    
     }
-
 }
 
 rock_div.addEventListener('click', () => game('r') )

@@ -1,84 +1,106 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang='en'>
 
 <head>
-  
   <%- include('partials/head') %> 
-  
+  <link rel='stylesheet' href='css/mews.css'>
+  <link rel='stylesheet' href='css/rockPaperScissor.css'>
 </head>
 
-<style>
-    #canvasDiv {
-    position:absolute;  /*fixed */
-    padding:0;
-    margin:0;
 
-    top:0;
-    left: 0;
+<body class='fixed-nav sticky-footer bg-transparent ' id='page-top'>
+<div id='canvasDiv' ></div>
+<nav class='navbar navbar-expand-lg navbar-light bg-transparent fixed-top' id='mainNav'>    <%- include('partials/nav') %>  </nav>
 
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-} 
-
-</style>
-
-<body class="fixed-nav sticky-footer bg-light " id="page-top">
-<div id="canvasDiv" ></div>
-<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top" id="mainNav">    <%- include('partials/nav') %>  </nav>
-
-<div class="content-wrapper">
-<div class="container-fluid text-center">  
+<div class='content-wrapper bg-transparent'>
+<div class='container-fluid text-center '>  
  <!-- Begin Container  -->  
   
   <div id=screen_id></div>
   <div id='speech'></div>
 
-    <div class="row">
-        <div class="col sm-2"></div>
-            <div class="col sm-8">
-                <div class="h3"> Welcome to a special blend of visuals, data gathering and games mini-projects using javascript and WebGL.  </div> 
-            </div>  
-        <div class="col sm-2"></div>   
+    <div class='row'>
+        <div class='col sm-8'>
+            <div>
+                <!-- <row>   <image src='img/earth3d.png' height='80px'></image>    </row> -->
+                <h3> Welcome to a special blend of visuals, data gathering and games mini-projects using javascript and WebGL. </h3>   
+            </div> 
+        </div>  
     </div>  
 
-
-     
-  <div class="row">
-    <div class="col-sm-12">
-      <div class='card m-5'>
-          <div>
-          <!-- <div class="row"><iframe width="320" height="240" src="Projects/NOC/s1/index.html" frameborder="0" ></iframe></div>-->
-            <h3><%= sysInfo.data.hostname %></h3>
-            <div class='text-left'>
-              <p>
-              OS: <%= sysInfo.data.ver %> <%= sysInfo.data.arch %>  <%= sysInfo.data.platform %> platform version <%= sysInfo.data.release %> </br>
-              Free Memory:  <%= (sysInfo.data.freemem / 1000000000).toFixed(2) %>  /  <%= (sysInfo.data.totalmem / 1000000000).toFixed(2) %> Gb</br>
-              CPUs: <%= sysInfo.cpus.length %> <%= sysInfo.cpus[0].model %> at <%= sysInfo.cpus[0].speed %> speed
-              </p>
-            </div>
-          </div> 
-      </div>
+    <div class='row'>
+        <div class='col-sm-12'>   
+                </br></br></br></br></br></br></br></br></br></br></br></br></br>
+        </div>
     </div>
-  </div>  
-
-      
-
-
-  <div class="row">       
-         <!--   <iframe width="640" height="480" src="Projects/NOC/sAll/index.html" frameborder="0" ></iframe> -->
-  </div>  
-
-  <div class="row">
-    <div class="col sm-11">
-    </div>  
-    <div class="col sm-1 text-right">
-      <div class="h6 text-muted small">  HitCount: <%- hitCount %>  </div> 
-    </div>     
-  </div>  
-
-
   
+
+<!--     Game    -->
+    <div class='row'>
+        <div class='col-sm-12'>
+            <div class='card game-canvas bg-transparent'>
+                <div class='card-header '>
+                    <h1>Rock Paper Scissors</h1> 
+                </div>
+                
+            
+                <div class='score-board'>
+                    <div id='user-label' class='badge'>user</div>
+                    <div id='computer-label' class='badge'>comp</div>
+                    <span id='user-score'>0</span>:<span id='computer-score'>0</span>
+                </div>
+        
+                <div class='result'> <p></p> </div>
+            
+                <div class='choices'>
+                    <div class='choice' id='r'>
+                        <img src='img/rock.png' alt=''>
+                    </div>
+                    <div class='choice' id='p'>
+                        <img  src='img/paper.png' alt=''>
+                    </div>
+                    <div class='choice' id='s'>
+                        <img src='img/scissors.png' alt=''>
+                    </div>
+                </div>
+            
+                <p id='action-message'>Why not play with me? </p>
+            </div>  
+        </div>
+    </div>  
+
+
+
+ <!--     Visitor Book   -->   
+    <div class='row mt-5'>
+        <div class='col sm-11'></div>  
+        <div class='col sm-1 text-right'>
+            <div class='h6 text-muted small'>  HitCount: <%- hitCount %>  </div> 
+        </div>     
+    </div>  
+
+    <div>
+        <h3>Leave your mark!</h3>
+        <form class='mew-form  mb-3 '>
+            <div class='error-message '></div>
+            <label for='name'>Name</label>
+            <input class='form-control' type='text' id='name' name='name'>
+            <label for='content'>Post</label>
+            <textarea class='form-control' type='text' id='content' name='content'></textarea>
+            <button class='form-control bg-warning my-1' id='poster'>Send Your Salutations</button>
+        </form>
+        <div class='mews'></div>
+        <div class='button-container'>
+        <!-- <button id='loadMoreButton' class='button-primary' style='visibility: hidden'>Load More Mews</button> -->
+            <p id='loadMore'>Loading...</p>
+        </div>
+        <div class='loading'>
+            <img src='img/loading.gif' alt=''>
+        </div>
+    </div>
+
+
+
  <!-- End Container  -->
 </div>
 </div>
@@ -87,16 +109,15 @@
 <%- include('partials/footer') %>
 
 <%- include('partials/p5') %> 
-<script type="text/javascript" src="js/p5.speech.js"></script>
-<script type="text/javascript" src="js/nestor.js"></script>
+<script type='text/javascript' src='js/p5.speech.js'></script>
+<script type='text/javascript' src='js/nestor.js'></script>
+<script type='text/javascript' src='js/rockPaperScissor.js'></script>
 
 </body>
 </html>
 
 <script>
-
   //    WALKER
-
   function Walker() {
   
   // Start Walker in center with 0 velocity
@@ -109,8 +130,6 @@
   this.setColor = function(newColor) {
       this.color = newColor
   }
-
-
   // Loop - Display Walker on canvas  
   this.render = function() {
       stroke(this.color)
@@ -127,24 +146,16 @@
       this.acc = p5.Vector.sub(scrpos, this.pos);
       // Setting the magnitude of that vector
       this.acc.setMag(0.4);
-
        // Physics engine algorithm
       this.vel.add(this.acc);
       this.pos.add(this.vel);
-
       // Keep walker On Screen
       this.pos.x = constrain(this.pos.x, 0, width - 1);
       this.pos.y = constrain(this.pos.y, 0, height - 1);
   }
 }
-
-
-
-
 //  PARTICLE
-
 class Particle {
-
   constructor(startX, startY) {
     this.x = startX;
     this.y = startY;
@@ -153,56 +164,41 @@ class Particle {
     this.d = random(15, 35);
     this.acc = 0.1;
     this.alpha = 255;
-
-
   }
-
   update() {
     this.vy = this.vy - this.acc;
     this.x += this.vx;
     this.y += this.vy;
     this.alpha -= 4;
   }
-
   isFinished() {
     return this.alpha < 30;
   }
-
   show() {
     noStroke();
     fill(255, random(80,190), 0,this.alpha);
     circle(this.x, this.y, this.d)
   }
-
   show1(colorX, colorY){
     noStroke();
     fill(colorX, random(80,190), colorY, this.alpha);
     circle(this.x, this.y, this.d)
   }
-
   show2(colorX, colorY){
     noStroke();
     fill(random(80,190), colorX, colorY, this.alpha);
     circle(this.x, this.y, this.d)
   }
-
 }
-
-
-
-
 // SKETCH
-
 let particles = [];
 let particles2 = [];
 let particles3 = [];
 let walker, walker2, walker3;
-
 function setup() 
 {
   let canvas = createCanvas(windowWidth, windowHeight);
   canvas.parent('canvasDiv');
-
   //create walker
   walker = new Walker();
   walker2 = new Walker(); 
@@ -212,7 +208,6 @@ function setup()
 function windowResized() {
     resizeCanvas(windowWidth, windowHeight);
 }
-
 function draw() 
 {
    
@@ -222,8 +217,6 @@ function draw()
     walker.update();
     walker2.update();
     walker3.update();
-
-
     for (let i = 0; i < 2; i++) {
         let p = new Particle(walker.pos.x, walker.pos.y);
         particles.push(p);
@@ -235,7 +228,6 @@ function draw()
             particles.splice(i, 1);
         }
     }  
-
     for (let i = 0; i < 2; i++) {
         let p2 = new Particle(walker2.pos.x, walker2.pos.y);
         particles2.push(p2);
@@ -247,7 +239,6 @@ function draw()
             particles2.splice(i, 1);
         }
     }
-
     for (let i = 0; i < 2; i++) {
         let p3 = new Particle(walker3.pos.x, walker3.pos.y);
         particles3.push(p3);
@@ -262,4 +253,163 @@ function draw()
    
 }
 
+
+
+
+
+
+
+const form = document.querySelector('form'); // grabbing an element on the page
+const errorElement = document.querySelector('.error-message');
+const loadingElement = document.querySelector('.loading');
+const mewsElement = document.querySelector('.mews');
+const loadMoreElement = document.querySelector('#loadMore');
+
+const apiUrl =  <%- JSON.stringify(apiUrl) %>;
+//const API_URL = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') ? 'http://localhost:3001/meows/v2/mews' : 'https://meower-api.now.sh/v2/mews';
+const API_URL =  apiUrl + '/meows/v2/mews' 
+
+
+let skip = 0;
+let limit = 20;  //   TODO:  si le limit est plus petit que window et y apas de scroll....   le scroll event launch pas
+let loading = false;
+let finished = false;
+
+errorElement.style.display = 'none';
+
+document.addEventListener('scroll', () => {
+  const rect = loadMoreElement.getBoundingClientRect();
+  if (rect.top < window.innerHeight && !loading && !finished) {
+    loadMore();
+  }
+});
+
+listAllMews();
+
+form.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const formData = new FormData(form);
+  const name = formData.get('name');
+  const content = formData.get('content');
+
+  if (name.trim() && content.trim()) {
+    errorElement.style.display = 'none';
+    form.style.display = 'none';
+    loadingElement.style.display = '';
+
+    const mew = {
+      name,
+      content
+    };
+    
+    fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify(mew),
+      headers: {
+        'content-type': 'application/json'
+      }
+    }).then(response => {      
+      if (!response.ok) {
+        const contentType = response.headers.get('content-type');
+        if (contentType.includes('json')) {
+          return response.json().then(error => Promise.reject(error.message));
+        } else {
+          return response.text().then(message => Promise.reject(message));
+        }
+      }
+    }).then(() => {
+      form.reset();
+      setTimeout(() => {
+        form.style.display = '';
+      }, 10000);
+      setTimeout(listAllMews, 1500) //  timeout prevent to launch before rateLimit  ..  TODO: weird    //listAllMews();
+    }).catch(errorMessage => {
+      form.style.display = '';
+      errorElement.textContent = errorMessage;
+      errorElement.style.display = '';
+      loadingElement.style.display = 'none';
+    });
+  } else {
+    errorElement.textContent = 'Name and content are required!';
+    errorElement.style.display = '';
+  }
+});
+
+function loadMore() {
+  skip += limit;
+  listAllMews(false);
+}
+
+function listAllMews(reset = true) {
+  loading = true;
+  if (reset) {
+    console.log('reset')
+    mewsElement.innerHTML = '';
+    skip = 0;
+    finished = false;
+  }
+
+  const url = `${API_URL}?skip=${skip}&limit=${limit}`
+
+ const options =  {
+    method: 'GET', // *GET, POST, PUT, DELETE, etc.
+    mode: 'no-cors'/*  , // cors, no-cors, *cors, same-origin
+    cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+    credentials: 'same-origin', // include, *same-origin, omit
+    headers: {
+      'Content-Type': 'application/json'
+      // 'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    redirect: 'follow', // manual, *follow, error
+    referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+    body: JSON.stringify(data) // body data type must match 'Content-Type' header
+    */
+  }
+
+
+  fetch(url, {options})
+    .then(response => response.json())
+    .then(result => {
+      result.mews.forEach(mew => {
+        const div = document.createElement('div');
+        
+        const r = document.createElement('div');
+        r.classList.add('row')
+        const col1 = document.createElement('div');
+        col1.classList.add('col-sm-3')
+        
+        const header = document.createElement('h4');
+        header.textContent = mew.name;
+        
+       
+        const col2 = document.createElement('div');
+        col2.classList.add('col-sm-9')
+
+        const contents = document.createElement('p');
+        contents.textContent = mew.content;
+
+        const date = document.createElement('small');
+        date.textContent = new Date(mew.created);
+
+
+        col1.appendChild(header)
+        col2.appendChild(contents);
+        col2.appendChild(date);
+        r.appendChild(col1)
+        r.appendChild(col2)
+        div.appendChild(r);
+      
+
+        mewsElement.appendChild(div);
+      });
+      loadingElement.style.display = 'none';
+      if (!result.meta.has_more) {
+        loadMoreElement.style.visibility = 'hidden';
+        finished = true;
+      } else {
+        loadMoreElement.style.visibility = 'visible';
+      }
+      loading = false;
+    });
+}
   </script>

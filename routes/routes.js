@@ -31,12 +31,12 @@ router.get("/", async (req, res) => {
     var ip = req.socket.remoteAddress
     console.log(ip)
     let count = await counter.increaseCount()
-    res.render('index', { menuId: 'home', hitCount: count, sysInfo: sysmon.getinfo() })
+    res.render('index', { menuId: 'home', hitCount: count, apiUrl: apiUrl })
 })
 
 router.get('/index', async (req, res) => {
     let count = await counter.getCount()
-    res.render('index',  { menuId: 'home', hitCount: count , sysInfo: sysmon.getinfo()})
+    res.render('index',  { menuId: 'home', hitCount: count , apiUrl: apiUrl })
 })
 
 router.get("/iGrow", (req, res) => {
@@ -45,19 +45,23 @@ router.get("/iGrow", (req, res) => {
 
 //const liveData = require('liveData')
 router.get('/earth', (req, res) => {
-    res.render('earth', {liveData: liveDatas.datas} )
+    res.render('earth', { liveData: liveDatas.datas, apiUrl: apiUrl })
 })
 
 router.get('/natureCode', (req, res) => {
     res.render('natureCode')
 })
 
+router.get('/outils', (req, res) => {
+    res.render('outils', { sysInfo: sysmon.getinfo() })
+})
+
 router.get('/legacy', (req, res) => {
-    res.render('legacy', {weatherAPI: process.env.WEATHER_API})
+    res.render('legacy', { weatherAPI: process.env.WEATHER_API, apiUrl: apiUrl })
 })
 
 router.get('/live', (req, res) => {
-    res.render('live')
+    res.render('live', { alertEmail: process.env.ALERT_EMAIL ? process.env.ALERT_EMAIL : "enter_your@email.com" })
 })
 
 router.get('/empty', (req, res) => {
@@ -72,7 +76,16 @@ router.get('/specs', (req, res) => {
     res.render('specs')
 })
 
-
+//Tools
+router.get('/colorfinder', (req,res) => {
+    res.render('colorfinder')
+})
+router.get('/technotes', (req,res) => {
+    res.render('technotes')
+})
+router.get('/serverspec', (req,res) => {
+    res.render('serverspec')
+})
 
 //  APIs
 
