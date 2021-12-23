@@ -17,7 +17,7 @@ logger.log('Server launching....' + moment().format('LLLL'))
 */
 
 const PORT = process.env.PORT  || 5000
-const IN_PROD = process.env.NODE_ENV.trim() === 'production'  // for https channel...  IN_PROD will be true if in production environment
+const IN_PROD = process.env.NODE_ENV === 'production'  // for https channel...  IN_PROD will be true if in production environment  
 console.dir(process.env.NODE_ENV)
 console.log('env prod:' + IN_PROD)
 
@@ -128,9 +128,11 @@ app.get('/kart', (req, res) => {  res.render('./public/Projects/Kart/index.html'
 
 
 const server = app.listen(PORT, () =>{  
+    console.log('\n__________________________________________________\n\n')
     console.log(`\n\nServer running in ${IN_PROD ? "Production" : "Developpement"} mode at port ${PORT}`)
     console.log(`(Nginx may change public port)`)
     console.log('Press Ctrl + C to exit\n')
+    console.log('\n__________________________________________________\n\n')
     nodeTools.readFile("greetings.txt")
   })
 
