@@ -1,6 +1,6 @@
 const fetch = require('node-fetch')
 const nodeTools = require('./nodeTools') //nodeTools.readFile("greetings.txt")
-const socketio = require('../socket')
+const socketio = require('./socket')
 
 
 

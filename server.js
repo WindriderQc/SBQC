@@ -63,11 +63,11 @@ const sessionOptions = {
 
 
 // mongoose with local DB
-require('./mongoCollections')
+require('./scripts/mongooseDB')
 
 
 //Mongodb Client setup  with CloudDB  // TODO: used for posts book but should be uniformized to one DB.  the use of collection in app.locals seem different
-const mongo = require('./mongo')
+const mongo = require('./scripts/mongoClientDB')
 
 mongo.connectDb('test', async (mongodb) =>{    // dbServ, test, admin, local 
 
@@ -137,7 +137,7 @@ const server = app.listen(PORT, () =>{
   })
 
 
-const socket = require('./socket')
+const socket = require('./scripts/socket')
 socket.init(server)
 
 

@@ -2,22 +2,24 @@
 
 require('dotenv/config')
 const mongoClient = require("mongodb").MongoClient
-const mongo_URL = process.env.MONGO_URL
+
 
 const mongo = {
     connectDb: (dbName, callback) => 
     {
-        mongoClient.connect(mongo_URL,  { useNewUrlParser: true, useUnifiedTopology: true })   //  TODO  passer l'URL en param pour enlever dépendance a dotenv
+        mongoClient.connect(process.env.MONGO_URL,  { useNewUrlParser: true, useUnifiedTopology: true })//  TODO  passer l'URL en param pour enlever dépendance a dotenv
         .then(client =>{
-            console.log('MongoDB client connected to db: ' + mongo_URL)  
+            
            
             client.db().admin().listDatabases().then(dbs => {
-                console.log( dbs)
+                console.log('\nMongoDB client connected to db: ' + process.env.MONGO_URL + '\nDatabases:')  
+                console.log(dbs.databases)
+                console.log()
             })
 
             this.db = client.db(dbName);
 
-            callback(this.db )
+            callback(this.db)
         })
     },
     
@@ -25,23 +27,17 @@ const mongo = {
     {
         try {
             const collInfos =  await this.db.listCollections().toArray() 
-           // console.log(collInfos)
             return collInfos
         } 
-        catch(e) { console.log(e)}
+        catch(e) { console.log(e) }
        
     },
     
     getDb: (collectionToGet) => 
     {
-            return this.db.collection(collectionToGet)
+        return this.db.collection(collectionToGet)
     }
     
 }
 
-
-
-
-
-  
 module.exports = mongo

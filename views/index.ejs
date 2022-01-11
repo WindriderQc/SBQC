@@ -8,13 +8,12 @@
 </head>
 
 
-<body class='fixed-nav sticky-footer bg-transparent ' id='page-top'>
+<body class='fixed-nav sticky-footer bg-transparent sidenav-toggled ' id='page-top'>
 <div id='canvasDiv' ></div>
-<nav class='navbar navbar-expand-lg navbar-light bg-transparent fixed-top' id='mainNav'>    <%- include('partials/nav') %>  </nav>
-
+<%- include('partials/nav') %> 
 <div class='content-wrapper bg-transparent'>
 <div class='container-fluid text-center '>  
- <!-- Begin Container  -->  
+<!-- Begin Container  -->  
   
   <div id=screen_id></div>
   <div id='speech'></div>
@@ -23,26 +22,57 @@
         <div class='col sm-8'>
             <div>
                 <!-- <row>   <image src='img/earth3d.png' height='80px'></image>    </row> -->
-                <h3> Welcome to a special blend of visuals, data gathering and games mini-projects using javascript and WebGL. </h3>   
+                <br>
+                <h3> Welcome to Special Blend Production</h3>
+                <br>
+                <h4> A mix of visuals, data gathering and games mini-projects using javascript and WebGL. </h4> 
+                <br>
+                <br>
+                <br>  
             </div> 
         </div>  
     </div>  
 
-    <div class='row'>
-        <div class='col-sm-12'>   
-                </br></br></br></br></br></br></br></br></br></br></br></br></br>
-        </div>
-    </div>
-  
 
-<!--     Game    -->
-    <div class='row'>
-        <div class='col-sm-12'>
-            <div class='card game-canvas bg-transparent'>
-                <div class='card-header '>
-                    <h1>Rock Paper Scissors</h1> 
-                </div>
-                
+    <div class="row px-5">
+
+        <div class="col-sm-6 mt-4 ">
+            <div class='card bg-transparent h-100 my-5'>
+                <div class='card-header '> <h1>Earth Explorer</h1> </div>
+                <a href="/earth" class="navbar-left"> <img src='img/earth3d.png' class="card-img-top p-4" alt='' > </a>
+                <h5 class="card-title pt-2 px-2">2D & 3D visualisations of ISS, earthquakes, temperature and localisation</h5> 
+            </div> 
+        </div>
+        
+        <div class="col-sm-6 mt-4 ">
+            <div class='card bg-transparent h-100 my-5'>
+                <div class='card-header '> <h1>Nature of Code</h1> </div>
+                <a href="/Projects/Nature of Code/sAll" class="navbar-left"> <img src='img/flocking.png' class="card-img-top p-4" alt='' > </a> 
+                <h5 class="card-title pt-2 px-2">Flocking Simulation via forces and behavior</h5>
+            </div> 
+        </div>
+
+        <div class="col-sm-6 mt-4 ">
+            <div class='card bg-transparent h-100 my-5'>
+                <div class='card-header '> <h1>Shared Canvas</h1> </div>
+                <a href="/Projects/DrawTogether" class="navbar-left"> <img src='img/canvas.png' class="card-img-top p-4" alt='' > </a> 
+                <h5 class="card-title pt-2 px-2">p5.js drawing canvas shared via MQTT</h5>
+            </div> 
+        </div>
+
+        <div class="col-sm-6 mt-4 ">
+            <div class='card bg-transparent h-100 my-5'>
+                <div class='card-header '> <h1>Nature of Code</h1> </div>   
+                <a href="/Projects/Nature of Code/s5" class="navbar-left"> <img src='img/NoC.Evolve.png' class="card-img-top p-4" alt='' > </a> 
+                <h5 class="card-title pt-2 px-2">DNA concept & leaf color evolution</h5>
+            </div> 
+        </div>
+
+
+        <!-- Game                    TODO: a mettre dans un .ejs a part    -->
+        <div class="col-sm-6 mt-2 ">   
+            <div class='card bg-transparent h-100 my-5'>
+                <div class='card-header '> <h1>Rock Paper Scissors</h1> </div>
             
                 <div class='score-board'>
                     <div id='user-label' class='badge'>user</div>
@@ -53,21 +83,19 @@
                 <div class='result'> <p></p> </div>
             
                 <div class='choices'>
-                    <div class='choice' id='r'>
-                        <img src='img/rock.png' alt=''>
-                    </div>
-                    <div class='choice' id='p'>
-                        <img  src='img/paper.png' alt=''>
-                    </div>
-                    <div class='choice' id='s'>
-                        <img src='img/scissors.png' alt=''>
-                    </div>
+                    <div class='choice' id='r'> <img src='img/rock.png' alt=''> </div>
+                    <div class='choice' id='p'> <img src='img/paper.png' alt=''> </div>
+                    <div class='choice' id='s'> <img src='img/scissors.png' alt=''> </div>
                 </div>
             
                 <p id='action-message'>Why not play with me? </p>
             </div>  
         </div>
-    </div>  
+
+
+
+
+    </div>
 
 
 
@@ -80,6 +108,7 @@
     </div>  
 
     <div>
+        <hr />
         <h3>Leave your mark!</h3>
         <form class='mew-form  mb-3 '>
             <div class='error-message '></div>
@@ -87,7 +116,7 @@
             <input class='form-control' type='text' id='name' name='name'>
             <label for='content'>Post</label>
             <textarea class='form-control' type='text' id='content' name='content'></textarea>
-            <button class='form-control bg-warning my-1' id='poster'>Send Your Salutations</button>
+            <button class='form-control bg-warning my-1' id='poster'>Say Hi!</button>
         </form>
         <div class='mews'></div>
         <div class='button-container'>
@@ -104,15 +133,11 @@
  <!-- End Container  -->
 </div>
 </div>
-
-
 <%- include('partials/footer') %>
-
 <%- include('partials/p5') %> 
 <script type='text/javascript' src='js/p5.speech.js'></script>
 <script type='text/javascript' src='js/nestor.js'></script>
 <script type='text/javascript' src='js/rockPaperScissor.js'></script>
-
 </body>
 </html>
 
