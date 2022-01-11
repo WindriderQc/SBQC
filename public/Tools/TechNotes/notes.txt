@@ -811,6 +811,9 @@ git push -u origin master
 
 
 
+// remove tracked file added later to gitignore
+git rm --cached -r .; git add .; git status; git commit -m "Ignore unwanted files"
+
 
 // Generate random key
 node
