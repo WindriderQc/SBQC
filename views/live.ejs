@@ -13,73 +13,47 @@
 <div class="container-fluid bg-3 text-center">  
 <!-- Begin Container  -->    
      
-        <div class="row">
-            <div class="col-sm-6">
+    <div class="row">
+        <div class="col-sm-6">
 
-               <div class="card m-3">
-                    <div id=p5canvas>No camera detected</div>
-                </div>
+            <div class="card m-3">
+                <div id=p5canvas>No camera detected</div>
             </div>
+        </div>
 
-            <div class='col-sm-4'>
-                <row>
-                <div class="card m-3">
+        <div class='col-sm-4'>
+            <row>
+            <div class="card m-3">
 
-                    <div class="m-4 p-3" id=inspectBtn></div>
+                <div class="m-4 p-3" id=inspectBtn></div>
 
-                        <div class="form-check m-3">
-                        <input type="checkbox" class="form-check-input" id="alertEnable" />
-                        <label class="form-check-label" for="alertEnable">Motion Alert</label>
-                        </div>
-
-                        <input class='m-3' id='dest_id' value=<%- alertEmail %> />
-                    
+                    <div class="form-check m-3">
+                    <input type="checkbox" class="form-check-input" id="alertEnable" />
+                    <label class="form-check-label" for="alertEnable">Motion Alert</label>
                     </div>
-                </row>
-             <row>
-                <div class="card m-3">
-                        <section class="style_a_creer_Coco">                     
-                    
-                        <div><a href="/live">enter</a> | <a href="/logs">list</a></div>
-                            <p>
-                            latitude: <span id="latitude"></span>&deg;<br />
-                            longitude: <span id="longitude"></span>&deg;
-                            </p> 
-                            <label for="mood">Log your mood</label>
-                            <input id="mood" value="rainbow" />
-                            <button id="submit">submit</button>
-                            <div id="cam_id"></div>  
-                            <div id="p5canvas"></div>
-                            <button id="recBtn">Rec</button>
-                        </section>
-                    
+
+                    <input class='m-3' id='dest_id' value=<%- alertEmail %> />
+                
                 </div>
+            </row>
+            <row>
+           
 
-             </row>
-            </div>
+            </row>
         </div>
+    </div>
 
-        <div class='row m-3'>
+    <div class='row m-3'>
 
-        </div>
-        
-        <div class='row'>
-          <div class="col-sm-6">
+    </div>
+    
+
+    <div class="card">
+    <div class="embed-responsive embed-responsive-4by3">
+        <div id='clientCam_id'></div>
        
-               
-            
-            </div>
-          
-         </div>
-
-
-     
- <div class="card">
-  <div class="embed-responsive embed-responsive-4by3">
-      <div id='clientCam_id'></div>
-      <div><img src="" id='rainbow' width ="480" /></div>
-  </div>
-</div> 
+    </div>
+    </div> 
 
 
 <!-- End Container  -->
@@ -92,26 +66,6 @@
 
 
 <script src="js/motionCam.js"></script>
-<script>
 
-let lat, lon, accuracy
-const locate = async () => {
- if(Tools.isGeoLocAvailable()) { 
-      const {coords} = await Tools.geoLocate() 
-      lat = coords.latitude
-      lon = coords.longitude
-      accuracy = coords.accuracy  
-      console.log('Your current position is:');
-      console.log(`Latitude : ${lat}`);
-      console.log(`Longitude: ${lon}`);
-      console.log(`More or less ${accuracy} meters.`);
-
-      document.getElementById("latitude").innerHTML = lat;
-      document.getElementById("longitude").innerHTML = lon;
-  }  
-}
-locate()
- 
-</script>
 </body>
 </html>

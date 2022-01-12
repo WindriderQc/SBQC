@@ -36,16 +36,17 @@ function setup()
 
   const canvasDiv = document.getElementById('p5canvas');
   const w = canvasDiv.offsetWidth;
+  console.log('canvas offset width:', w)
   p5Canvas = createCanvas(640, 480)
   p5Canvas.parent('p5canvas')
-  canvas = p5Canvas.canvas
+  //canvas = p5Canvas.canvas
   //noCanvas();
   pixelDensity(1)
 
   //frameRate(30)
 
   capture = createCapture(VIDEO);
-  capture.parent(document.getElementById('clientCam_id'))
+  capture.parent(canvasDiv)
 
 
   CAMERA_URL = "http://192.168.0.33/cams/blackpi";
@@ -57,7 +58,7 @@ function setup()
   video = createCapture(VIDEO);
   video.size(width, height);
   video.hide();
-  video.parent(document.getElementById('cam_id'))
+  video.parent(document.getElementById('clientCam_id'))
 
   //btn = document.getElementById('recBtn')
           //btn.parent(document.getElementById('recBtn'))
@@ -91,30 +92,7 @@ function setup()
         inspectBtn.removeClass('btn-danger')
         inspectBtn.addClass('btn-secondary')
       }
-  })
-
-
-   
-  const button = document.getElementById('submit')
-  button.addEventListener('click', async event => {
-
-      const mood = document.getElementById('mood').value;
-      video.loadPixels()
-      const image64 = video.canvas.toDataURL()
-      const data = { lat, lon, mood, image64 }
-      const options = {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      }
-      const response = await fetch('/checkins/api', options)
-      const json = await response.json()
-      console.log(json)
-
-  })
-  
+  }) 
    
 }
 
@@ -236,23 +214,6 @@ async function sendAlert()  //  TODO: pkoi pas utiliser la version dans TOols?
     console.log(json); 
 } 
 
-
-
-async function catchRainbow() {
-  const response =  await fetch('/img/screenShotLevel1.png')
-  const blob = await response.blob()
-  document.getElementById('rainbow').src = URL.createObjectURL(blob)
-}
-
-
-catchRainbow()
-    .then(response => {
-      console.log('got it')
-    })
-    .catch(error => {
-      console.log('error!'); 
-      console.log(error)
-    })
 
 
 /*
