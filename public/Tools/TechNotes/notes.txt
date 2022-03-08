@@ -370,6 +370,31 @@ force user = yb
 
 
 
+Renew Let’s Encrypt 
+-------------------
+
+sudo certbot renew
+
+or
+
+certbot certonly --force-renew -d example.com
+
+
+
+Automatically Renew Let’s Encrypt Certificates
+----------------------------------------------
+
+Open the crontab file.
+
+$ crontab -e
+Add the certbot command to run daily. In this example, we run the command every day at noon. The command checks to see if the certificate on the server will expire within the next 30 days, and renews it if so. The --quiet directive tells certbot not to generate output.
+
+0 12 * * * /usr/bin/certbot renew --quiet
+
+
+
+
+
 
 
 
