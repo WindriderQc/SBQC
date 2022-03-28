@@ -2,6 +2,7 @@ import { SceneManager} from './GraphysX/sceneManager.js'
 import { TestLine } from './scene/testLine.js'
 import { World } from './scene/world.js'
 import { PlaneZ } from './scene/planeZ.js'
+import { Earth } from './scene/earth.js'
 import { MorphSphere } from './scene/morphSphere.js'
 
 const canvas = document.getElementById('canvas'); console.log(canvas.height, canvas.width)
@@ -22,7 +23,7 @@ sceneManager.loadSkybox(World.skybox.type, World.skybox.skyName, 10000)
 sceneManager.addSubject( new MorphSphere(sceneManager.scene))
 sceneManager.addSubject( new TestLine(sceneManager.scene))
 sceneManager.addSubject( new PlaneZ(sceneManager.scene, worldFolder))
-
+sceneManager.addSubject( new Earth(sceneManager.scene, worldFolder))
 
 
 

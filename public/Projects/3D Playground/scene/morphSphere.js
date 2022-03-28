@@ -32,7 +32,7 @@ export class MorphSphere{
         scene.add(mesh)
     }
 
-    update(time, frameCount, mousePosition) {  //  TODO:  seem to bug if frameCount = 0...   mettre un catch n console?
+    update(time, frameCount, mousePosition) {  //  TODO:  seem to bug if frameCount = 0...   mettre un catch n console msg?
        
 
         this.material.uniforms.time.value = frameCount //time
