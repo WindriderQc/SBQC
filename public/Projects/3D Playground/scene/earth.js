@@ -6,7 +6,7 @@ export class Earth {
     speedX 
     speedY 
 
-    constructor(scene, guiRoot) {
+    constructor(scene, guiRoot, position) {
         
         const texture = new TextureLoader().load('./textures/earth/earth_uv_with_topo.jpg')
         console.log(texture)
@@ -14,7 +14,7 @@ export class Earth {
 
  
         //this.mesh.geometry.scale(4,4,4)
-        this.mesh.position.set(0,20, 0)
+        this.mesh.position.set(position.x,position.y, position.z)
         scene.add( this.mesh )
 
         this.speedX = 2000

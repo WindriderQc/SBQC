@@ -4,7 +4,7 @@ export class MorphSphere{
 
     material
 
-    constructor(scene) {
+    constructor(scene, position) {
 
         const uniforms  = {
             time: {
@@ -28,7 +28,9 @@ export class MorphSphere{
         const geometry = new IcosahedronBufferGeometry(2, 5)
         geometry.computeVertexNormals()
 
+
         const mesh = new Mesh(geometry ,this.material)
+        mesh.position.set(position.x, position.y, position.y)
         scene.add(mesh)
     }
 

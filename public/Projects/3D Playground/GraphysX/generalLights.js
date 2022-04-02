@@ -1,5 +1,6 @@
 import { PointLight,SpotLight, HemisphereLight, DirectionalLight, AmbientLight} from 'three'
 
+
 export class GeneralLights {
 
     light
@@ -58,7 +59,11 @@ export class GeneralLights {
     }
 
 	update(time, frameCount) {
-		this.light.intensity = ( Math.sin(frameCount) + 1.5) / 1.5;
-		this.light.color.setHSL( Math.sin(frameCount), 0.5, 0.5 );
+	
+        const period = 240     // length of one period in frames
+        const amplitude = 75
+        this.light.intensity = amplitude * Math.sin(Math.PI  * frameCount / period) + 73
+
+		//this.light.color.setHSL( 2 * Math.sin(Math.PI * 4 * frameCount / 300), 0.5, 0.5 );
 	}
 }
