@@ -7,7 +7,7 @@ const sysmon = new (require('../scripts/systemMonitor'))()
 console.log("SysInfo: ", sysmon.getinfo().data)
 console.log("CPU: ", sysmon.getinfo().cpus.length)
 
-const apiUrl = process.env.NODE_ENV.trim() === 'production' ?  'https://www.SBQC.net' : 'http://localhost:3001';
+const apiUrl = process.env.NODE_ENV === 'production' ?  'https://www.SBQC.net' : 'http://localhost:3001';
 console.log('API url: ' + apiUrl)
 
 
