@@ -12,7 +12,7 @@ mongoose.connect( url,  { family: 4, useNewUrlParser: true, useUnifiedTopology: 
         if (err) console.log(err)
     
         new Admin(mongoose.connection.db).listDatabases((err, result) => {
-            console.log('listDatabases succeeded');
+            console.log('Databases listing:');
             // database list stored in result.databases
             const allDatabases = result.databases;    
             console.log(allDatabases)
