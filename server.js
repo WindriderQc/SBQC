@@ -69,7 +69,7 @@ require('./scripts/mongooseDB')
 //Mongodb Client setup  with CloudDB  // TODO: used for posts book but should be uniformized to one DB.  the use of collection in app.locals seem different
 const mongo = require('./scripts/mongoClientDB')
 
-mongo.connectDb('test', async (mongodb) =>{    // dbServ, test, admin, local 
+mongo.connectDb('SBQC', async (mongodb) =>{    // dbServ, test, admin, local 
 
     app.locals.collections = [] 
     const list = await mongo.getCollectionsList()
