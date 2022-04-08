@@ -3,6 +3,7 @@
 sudo curl -fsSL https://deb.nodesource.com/setup_current.x|sudo -E bash -
 sudo apt update && sudo apt upgrade -y
 sudo apt install -y nodejs
+node -v
 sudo apt install -y nginx
 sudo apt install -y mosquitto
 sudo mosquitto -d
