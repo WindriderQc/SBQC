@@ -11,7 +11,6 @@ let isReady = false
 mongoose.connect( url,  { family: 4, useNewUrlParser: true, useUnifiedTopology: true }, (err)=> { // family: 4    skip  default IPV6 connection  and accelerate connection.
         if (err) console.log(err)
       
-        console.log('\nMongoose connected to db: ' + url)   
       
         new Admin(mongoose.connection.db).listDatabases((err, result) => {
             console.log('Databases listing:');
@@ -31,7 +30,7 @@ mongoose.connection.once('open', function() {
     mongoose.connection.db.listCollections().toArray( (err, col) => {   //trying to get collection names
         if(err) console.log(err)
      
-      
+        console.log('\nMongoose connected to db: ' + url)   
         console.log("DB collections:")
         console.log(col) // [{ name: 'dbname.myCollection' }]
         console.log('\n')

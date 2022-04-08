@@ -70,8 +70,8 @@ require('./scripts/mongooseDB')
 const mongo = require('./scripts/mongoClientDB')
 
 mongo.connectDb('SBQC', async (db) =>{    // dbServ, test, admin, local 
-    //db.createCollection('server')
-
+    
+    //db.createCollection('server')     TODO:  faire un test conditionnel et creer si non exist
     app.locals.collections = [] 
     const list = await mongo.getCollectionsList()
 
