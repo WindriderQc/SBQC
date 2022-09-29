@@ -23,4 +23,4 @@ node_modules/
 .env.test
 
 
-visitorCount.txt
+visitCounter.txt
