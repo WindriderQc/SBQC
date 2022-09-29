@@ -7,11 +7,17 @@ const mongoClient = require("mongodb").MongoClient
 const mongo = {
     connectDb: (dbName, callback) => 
     {
-        
+        if(typeof process.env.MONGO_URL === 'undefined')
+        {
+       
+            console.log('MONGO_URL undefined. Check if .env file properly configured?')
+            process.exit(1)
+        }
+            
         mongoClient.connect(process.env.MONGO_URL,  { useNewUrlParser: true, useUnifiedTopology: true })//  TODO  passer l'URL en param pour enlever dépendance a dotenv
         .then(client =>{
             
-           
+        
             client.db().admin().listDatabases().then(dbs => {
                 console.log('\nMongoDB client connected to db: ' + process.env.MONGO_URL + '\nDatabases:')  
                 console.log(dbs.databases)
@@ -22,6 +28,8 @@ const mongo = {
 
             callback(this.db)
         })
+
+      
     },
     
     getCollectionsList:  async () => 

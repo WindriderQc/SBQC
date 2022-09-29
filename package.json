@@ -29,7 +29,7 @@
     "cors": "^2.8.5",
     "csvtojson": "^2.0.10",
     "dotenv": "^8.2.0",
-    "ejs": "^2.7.4",
+    "ejs": "^3.1.8",
     "events": "^3.3.0",
     "express": "^4.17.1",
     "express-rate-limit": "^5.5.0",
