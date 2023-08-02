@@ -1,7 +1,7 @@
 
 wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | sudo apt-key add -
 
-echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.4.list
+echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
 
 sudo apt update && sudo apt upgrade -y
 sudo apt-get install -y mongodb-org
@@ -13,7 +13,7 @@ systemctl enable mongod.service    #  insure launch at startup
 
 #Mongo authentication
 
-in /etc/mongod.conf    change bindip to 0.0.0.0
+in /etc/mongod.conf    change bindip to 0.0.0.0 instead of 127.0.0.1
 uncomment security and use:
 security: 
 authorization: enabled

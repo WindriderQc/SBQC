@@ -16,6 +16,9 @@ node -v
 # Install PM2
 sudo npm install pm2@latest -g
 pm2 startup systemd
+pm2 save
+
+
 
 # required for platformIO (VS Code) to install properly
 sudo apt install python3-venv -y
