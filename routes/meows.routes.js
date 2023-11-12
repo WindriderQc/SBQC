@@ -5,7 +5,6 @@ const Filter = require('bad-words')
 const filter = new Filter();
 
 
-
 router.get('/', (req, res) => {
     res.json({
       message: 'Meower!'

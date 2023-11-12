@@ -2,11 +2,11 @@
   "name": "sbqc",
   "version": "1.0.1",
   "description": "",
-  "main": "server.js",
+  "main": "sbqc_serv.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "node sbqc_serv.js",
+    "dev": "nodemon sbqc_serv.js"
   },
   "repository": {
     "type": "git",
@@ -34,7 +34,7 @@
     "express": "^4.17.1",
     "express-rate-limit": "^5.5.0",
     "express-session": "^1.17.1",
-    "jsonwebtoken": "^8.5.1",
+    "jsonwebtoken": "^9.0.1",
     "moment": "^2.29.1",
     "mongodb": "^3.7.3",
     "mongoose": "^6.0.12",
@@ -45,6 +45,7 @@
     "nodemailer-smtp-transport": "^2.4.2",
     "serve-index": "^1.9.1",
     "socket.io": "^4.3.2",
+    "tiddlywiki": "^5.3.0",
     "uuid": "^8.3.2"
   },
   "devDependencies": {

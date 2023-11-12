@@ -33,8 +33,7 @@ router.post("/register", async (req, res) => {
 
     const emailExist = await User.findOne({ email: req.body.email })
     if (emailExist) {
-        console.log('user exist')
-        console.log(emailExist)
+        console.log('user exist: ', emailExist)
         result.message = "Email already exists"
         return res.status(400).send(result)  //  TODO: replace par un login.ejs ou register.ejs avec alert msg
     }
@@ -53,13 +52,13 @@ router.post("/register", async (req, res) => {
 
     try {
         const savedUser =  await user.save()
-        console.log(savedUser)
+        console.log('Saved user:\n', savedUser)
         result.user = savedUser.name + " - " + savedUser._id
         result.message = 'Success'
         res.redirect('../')
     } 
     catch (err) {   
-        console.log(result)
+        console.log('Error in post register: ', result)
         res.redirect('/login/register')   
     }
 
@@ -74,7 +73,7 @@ router.get('/', (req, res) => {
 
 router.post('/', async (req, res) => {  
     
-    console.log('login request: ' + req.body.email)
+    console.log('login request: ', req.body.email)
 
     try {
         const result = {
@@ -88,7 +87,7 @@ router.post('/', async (req, res) => {
         if (error) {
         
             result.message = error.details[0].message
-            console.log(result.message)
+            console.log('login validation error: ', result.message)
             //return res.status(400).send(result)
             return res.render('partials/loginnomatch', {alertMsg: "Oups: " + result.message})
         }
@@ -110,7 +109,7 @@ router.post('/', async (req, res) => {
             //return res.status(400).send(result)
             return res.render('partials/loginnomatch', {alertMsg: "Sorry, email or password incorrect. Please try again."})
         }
-        else console.log('Login success: ' + user)
+        else console.log('Login success: ', user)
         
         // Create and assign a token
         const token = jwt.sign({ _id: user._id }, process.env.TOKEN_SECRET)
@@ -140,21 +139,26 @@ router.post('/', async (req, res) => {
         const data = await JSON.stringify(resp)
         console.log(data)*/
 
-        console.log('login response: ' + result.message);
+        console.log('login response: ', result.message);
         if (result.token.length > 5) {
        
             req.session.userToken = result.token
             req.session.email = result.email
-
-            req.session.save((err) => {     
-                if(!err)  res.header('credentials', 'include').redirect('../fundev')    //res.header("auth-token", result.token).render('fundev', { name: req.session.email });    
-            })   
-        
+            console.log('saving session:\n', req.session)
+            
+            try  {
+                await req.session.save();
+                res.header('credentials', 'include').redirect('../fundev')    //res.header("auth-token", result.token).render('fundev', { name: req.session.email });    
+            } catch (err) {
+                console.log('error saving session' , err); 
+                res.status(500).send('Error saving session');  
+            }
+             
         }
         else res.render('partials/loginnomatch', { alertMsg: 'Sorry, something wrong with authentification. Please contact your admin.'})
     }
     catch (err) {
-        console.log(err)
+        console.log('Error in post login', err)
     }
 
 })

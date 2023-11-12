@@ -961,3 +961,43 @@ POST https://www.googleapis.com/geolocation/v1/geolocate?key=KEYYYYYYYYYYYYYYYYY
 ]
 
 }
+
+
+
+
+
+
+
+
+
+
+tiddlywiki
+-----------
+
+
+Open a command line terminal and type:
+npm install -g tiddlywiki
+If it fails with an error you may need to re-run the command as an administrator:
+sudo npm install -g tiddlywiki (Mac/Linux)
+Ensure TiddlyWiki is installed by typing:
+tiddlywiki --version
+In response, you should see TiddlyWiki report its current version (eg "5.3.0". You may also see other debugging information reported.)
+Try it out:
+tiddlywiki mynewwiki --init server to create a folder for a new wiki that includes server-related components
+tiddlywiki mynewwiki --listen to start TiddlyWiki
+Visit http://127.0.0.1:8080/ in your browser
+Try editing and creating tiddlers
+Optionally, make an offline copy:
+click the  save changes button in the sidebar, OR
+tiddlywiki mynewwiki --build index
+
+
+
+yb@BNode:~/servers/SBQC$ tiddlywiki --version
+5.3.0
+yb@BNode:~/servers/SBQC$ tiddlywiki mynewwiki --init server
+Copied edition 'server' to mynewwiki
+yb@BNode:~/servers/SBQC$ tiddlywiki mynewwiki --listen
+syncer-server-filesystem: Dispatching 'save' task: $:/StoryList
+Serving on http://127.0.0.1:8080
+(press ctrl-C to exit)

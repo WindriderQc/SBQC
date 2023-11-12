@@ -4,6 +4,7 @@ const socketio = require('./socket')
 
 
 
+
 let datas = { version: 1.0 }
 
 
@@ -68,7 +69,7 @@ async function getZonAnn()
     
         //console.log(year, temp)
         datas.yearTemp = {year, temp}
-        return (datas.yearTemp)
+        return (datas.yearTemp)  //  TODO:  mais...    ca va retourner juste la premiere ligne du tableau!?
     })
 }
 
@@ -88,7 +89,7 @@ function init()
 }
 
 
-async function issLocation() 
+async function issLocation()   //  TODO:  pkoi ces function...?  pkoi ne pas exporter getISS et getQuakes?
 {
     const data = await getISS()
     return data
@@ -102,7 +103,7 @@ async function quakes()
 
 
 
-
+// const intervals = { quakes:1000*60*60*24*7, iss: 1000*5 }
 function setAutoUpdate(intervals, updateNow) 
 {
     if(updateNow) {

@@ -290,10 +290,9 @@ const loadingElement = document.querySelector('.loading');
 const mewsElement = document.querySelector('.mews');
 const loadMoreElement = document.querySelector('#loadMore');
 
-const apiUrl =  <%- JSON.stringify(apiUrl) %>;
+const localUrl =  <%- JSON.stringify(localUrl) %>;
 //const API_URL = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') ? 'http://localhost:3001/meows/v2/mews' : 'https://meower-api.now.sh/v2/mews';
-//const API_URL =  apiUrl + '/meows/v2/mews' 
-const API_URL =    'http://specialblend.ddns.net:3002/meows/v2/mews' 
+const LOCAL_URL =  localUrl + '/meows/v2/mews' 
 
 
 let skip = 0;
@@ -328,7 +327,7 @@ form.addEventListener('submit', (event) => {
       content
     };
     
-    fetch(API_URL, {
+    fetch(LOCAL_URL, {
       method: 'POST',
       body: JSON.stringify(mew),
       headers: {
@@ -375,7 +374,7 @@ function listAllMews(reset = true) {
     finished = false;
   }
 
-  const url = `${API_URL}?skip=${skip}&limit=${limit}`
+  const url = `${LOCAL_URL}?skip=${skip}&limit=${limit}`
 
  const options =  {
     method: 'GET', // *GET, POST, PUT, DELETE, etc.

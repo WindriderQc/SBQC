@@ -20,24 +20,21 @@ let liveDatas = require('../scripts/liveData.js')
 // free routes
 
 router.get("/", async (req, res) => {
-    let client = req.headers['user-agent']   //  TODO: send dans BD ces infos pour un checkin log de qui vient sur root /
-    console.log(client)
-    let content = req.headers['Content-Type'] 
-    console.log(content)
-    let autorize = req.headers['Authorization'] 
-    console.log(autorize)
+    //  TODO: send dans BD ces infos pour un checkin log de qui vient sur root /
+    let client = req.headers['user-agent'];        console.log('Client: ', client)
+    let content = req.headers['Content-Type'];     console.log('Content-Type: ', content)
+    let autorize = req.headers['Authorization'];   console.log('Authorize:', autorize)
+    let origin = req.headers['host'];              console.log('Host:', origin)
+    let ip = req.socket.remoteAddress;             console.log('Client IP: ', ip)
 
-    var origin = req.headers['host'] 
-    console.log(origin)
-    var ip = req.socket.remoteAddress
-    console.log(ip)
     let count = await counter.increaseCount()
-    res.render('index', { menuId: 'home', hitCount: count, apiUrl: apiUrl })
+
+    res.render('index', { menuId: 'home', hitCount: count, localUrl: req.protocol + '://' + req.get('host') })
 })
 
 router.get('/index', async (req, res) => {
     let count = await counter.getCount()
-    res.render('index',  { menuId: 'home', hitCount: count , apiUrl: apiUrl })
+    res.render('index',  { menuId: 'home', hitCount: count , localUrl: req.protocol + '://' + req.get('host') })
 })
 
 router.get("/iGrow", (req, res) => {
@@ -121,7 +118,7 @@ router.route('/users/viaEmail/:email')
 
 //  Session validation & logged in routes
 const hasSessionID = (req, res, next) => {
-    console.log(req.session)
+    console.log('Session: ', req.session)
     if (!req.session.userToken) {
         res.redirect('/login')
     } else {

@@ -9,17 +9,12 @@ const express = require('express'),
 
 //rateLimit = require('express-rate-limit'),
 const cors = require('cors')
-//Logger = require('./logger'),
 
-/*const logger = new Logger()
-//logger.on('message', (data) => console.log('Called Listener: ', data))    //  exemple de trigger sur un event
-logger.log('Server launching....' + moment().format('LLLL'))
-*/
 
 const PORT = process.env.PORT  || 5000
-const IN_PROD = process.env.NODE_ENV === 'production'  // for https channel...  IN_PROD will be true if in production environment  
-console.dir(process.env.NODE_ENV)
-console.log('env prod:' + IN_PROD)
+const IN_PROD = process.env.NODE_ENV === 'production'  // for https channel...  IN_PROD will be true if in production environment    If true while on http connection, session cookie will not work
+console.dir('Node Env: ', process.env.NODE_ENV)
+console.log('env prod:', IN_PROD)
 
 
 
@@ -65,11 +60,17 @@ const sessionOptions = {
 // mongoose with local DB
 require('./scripts/mongooseDB')
 
+if(typeof process.env.MONGO_URL === 'undefined')
+{
+
+    console.log('MONGO_URL undefined. Check if .env file properly configured?')
+    //process.exit(1)
+}
 
 //Mongodb Client setup  with CloudDB  // TODO: used for posts book but should be uniformized to one DB.  the use of collection in app.locals seem different
 const mongo = require('./scripts/mongoClientDB')
 
-mongo.connectDb('SBQC', async (db) =>{    // dbServ, test, admin, local 
+mongo.connectDb( process.env.MONGO_URL, 'SBQC', async (db) =>{    // dbServ, test, admin, local 
     
     //db.createCollection('server')     TODO:  faire un test conditionnel et creer si non exist
     app.locals.collections = [] 
