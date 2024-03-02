@@ -1001,3 +1001,22 @@ yb@BNode:~/servers/SBQC$ tiddlywiki mynewwiki --listen
 syncer-server-filesystem: Dispatching 'save' task: $:/StoryList
 Serving on http://127.0.0.1:8080
 (press ctrl-C to exit)
+
+
+
+
+
+
+
+
+
+
+
+MongoDB
+
+sudo nano /etc/mongodb.conf
+
+Change the value of bindIp from 127.0.0.1 to 0.0.0.0. This allows MongoDB to listen for connections from any IP address:
+net:
+  port: 27017
+  bindIp: 0.0.0.0

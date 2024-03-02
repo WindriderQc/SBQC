@@ -11,7 +11,7 @@ const express = require('express'),
 const cors = require('cors')
 
 
-const PORT = process.env.PORT  || 5000
+const PORT = process.env.PORT  || 3001
 const IN_PROD = process.env.NODE_ENV === 'production'  // for https channel...  IN_PROD will be true if in production environment    If true while on http connection, session cookie will not work
 console.dir('Node Env: ', process.env.NODE_ENV)
 console.log('env prod:', IN_PROD)
@@ -24,7 +24,7 @@ app.set('view engine', 'ejs')
 if(IN_PROD) app.set('trust proxy', true)    //  this is insure cookie persistence in production otherwise the cookie is not sent back after login (may be in relation with Nginx config)
 
 const mongoStore = new MongoDBStore({  
-    uri: process.env.MONGO_URL,  
+    uri: process.env.MONGO_CLOUD,  
     collection: 'mySessions', 
     connectionOptions: {
         useNewUrlParser: true,
@@ -60,17 +60,12 @@ const sessionOptions = {
 // mongoose with local DB
 require('./scripts/mongooseDB')
 
-if(typeof process.env.MONGO_URL === 'undefined')
-{
 
-    console.log('MONGO_URL undefined. Check if .env file properly configured?')
-    //process.exit(1)
-}
 
 //Mongodb Client setup  with CloudDB  // TODO: used for posts book but should be uniformized to one DB.  the use of collection in app.locals seem different
 const mongo = require('./scripts/mongoClientDB')
 
-mongo.connectDb( process.env.MONGO_URL, 'SBQC', async (db) =>{    // dbServ, test, admin, local 
+mongo.connectDb( process.env.MONGO_CLOUD, 'SBQC', async (db) =>{    // dbServ, test, admin, local 
     
     //db.createCollection('server')     TODO:  faire un test conditionnel et creer si non exist
     app.locals.collections = [] 
