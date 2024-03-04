@@ -1020,3 +1020,38 @@ Change the value of bindIp from 127.0.0.1 to 0.0.0.0. This allows MongoDB to lis
 net:
   port: 27017
   bindIp: 0.0.0.0
+
+
+
+  ESP32
+
+    // ESP32 HUZZAH32
+ 
+  // *** Note :
+  //           you can only read analog inputs on ADC #1 once WiFi has started *** //
+  //           PWM is possible on every GPIO pin
+  
+/* 
+_A0( 26);  // A0 DAC2 ADC#2 not available when using wifi 
+_A1( 25);  // A1 DAC1 ADC#2 not available when using wifi
+_A2( 34);  // A2      ADC#1   Note it is not an output-capable pin! 
+_A3( 39);  // A3      ADC#1   Note it is not an output-capable pin! 
+_A4( 36);  // A4      ADC#1   Note it is not an output-capable pin! 
+_A5(  4);  // A5      ADC#2  TOUCH0 
+_SCK( 5);  // SPI SCK
+_MOSI( 18);   // MOSI
+_MISO( 19);  // MISO
+GPIO 16 - RX
+GPIO 17 - TX
+_D21( 21); 
+23	  SDA
+22	  SCL
+_A6( 14);           A6 ADC#2
+32		            A7 can also be used to connect a 32 KHz crystal
+_A8( 15); // 15		A8 ADC#2
+33		            A9
+27		            A10 ADC#2
+12	            	A11 ADC#2 This pin has a pull-down resistor built into it, we recommend using it as an output only, or making sure that the pull-down is not affected during boot
+_A12( 13, );        A12  ADC#2  Builtin LED
+_A13( 35, "VBAT");  This is general purpose input #35 and also an analog input, which is a resistor divider connected to the VBAT line   Voltage is divided by 2 so multiply the analogRead by 2
+*/
