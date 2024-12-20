@@ -7,7 +7,6 @@ const url = process.env.MONGO_URL ? process.env.MONGO_URL : "mongodb://127.0.0.1
 
 if(typeof process.env.MONGO_URL === 'undefined')  // TODO  beau bordel avec la ligne en haut....
 {
-
     console.log('MONGO_URL undefined. Check if .env file properly configured?')
     //process.exit(1)
 }
