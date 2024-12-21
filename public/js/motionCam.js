@@ -39,11 +39,7 @@ function setup()
   console.log('canvas offset width:', w)
   p5Canvas = createCanvas(640, 480)
   p5Canvas.parent('p5canvas')
-  //canvas = p5Canvas.canvas
-  //noCanvas();
   pixelDensity(1)
-
-  //frameRate(30)
 
   capture = createCapture(VIDEO);
   capture.parent(canvasDiv)
@@ -94,7 +90,17 @@ function setup()
       }
   }) 
    
+
 }
+
+
+
+
+  
+
+
+
+
 
 
 /*
@@ -188,6 +194,12 @@ function draw()
 
 
 
+
+
+
+
+
+
 async function sendAlert()  //  TODO: pkoi pas utiliser la version dans TOols?
 {
     image(video, 0, 0)  // gets the video image instead of pixel analysis for a cleaner email
@@ -216,6 +228,8 @@ async function sendAlert()  //  TODO: pkoi pas utiliser la version dans TOols?
 
 
 
+  
+
 /*
 function record() 
 {
@@ -234,9 +248,6 @@ function record()
 }
 
 */
-
-
-
 
 
 

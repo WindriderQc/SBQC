@@ -64,8 +64,8 @@
 
 let iss   // International Space Station location     
 
-const apiUrl =  <%- JSON.stringify(apiUrl) %>;
-let socket = io.connect(apiUrl)
+const mqttUrl =  <%- JSON.stringify(mqttUrl) %>;
+let socket = io.connect(mqttUrl)
 
 socket.on('iss', (data) => { 
     iss = data

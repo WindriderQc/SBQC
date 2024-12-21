@@ -8,7 +8,8 @@ console.log("SysInfo: ", sysmon.getinfo().data)
 console.log("CPU: ", sysmon.getinfo().cpus.length)
 
 //const apiUrl = process.env.NODE_ENV === 'production' ?  'https://www.specialblend.ddns.net:3001' : 'http://localhost:3001';
-const apiUrl = process.env.DATA_API;
+const apiUrl = process.env.DATA_API
+const mqttUrl = process.env.MQTT_IP
 console.log('API url: ' + apiUrl)
 
 
@@ -43,7 +44,7 @@ router.get("/iGrow", (req, res) => {
 
 //const liveData = require('liveData')
 router.get('/earth', (req, res) => {
-    res.render('earth', { liveData: liveDatas.datas, apiUrl: apiUrl })
+    res.render('earth', { liveData: liveDatas.datas, mqttUrl: mqttUrl })
 })
 
 router.get('/natureCode', (req, res) => {

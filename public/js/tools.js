@@ -127,10 +127,12 @@ const Tools = {
         
     ipLookUp: async () => {
             try {
-                const response = await fetch('http://ip-api.com/json')
+                //const response = await fetch('http://ip-api.com/json')
+                const response = await fetch('https://apip.cc/json')
+               
                 const data = await response.json()
                 console.log('User\'s Location Data is ', data);
-                console.log('User\'s Country', data.country);
+               // console.log('User\'s Country', data.CountryName);
                 return data
             } catch (error) {
                  console.log('Request failed.  Returned status of', error);
