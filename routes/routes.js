@@ -28,13 +28,13 @@ router.get("/", async (req, res) => {
     let ip = req.socket.remoteAddress;             console.log('Client IP: ', ip)
 
     let count = await counter.increaseCount()
-
-    res.render('index', { menuId: 'home', hitCount: count, localUrl: req.protocol + '://' + req.get('host') })
+    //res.render('index', { menuId: 'home', hitCount: count, localUrl: req.protocol + '://' + req.get('host') })
+    res.render('index', { menuId: 'home', hitCount: count, localUrl: 'https://' + req.get('host') })
 })
 
 router.get('/index', async (req, res) => {
     let count = await counter.getCount()
-    res.render('index',  { menuId: 'home', hitCount: count , localUrl: req.protocol + '://' + req.get('host') })
+    res.render('index', { menuId: 'home', hitCount: count, localUrl: 'https://' + req.get('host') })
 })
 
 router.get("/iGrow", (req, res) => {

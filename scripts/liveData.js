@@ -58,6 +58,8 @@ async function getQuakes()
 async function getZonAnn() 
 {
     const response = await fetch('https://data.giss.nasa.gov/gistemp/tabledata_v4/ZonAnn.Ts+dSST.csv')
+    
+
     const data = await response.text()
   
     const table = data.split('\n').slice(1)   //  slice delete line 1
