@@ -3,58 +3,54 @@
 
 <head> <%- include('partials/head') %> </head>
 
-<body class="fixed-nav sticky-footer bg-light sidenav-toggled" id="page-top">
+<body>
   
 <%- include('partials/nav') %> 
 
-<div class="content-wrapper">
-<div class="container-fluid bg-3 text-center">  
-<!-- Begin Container  -->  
-  <div class="card mb-3">
-    <div class="card-body" >
-        <div class="form-inline my-4">
-            City: <input class="form-control mx-2" id ="city" value = "Toronto"></input>
-            <button class="form-control mx-2" id="submit">submit</button>
-        </div>
-        <div class="form-inline my-4">
-            <p class="form-text mx-4" id="temp"> Temp :  0</p> 
-            <p class="form-text mx-4" id="humid"> Humid:  0</p>  
-            
-        </div>
-        <div class="form-inline my-4">
-            <input class="form-control mx-4" type="checkbox" id="gridCheck" onclick="setGrid()">
-            <label for="gridCheck"> Show Grid </label>   
+<div id="page-top" class="container-fluid bg-3 text-center">  
+
+    <div class="card mb-3">
+        <div class="card-body text-start">
+            <form class="row ">
+                <div class="col">
+                    <label for="city" class="form-label">City:</label>
+                </div>
+                <div class="col">
+                    <input type="text" class="form-control" id="city" value="Toronto">
+                </div>
+                <div class="col">
+                    <button
+                        id="submit"
+                        data-mdb-ripple-init
+                        class="btn btn-outline-primary"
+                        type="button"
+                        data-mdb-ripple-color="dark"
+                    >Submit</button>
+                </div>
+            </form>
+            <div class="row my-4">
+                <div class="col">
+                    <p class="form-text" id="temp">Temp: 0</p>
+                    <p class="form-text" id="humid">Humid: 0</p>
+                </div>
+            </div>
+            <div class="form-check my-4">
+                <input class="form-check-input" type="checkbox" id="gridCheck" onclick="setGrid()">
+                <label class="form-check-label" for="gridCheck">Show Grid</label>
+            </div>
         </div>
     </div>
 
-   
-   
-
-</div>
-
-  </div>
-
-
-
-        <div class="card mb-3">
-
-            <div class="card-body" >
-                <div id='mapLabel'></div>
-            </div>
-            <div class="card-footer small text-muted">  </div>
-        </div>
+    <div class="card mb-3">
+        <div class="card-body" > <div id='mapLabel'></div>  </div>
+    </div>
  
-        <div class="card mb-3">
-
-            <div class="card-body" >
-                <%- include('partials/worldTemp') %>
-            </div>
-            <div class="card-footer small text-muted">  </div>
-        </div>
+    <div class="card mb-3">
+        <div class="card-body" > <%- include('partials/worldTemp') %> </div>
+    </div>
 
 
 <!-- End Container  -->
-</div>
 </div>
 
 <%- include('partials/footer') %> 
