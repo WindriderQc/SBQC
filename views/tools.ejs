@@ -5,6 +5,8 @@
 
 <style>
 
+
+
         /* unvisited link */
     a:link {
         color: rgba(88,79,63,255);
@@ -24,14 +26,18 @@
     a:active {
         color: orange;
     }
+
+ 
+
+
 </style>
 
 </head>
 
-<body class="fixed-nav sticky-footer bg-light" id="page-top">
+<body class="bg-light ">
 <%- include('partials/nav') %>
 
-<div class="content-wrapper" id="mainContainer">
+<div  id="page-top" class="content-wrapper navbar-spacing">
     <div class="container-fluid bg-3 text-center">   
     <!-- Begin Container  -->      
             
@@ -89,7 +95,7 @@
                     </div>
                 </div>
                 <div class="card-body"> <a href="/Tools/System_Info"> <i class="far fa-clipboard fa-7x"></i> </a> </div>
-                <div class="card-footer small text-muted"> Server specifications recorded at last boot.<br> <br> </div>
+                <div class="card-footer small text-muted"> Server specifications recorded at last boot.<br> </div>
             </div>
         </div>
     
@@ -97,8 +103,11 @@
 
     <div class='row'>
         <div class="col-sm-12">
-            <div class="card py-3">  
-                <%- include('partials/rgbSlider', {cssParam: "background-color", domId: "mainContainer"  }) %> 
+            <div class="card mb-3">  
+                <div class="card-header" style="background-color: rgba(118, 190,70, 255);"> Background color selector</div>
+                <div class="card-body">
+                    <%- include('partials/rgbSlider', {cssParam: "background-color", domId: "page-top"  }) %> 
+                </div>
             </div>
         </div>
     </div>
@@ -127,6 +136,10 @@
     
     <%- include('partials/footer') %>
     <%- include('partials/p5') %> 
+
+
+   
+
 
 </body>
 </html>

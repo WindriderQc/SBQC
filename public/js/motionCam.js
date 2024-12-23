@@ -42,6 +42,7 @@ function setup()
   pixelDensity(1)
 
   capture = createCapture(VIDEO);
+  console.log('capture:', capture)
   capture.parent(canvasDiv)
 
 

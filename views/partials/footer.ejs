@@ -3,13 +3,24 @@
     <i class="fa fa-angle-up"></i>
 </a>
 
-  <!-- MDB -->
-  <script type="text/javascript" src="js/mdb.umd.min.js"></script>
-
+<!-- MDB -->
+<script type="text/javascript" src="js/mdb.umd.min.js"></script>
 
 <!-- Tools -->
 <script src="js/tools.js"></script>
 
 
-<%- include('logout') %>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var navbarToggler = document.querySelector('.navbar-toggler');
+      var body = document.body;
 
+      navbarToggler.addEventListener('click', function() {
+        if (body.classList.contains('navbar-expanded-spacing')) {
+          body.classList.remove('navbar-expanded-spacing');
+        } else {
+          body.classList.add('navbar-expanded-spacing');
+        }
+      });
+    });
+</script>

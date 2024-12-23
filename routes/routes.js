@@ -51,8 +51,8 @@ router.get('/natureCode', (req, res) => {
     res.render('natureCode')
 })
 
-router.get('/outils', (req, res) => {
-    res.render('outils', { sysInfo: sysmon.getinfo() })
+router.get('/tools', (req, res) => {
+    res.render('tools', { sysInfo: sysmon.getinfo() })
 })
 
 router.get('/legacy', (req, res) => {
@@ -86,73 +86,7 @@ router.get('/serverspec', (req,res) => {
     res.render('serverspec')
 })
 
-//  APIs
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-const userController = require('../controllers/userController')
-
-router.post("/users/test", async (req, res) => {
-    console.log("test");
-    res.header("auth-test", "yoyo").send("test good");  //  testing custom header 
-    })
-
-router.route('/users')
-    .get(userController.index)
-    .post(userController.new)  
-
-router.route('/users/deleteViaEmail').post(userController.deleteViaEmailbody)    
-
-
-router.route('/users/:user_id')
-    .get(userController.view)
-    .patch(userController.update)
-    .put(userController.update)
-    .delete(userController.delete)
-
-router.route('/users/viaEmail/:email')
-    .get(userController.viaEmail)
-    .delete(userController.deleteViaEmail)
-
-
-
-
-
-//  Session validation & logged in routes
-const hasSessionID = (req, res, next) => {
-    console.log('Session: ', req.session)
-    if (!req.session.userToken) {
-        res.redirect('/login')
-    } else {
-        next()
-    }
-}
-
-
-router.get('/fundev', hasSessionID,  (req, res) => {
-    res.render('fundev', { name: req.session.email })    
-})
-
-
-
-
-const User = require('../models/userModel');
-
-router.get('/settings',  hasSessionID, async (req, res) => {
-    
-    User.get((err, users)=> { 
-        if(err) console.log(err)
-        res.render('settings', {users: users})
-    })
-
-   /*try {
-        const response = await fetch(apiUrl + "/users/")
-        const users = await response.json()
-        console.log(users)
-        res.render('settings', {users: users.data})
-    } 
-    catch (err) {   console.log(err)    }
-    */
-})
 
 
 

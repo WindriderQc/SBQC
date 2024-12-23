@@ -21,7 +21,64 @@
 
 
 
+<style>
 
+    body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    }
+    .background-container {
+        background-image: url('/img/aiBackground1.png');
+        background-size: cover;
+        background-position: center;
+        height: 640px;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        z-index: 0;
+        padding:0%;
+        margin: 0%;
+    }
+
+    .background-container .col {
+        max-width: 800px;
+        margin: auto;
+        background: rgba(255, 255, 255, 0.75); 
+        padding: 20px;
+        border-radius: 10px;
+    }
+
+    #canvasDiv {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1; /* Higher z-index */
+    }
+
+    .topDiv {
+        position: relative;
+        z-index: 2; /* Highest z-index */
+    }
+
+    #page-top {
+      padding-top: 84px; 
+    }
+    .navbar-expanded-spacing {
+      padding-top: 210px; 
+    }
+    .nav-link-text {
+        padding-left: 4px;
+        padding-right: 16px;
+    }
+
+
+</style>
 
 
 

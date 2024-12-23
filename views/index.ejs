@@ -5,62 +5,12 @@
   <%- include('partials/head') %> 
   <link rel='stylesheet' href='css/mews.css'>
   <link rel='stylesheet' href='css/rockPaperScissor.css'>
-
-<style>
-    body, html {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    width: 100%;
-    }
-    .background-container {
-        background-image: url('/img/aiBackground1.png');
-        background-size: cover;
-        background-position: center;
-        height: 640px;
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        z-index: 0;
-        padding:0%;
-        margin: 0%;
-    }
-
-    .background-container .col {
-        max-width: 800px;
-        margin: auto;
-        background: rgba(255, 255, 255, 0.75); 
-        padding: 20px;
-        border-radius: 10px;
-    }
-
-    #canvasDiv {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 1; /* Higher z-index */
-    }
-
-    .topDiv {
-    position: relative;
-    z-index: 2; /* Highest z-index */
-}
-
-
-</style>
 </head>
 
-
-
-
-
-
-<body class=' ' id='page-top'>
+<body>
+<%- include('partials/nav') %>
     <div id='canvasDiv'></div>    
+
     <div class="background-container d-flex justify-content-center align-items-center" style="height: 100vh">
         <div class="text-center">
          
@@ -86,8 +36,8 @@
 
       
 
-<%- include('partials/nav') %> 
-<div class=' content-wrapper bg-transparent'>
+
+<div id='page-top' class=' content-wrapper bg-transparent'>
 <div class='container-fluid text-center '>  
 <!-- Begin Container  -->  
   
@@ -190,19 +140,43 @@
     </div>
 
 
-
+<!-- Scroll to Top Button-->
+<a class="scroll-to-top rounded" href="#page-top">
+    <i class="fa fa-angle-up"></i>
+</a>
  <!-- End Container  -->
 </div>
 </div>
-<%- include('partials/footer') %>
+
+
+
+<!-- MDB -->
+<script type="text/javascript" src="js/mdb.umd.min.js"></script>
+
+<!-- Tools -->
+<script src="js/tools.js"></script>
+
 <%- include('partials/p5') %> 
 <script type='text/javascript' src='js/p5.speech.js'></script>
 <script type='text/javascript' src='js/nestor.js'></script>
 <script type='text/javascript' src='js/rockPaperScissor.js'></script>
-</body>
-</html>
+
 
 <script>
+// Ensure MDBootstrap components are initialized
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize tooltips
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-mdb-toggle="tooltip"]'))
+  var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new mdb.Tooltip(tooltipTriggerEl)
+  })
+});
+
+
+
+
+
+
   //    WALKER
   function Walker() {
   
@@ -564,3 +538,9 @@ function listAllMews(reset = true) {
     });
 }
   </script>
+
+
+
+
+</body>
+</html>
