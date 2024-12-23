@@ -24,3 +24,5 @@ node_modules/
 
 
 visitCounter.txt
+
+*.code-workspace
