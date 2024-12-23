@@ -5,36 +5,97 @@
   <%- include('partials/head') %> 
   <link rel='stylesheet' href='css/mews.css'>
   <link rel='stylesheet' href='css/rockPaperScissor.css'>
+
+<style>
+    body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    }
+    .background-container {
+        background-image: url('/img/aiBackground1.png');
+        background-size: cover;
+        background-position: center;
+        height: 640px;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        z-index: 0;
+        padding:0%;
+        margin: 0%;
+    }
+
+    .background-container .col {
+        max-width: 800px;
+        margin: auto;
+        background: rgba(255, 255, 255, 0.75); 
+        padding: 20px;
+        border-radius: 10px;
+    }
+
+    #canvasDiv {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1; /* Higher z-index */
+    }
+
+    .topDiv {
+    position: relative;
+    z-index: 2; /* Highest z-index */
+}
+
+
+</style>
 </head>
 
 
-<body class='fixed-nav sticky-footer bg-transparent sidenav-toggled ' id='page-top'>
-<div id='canvasDiv' ></div>
+
+
+
+
+<body class=' ' id='page-top'>
+    <div id='canvasDiv'></div>    
+    <div class="background-container d-flex justify-content-center align-items-center" style="height: 100vh">
+        <div class="text-center">
+         
+            <div class='col sm-8 topDiv'>
+                <img class="mb-4" src="img/favicon.ico" style="width: 250px; "  />
+
+                <div class="">
+                    <br>
+                    <h3> Welcome to Special Blend Production</h3>
+                    <br>
+                    <h3> A mix of visuals, data gathering and games mini-projects using node.js with express, mosquitto mqtt, p5.js and WebGL. </h3> 
+                    <br>
+                    <br>
+                    <br>
+                    <a href="/index">
+                        <button type="button" class="btn btn-outline-success" data-mdb-ripple-init data-mdb-ripple-color="dark">Engage interactive eXperience</button>
+                    </a>
+                </div> 
+            </div>  
+       
+        </div>
+      </div>
+
+      
+
 <%- include('partials/nav') %> 
-<div class='content-wrapper bg-transparent'>
+<div class=' content-wrapper bg-transparent'>
 <div class='container-fluid text-center '>  
 <!-- Begin Container  -->  
   
-  <div id=screen_id></div>
-  <div id='speech'></div>
-
-    <div class='row'>
-        <div class='col sm-8'>
-            <div>
-                <!-- <row>   <image src='img/earth3d.png' height='80px'></image>    </row> -->
-                <br>
-                <h3> Welcome to Special Blend Production</h3>
-                <br>
-                <h4> A mix of visuals, data gathering and games mini-projects using javascript and WebGL. </h4> 
-                <br>
-                <br>
-                <br>  
-            </div> 
-        </div>  
-    </div>  
+    <div id=screen_id></div>
+    <div id='speech'>-</div>
 
 
-    <div class="row px-5">
+    <div class="row px-5" id="projectsDiv">
 
         <div class="col-sm-6 mt-4 ">
             <div class='card bg-transparent h-100 my-5'>
@@ -45,7 +106,7 @@
         </div>
         
         <div class="col-sm-6 mt-4 ">
-            <div class='card bg-transparent h-100 my-5'>
+            <div class='card  bg-transparent h-100 my-5'>
                 <div class='card-header '> <h1>Nature of Code</h1> </div>
                 <a href="/Projects/Nature of Code/sAll" class="navbar-left"> <img src='img/flocking.png' class="card-img-top p-4" alt='' > </a> 
                 <h5 class="card-title pt-2 px-2">Flocking Simulation via forces and behavior</h5>
@@ -220,16 +281,80 @@ let particles = [];
 let particles2 = [];
 let particles3 = [];
 let walker, walker2, walker3;
+
+let mouth;
+
+
 function setup() 
 {
-  let canvas = createCanvas(windowWidth, windowHeight);
-  canvas.parent('canvasDiv');
-  //create walker
-  walker = new Walker();
-  walker2 = new Walker(); 
-  walker3 = new Walker(); 
+
+    //  WALKER  
+    let canvas = createCanvas(windowWidth, windowHeight);
+    canvas.parent('canvasDiv');
+    //create walker
+    walker = new Walker();
+    walker2 = new Walker(); 
+    walker3 = new Walker(); 
+
+
+    // NESTOR
+    //let lang = navigator.language || 'fr-FR'   //  'en-US'
+    let lang = 'en-US'
+    console.log('language: ' + lang)
+   // let speechRec = new p5.SpeechRec(lang, gotSpeech)
+    //let continuous = true
+    //speechRec.start(continuous, false)
+    //speechRec.start()
+
+    mouth = new p5.Speech(); // speech synthesis object   
+    mouth.onLoad = voiceReady;
+
+
 }
  
+
+function gotSpeech() 
+{
+    if(speechRec.resultValue){
+    
+        let p = createP(speechRec.resultString);
+        let d = document.getElementById('speech')
+        d.innerHTML = p
+        console.log("SpeechRec: ",  p)
+        //p.parent(document.getElementById('speech'))
+        //createP(speechRec.resultString);
+    }
+    else {
+    let p = createP(speechRec)
+    p.parent(document.getElementById('speech'))
+    console.log("SpeechRec: ",  speechRec)
+    }
+}
+
+
+
+
+ 
+function voiceReady() 
+{
+   console.log('Speech recognition supported 😊')
+   console.log('Voices: ', mouth.voices) 
+   mouth.setVoice(1)
+   mouth.setRate(1)
+   mouth.setPitch(1)
+
+   mouth.speak('How you doinnn?'); // say something
+
+  // mouth.setVoice(6)
+// mouth.speak('Caâlisss de tabârnack... Quessé tu fais la encore?'); // say something
+}
+
+
+
+
+
+
+
 function windowResized() {
     resizeCanvas(windowWidth, windowHeight);
 }
