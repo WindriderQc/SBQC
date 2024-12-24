@@ -170,9 +170,18 @@ document.addEventListener('DOMContentLoaded', function() {
   var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
     return new mdb.Tooltip(tooltipTriggerEl)
   })
+
+  getUserInfo()
 });
 
 
+
+
+async function getUserInfo()
+{
+    const info = await Tools.ipLookUp()
+    document.getElementById('ip_id').innerHTML =  "<pre>"+JSON.stringify(info,null, '\t') +"</pre>"
+} 
 
 
 
