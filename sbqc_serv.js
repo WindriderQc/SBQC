@@ -18,6 +18,10 @@ console.log('env prod:', IN_PROD)
 
 
 
+
+
+
+
 const app = express()
 app.set('view engine', 'ejs')
 
@@ -49,11 +53,23 @@ const sessionOptions = {
   }
 }
 
+if(!IN_PROD)  //  Required only when not served by nginx...  DEV Purpose
+{
+const https = require('https');
+const fs = require('fs');
 
+const options = {
+    key: fs.readFileSync('./selfsigned.key'),
+    cert: fs.readFileSync('./selfsigned.crt')
+  };
+  
+  https.createServer(options, app).listen(443, () => {
+    console.log('Server is running on https://ugnode.local');
+  });
+}
 
 
 //  Databases
-
 
 // mongoose with local DB
 //require('./scripts/mongooseDB')
@@ -131,3 +147,7 @@ console.log("Intervals: ", intervals)
 
 //console.log('Launching automation scripts')
 //require('./scripts/serverScripts.js')  // generate infos/index.html
+
+
+
+
