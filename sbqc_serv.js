@@ -53,7 +53,7 @@ const sessionOptions = {
   }
 }
 
-if(!IN_PROD)  //  Required only when not served by nginx...  DEV Purpose
+if(IN_PROD)  //  Required only when not served by nginx...  DEV Purpose
 {
 const https = require('https');
 const fs = require('fs');
