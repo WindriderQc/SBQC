@@ -1,5 +1,9 @@
 const router = require('express').Router()
-const fetch = require('node-fetch')
+
+// Dynamic import for node-fetch
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+
+//const fetch = require('node-fetch')
 const mailman = require('../public/js/mailman')
 let counter = require('../scripts/visitorCount')
 

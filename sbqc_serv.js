@@ -128,12 +128,16 @@ const server = app.listen(PORT, () =>{
     console.log(`(Nginx may change public port)`)
     console.log('Press Ctrl + C to exit\n')
     console.log('\n__________________________________________________\n\n')
-    nodeTools.readFile("greetings.txt")
+    //nodeTools.readFile("greetings.txt")
   })
 
 
-const socket = require('./scripts/socket')
-socket.init(server)
+const socketio = require('./scripts/socket')
+socketio.init(server)
+
+ 
+
+
 
 
 let liveDatas = require('./scripts/liveData.js')
@@ -151,3 +155,25 @@ console.log("Intervals: ", intervals)
 
 
 
+
+/*
+const { Server } = require("socket.io");
+const io = new Server(server);
+
+io.on('connection', (socket) => {
+    console.log('a user connected');
+
+    socket.on('chat message', (msg) => {
+        io.emit('chat message', msg);
+    });
+
+    socket.on('mouse', (msg) => {
+        socket.broadcast.emit('mouse', msg); // This will send to all clients except the source
+    });
+
+    socket.on('disconnect', () => {
+      console.log('user disconnected');
+    });
+  });
+
+ */

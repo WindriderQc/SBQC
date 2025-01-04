@@ -16,13 +16,28 @@ function init(server)
     
         socket_ = socket
         
-        socket.on('mouse', (data) => { // example used to share mouse movement between client - DrawTogether project
+        /*socket.on('mouse', (data) => { // example used to share mouse movement between client - DrawTogether project
             socket.broadcast.emit('mouse', data) // io.sockets.emit()  will emit back to sender as well.  could be used if data is modified by server
-        })
+        })*/
+
+        socket.on('chat message', (msg) => {
+            io.emit('chat message', msg);
+        });
+    
+        socket.on('mouse', (msg) => {
+            socket.broadcast.emit('mouse', msg); // This will send to all clients except the source
+        });
+    
+        socket.on('disconnect', () => {
+            console.log('user disconnected');
+        });
+
     })
 
+  
+
     io_ = io
-    return io_
+    return {io_ }
 }
 
 

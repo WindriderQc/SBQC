@@ -1,9 +1,6 @@
 let router = require('express').Router()
 
 //  meower
-const Filter = require('bad-words')
-const filter = new Filter();
-
 
 router.get('/', (req, res) => {
     res.json({
@@ -73,8 +70,8 @@ function isValidMew(mew) {
 const createMew = async (req, res, next) => {
     if (isValidMew(req.body)) {
         const mew = {
-        name: filter.clean(req.body.name.toString().trim()),
-        content: filter.clean(req.body.content.toString().trim()),
+        name: req.body.name.toString().trim(),
+        content: req.body.content.toString().trim(),
         created: new Date()
         }
         
@@ -99,8 +96,6 @@ const createMew = async (req, res, next) => {
 
 router.post('/mews', createMew)
 router.post('/v2/mews', createMew)
-
-
 
 
 

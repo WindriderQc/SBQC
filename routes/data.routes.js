@@ -1,6 +1,10 @@
 require('dotenv').config();
 const router = require('express').Router()
-const fetch = require('node-fetch')
+
+// Dynamic import for node-fetch
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+
+//const fetch = require('node-fetch')
 
 const liveData = require('../scripts/liveData')
 

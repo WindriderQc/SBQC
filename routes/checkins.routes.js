@@ -5,9 +5,9 @@ const router = require('express').Router()
 
 
 
-const Datastore = require('nedb')
-const picDb = new Datastore('pics.db');
-picDb.loadDatabase();
+////const Datastore = require('nedb')
+//const picDb = new Datastore('pics.db');
+//picDb.loadDatabase();
 
 router.get('/api', (request, response) => {
     picDb.find({}, (err, data) => {

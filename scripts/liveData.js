@@ -1,6 +1,11 @@
-const fetch = require('node-fetch')
+//const fetch = require('node-fetch')
+
+// Dynamic import for node-fetch
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+
 const nodeTools = require('./nodeTools') //nodeTools.readFile("greetings.txt")
 const socketio = require('./socket')
+
 
 
 
@@ -55,25 +60,29 @@ async function getQuakes()
 
 
 
-async function getZonAnn() 
-{
-    const response = await fetch('https://data.giss.nasa.gov/gistemp/tabledata_v4/ZonAnn.Ts+dSST.csv')
-    
 
-    const data = await response.text()
-  
-    const table = data.split('\n').slice(1)   //  slice delete line 1
-    
-    table.forEach(row => {
-        const columns = row.split(',')
-        const year = columns[0]
-        const temp = columns[1]
-    
-        //console.log(year, temp)
-        datas.yearTemp = {year, temp}
-        return (datas.yearTemp)  //  TODO:  mais...    ca va retourner juste la premiere ligne du tableau!?
-    })
+async function getZonAnn() {
+    try {
+        const response = await fetch('https://data.giss.nasa.gov/gistemp/tabledata_v4/ZonAnn.Ts+dSST.csv');
+        const data = await response.text();
+
+        const table = data.split('\n').slice(1);   //  slice delete line 1
+        
+        table.forEach(row => {
+            const columns = row.split(',');
+            const year = columns[0];
+            const temp = columns[1];
+        
+            //console.log(year, temp)
+            datas.yearTemp = {year, temp};
+            return datas.yearTemp;  //  TODO:  mais...    ca va retourner juste la premiere ligne du tableau!?
+        });
+    } catch (err) {
+        console.log('Failed to fetch ZonAnn data:', err);
+        datas.yearTemp = {};
+    }
 }
+
 
 
 
