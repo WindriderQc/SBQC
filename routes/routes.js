@@ -26,14 +26,34 @@ let liveDatas = require('../scripts/liveData.js')
 
 router.get("/", async (req, res) => {
     //  TODO: send dans BD ces infos pour un checkin log de qui vient sur root /
-    let client = req.headers['user-agent'];        console.log('Client: ', client)
-    let content = req.headers['Content-Type'];     console.log('Content-Type: ', content)
-    let autorize = req.headers['Authorization'];   console.log('Authorize:', autorize)
-    let origin = req.headers['host'];              console.log('Host:', origin)
-    let ip = req.socket.remoteAddress;             console.log('Client IP: ', ip)
+    let client = req.headers['user-agent'];        
+    let content = req.headers['Content-Type'];     
+    let autorize = req.headers['Authorization'];   
+    let origin = req.headers['host'];              
+    let ip = req.socket.remoteAddress;     
 
     let count = await counter.increaseCount()
 
+   const log = {
+        logType: 'checkin',
+        client: client ? client.toString().trim() : 'none',
+        content: content ? content.toString().trim() : 'none',
+        authorization: autorize ? autorize.toString().trim() : 'none',
+        host: origin ? origin.toString().trim() : 'none',
+        ip: ip ? ip.toString().trim() : 'none',   
+        hitCount: count,
+        created: new Date()
+        }
+        
+        const logsdb =  req.app.locals.collections.server;
+    try{
+        const createdLog = await logsdb.insertOne(log)
+        console.log(
+        `${createdLog.insertedCount} documents were inserted with the _id: ${createdLog.insertedId}`,
+        )
+         console.log(createdLog.ops)
+    }
+    catch(err) {console.log(err); next() }
 
 
 
@@ -175,8 +195,8 @@ router.get('/v2/logs', async (req, res, next) => {
     skip = skip < 0 ? 0 : skip;
     limit = Math.min(2000, Math.max(1, limit))
 
-    const logsdb =  req.app.locals.collections['server']
-    console.log(logsdb.namespace)
+    const logsdb =  req.app.locals.collections['userLogs']
+    console.log('DB namespace', logsdb.namespace)
 
     Promise.all([
         logsdb.countDocuments(),
@@ -192,21 +212,17 @@ router.get('/v2/logs', async (req, res, next) => {
 
 })
 
-function isValidLog(log) {
-    return log.name && log.name.toString().trim() !== '' && log.name.toString().trim().length <= 50 &&
-        log.content && log.content.toString().trim() !== '' && log.content.toString().trim().length <= 140
-}
 
 
-const createLog = async (req, res, next) => {
-    if (isValidLog(req.body)) {
-        const log = {
-        name: req.body.name.toString().trim(),
-        content: req.body.content.toString().trim(),
-        created: new Date()
-        }
-        
-        const logsdb =  req.app.locals.collections.server;
+
+
+
+const createUserLog = async (req, res, next) => {
+    if (req.body) {
+        const log = req.body
+        log.created =  new Date()
+        console.log(log)
+        const logsdb =  req.app.locals.collections.userLogs;
     try{
         const createdLog = await logsdb.insertOne(log)
         console.log(
@@ -225,7 +241,7 @@ const createLog = async (req, res, next) => {
     }
 }
 
-router.post('/v2/logs', createLog)
+router.post('/v2/logs', createUserLog)
 
 
 

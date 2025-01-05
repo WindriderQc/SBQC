@@ -91,7 +91,16 @@ mongo.connectDb( process.env.MONGO_CLOUD, 'SBQC', async (db) =>{    // dbServ, t
         app.locals.collections[coll.name] =  mongo.getDb(coll.name)
     }
     
-    app.locals.collections.server.insertOne({ name: "dbServer boot", date: Date.now() })   //   TODO:  Server may not exist
+    app.locals.collections.server.insertOne({ 
+        logType: 'boot',
+        client: 'server',
+        content: 'dbServer boot',
+        authorization: 'none',
+        host: IN_PROD ? "Production Mode" : "Developpement Mode",
+        ip: 'localhost',
+        hitCount: 'N/A',
+        created: Date.now() 
+    })   //   TODO:  Server may not exist
 
 })
 

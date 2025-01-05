@@ -81,7 +81,7 @@
 
   <div class="row-padding margin-bottom">
     <div class="col col-3">
-      <div class="container red padding-16">
+      <div class="container green text-black padding-16">
         <div class="left"><i class="fa fa-comment xxxlarge"></i></div>
         <div class="right">
           <h3 id="msgCard">52</h3>
@@ -91,7 +91,7 @@
       </div>
     </div>
     <div class="col col-3">
-      <div class="container blue padding-16">
+      <div class="container indigo text-black padding-16">
         <div class="left"><i class="fa fa-eye xxxlarge"></i></div>
         <div class="right">
           <h3 id="viewsCard"><%- hitCount %></h3>
@@ -101,7 +101,7 @@
       </div>
     </div>
     <div class="col col-3">
-      <div class="container teal padding-16">
+      <div class="container khaki padding-16">
         <div class="left"><i class="fa fa-share-alt xxxlarge"></i></div>
         <div class="right">
           <h3 id="devicesCard">2</h3>
@@ -111,7 +111,7 @@
       </div>
     </div>
     <div class="col col-3">
-      <div class="container orange text-white padding-16">
+      <div class="container grey padding-16">
         <div class="left"><i class="fa fa-users xxxlarge"></i></div>
         <div class="right">
           <h3 id="usersCard">50</h3>
@@ -410,6 +410,7 @@ function listAllLogs() {
                 paging: true,
                 data: result.logs,
                 columns: columns,
+                scrollX: true // Enable horizontal scrolling
                 //autoWidth: false, // Disable automatic column width expansion
             });
 

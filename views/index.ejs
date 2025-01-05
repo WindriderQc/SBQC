@@ -172,25 +172,7 @@
 
 
 <script>
-// Ensure MDBootstrap components are initialized
-document.addEventListener('DOMContentLoaded', function() {
-  // Initialize tooltips
-  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-mdb-toggle="tooltip"]'))
-  var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-    return new mdb.Tooltip(tooltipTriggerEl)
-  })
 
-  getUserInfo()
-});
-
-
-
-
-async function getUserInfo()
-{
-    const info = await Tools.ipLookUp()
-    document.getElementById('ip_id').innerHTML =  "<pre>"+JSON.stringify(info,null, '\t') +"</pre>"
-} 
 
 
 
@@ -555,6 +537,59 @@ function listAllMews(reset = true) {
       loading = false;
     });
 }
+
+
+
+
+
+
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize tooltips
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-mdb-toggle="tooltip"]'))
+  var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new mdb.Tooltip(tooltipTriggerEl)
+  })
+
+
+
+  getUserInfo()
+
+
+  
+});
+
+
+
+
+async function getUserInfo()
+{
+    const info = await Tools.ipLookUp()
+    info.logType =  'userIP'
+    info.content = 'Connection from ' + info.City + ', ' + info.Country + ' (' + info.IP + ')'
+    document.getElementById('ip_id').innerHTML =  "<pre>"+JSON.stringify(info,null, '\t') +"</pre>"
+    const url =  localUrl + '/v2/logs' 
+    
+    fetch(url, {
+      method: 'POST',
+      body: JSON.stringify(info),
+      headers: {
+        'content-type': 'application/json'
+      }
+    }).then(response => {      
+      if (!response.ok) {
+        const contentType = response.headers.get('content-type');
+        if (contentType.includes('json')) {
+          return response.json().then(error => Promise.reject(error.message));
+        } else {
+          return response.text().then(message => Promise.reject(message));
+        }
+      }
+    }).catch(errorMessage => {   console.log(errorMessage)  });
+
+} 
+
+
   </script>
 
 

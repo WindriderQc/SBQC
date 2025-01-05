@@ -30,7 +30,7 @@ router.get('/v2/mews', async (req, res, next) => {
     limit = Math.min(50, Math.max(1, limit))
 
     const mewsdb =  req.app.locals.collections['mews']
-    console.log(mewsdb.namespace)
+    console.log('Getting Meows from db namespace: ', mewsdb.namespace)
 
     Promise.all([
         mewsdb.countDocuments(),
