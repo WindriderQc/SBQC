@@ -355,7 +355,7 @@ const LOCAL_URL =  localUrl + '/v2/logs'
 
 
 let skip = 0;
-let limit = 2000;  //   TODO:  si il y a plus de 2000 logs....
+let source = "server"; 
 let loading = false;
 
 
@@ -367,10 +367,9 @@ function listAllLogs() {
   loading = true;
   loadingElement.style.display = '';
 
-  //const url = `${LOCAL_URL}`
-    const url = `${LOCAL_URL}?skip=${skip}&limit=${limit}`
+  const url = `${LOCAL_URL}?skip=${skip}&source=${source}`
 
- const options =  {
+  const options =  {
     method: 'GET', // *GET, POST, PUT, DELETE, etc.
     mode: 'no-cors'/*  , // cors, no-cors, *cors, same-origin
     cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached

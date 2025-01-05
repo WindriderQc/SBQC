@@ -188,25 +188,23 @@ router.post('/alert', async (req, res) => {
 router.get('/v2/logs', async (req, res, next) => {
     // let skip = Number(req.query.skip) || 0
     // let limit = Number(req.query.limit) || 10
-    let { skip = 0, limit = 5, sort = 'desc' } = req.query
+    let { skip = 0,  sort = 'desc', source = 'userLogs' } = req.query
     skip = parseInt(skip) || 0
-    limit = parseInt(limit) || 5
+    
 
     skip = skip < 0 ? 0 : skip;
-    limit = Math.min(2000, Math.max(1, limit))
-
-    const logsdb =  req.app.locals.collections['userLogs']
-    console.log('DB namespace', logsdb.namespace)
+   
+    const logsdb =  req.app.locals.collections[source]
+    console.log('Getting logs from DB namespace', logsdb.namespace)
 
     Promise.all([
         logsdb.countDocuments(),
-        logsdb.find({}, { skip, limit, sort: {  created: sort === 'desc' ? -1 : 1     } }).toArray()
+        logsdb.find({}, { skip, sort: {  created: sort === 'desc' ? -1 : 1     } }).toArray()
     ])
     .then(([ total, logs ]) => {
-        // console.log(mews)
         res.json({
         logs,
-        meta: { total, skip, limit, has_more: total - (skip + limit) > 0, } })
+        meta: { total, skip, source, has_more: 0, } })
     })
     .catch(next)
 
