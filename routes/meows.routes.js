@@ -34,27 +34,15 @@ router.get('/v2/mews', async (req, res, next) => {
 
     Promise.all([
         mewsdb.countDocuments(),
-        mewsdb.find({}, {
-            skip,
-            limit,
-            sort: {  created: sort === 'desc' ? -1 : 1     }
-        }).toArray()
+        mewsdb.find({}, { skip, limit, sort: {  created: sort === 'desc' ? -1 : 1     } }).toArray()
     ])
     .then(([ total, mews ]) => {
-
         // console.log(mews)
         res.json({
         mews,
-        meta: {
-            total,
-            skip,
-            limit,
-            has_more: total - (skip + limit) > 0,
-        }
-        })
-    }).catch(next)
-
-
+        meta: { total, skip, limit, has_more: total - (skip + limit) > 0, } })
+    })
+    .catch(next)
 
 })
 
@@ -62,9 +50,6 @@ function isValidMew(mew) {
     return mew.name && mew.name.toString().trim() !== '' && mew.name.toString().trim().length <= 50 &&
         mew.content && mew.content.toString().trim() !== '' && mew.content.toString().trim().length <= 140
 }
-
-
-
 
 
 const createMew = async (req, res, next) => {

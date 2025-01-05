@@ -52,9 +52,9 @@ const sessionOptions = {
       sameSite: true
   }
 }
-
+/*
 if(IN_PROD)  //  Required only when not served by nginx...  DEV Purpose
-{
+{ 
 const https = require('https');
 const fs = require('fs');
 
@@ -67,7 +67,7 @@ const options = {
     console.log('Server is running on https://ugnode.local');
   });
 }
-
+*/
 
 //  Databases
 

@@ -21,7 +21,7 @@ exports.increaseCount = async () =>{
       visitorCount++
       let str = visitorCount.toString()
       await fs.writeFile('visitCounter.txt', str) 
-      console.log(str)
+      console.log('count', str)
       return str
     } catch (error) {
       console.error(`Got an error trying to write to a file: ${error.message}`);

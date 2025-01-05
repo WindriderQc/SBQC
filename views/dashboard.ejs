@@ -1,16 +1,33 @@
 <!DOCTYPE html>
-<html>
-<head>
-<title>SBQC Server Dashboard</title>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="/css/sbqc.css">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-<style>
+<html lang='en'>
 
-</style>
+<head>
+    <!--HEADER-->
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="description" content="Server Dashboard App">
+<meta name="author" content="SpecialBlend Production">
+<link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon">
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
+<script src="https://cdn.socket.io/4.3.2/socket.io.min.js" integrity="sha384-KAZ4DtjNhLChOB/hxXuKqhMLYvx3b5MlT55xPEiNmREKRzeEm+RVPlTnAn0ajQNs" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js" ></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@latest/moment.min.js"></script>
+
+
+<title>SBQC Server Dashboard</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.css">
+
+<link rel="stylesheet" href="/css/sbqc.css">
 </head>
+
 <body class="light-grey">
 
 <!-- Top container -->
@@ -77,7 +94,7 @@
       <div class="container blue padding-16">
         <div class="left"><i class="fa fa-eye xxxlarge"></i></div>
         <div class="right">
-          <h3 id="viewsCard">99</h3>
+          <h3 id="viewsCard"><%- hitCount %></h3>
         </div>
         <div class="clear"></div>
         <h4>Views</h4>
@@ -87,10 +104,10 @@
       <div class="container teal padding-16">
         <div class="left"><i class="fa fa-share-alt xxxlarge"></i></div>
         <div class="right">
-          <h3 id="sharesCard">23</h3>
+          <h3 id="devicesCard">2</h3>
         </div>
         <div class="clear"></div>
-        <h4>Shares</h4>
+        <h4>Devices</h4>
       </div>
     </div>
     <div class="col col-3">
@@ -113,6 +130,19 @@
       </div>
       <div class="col col-8">
         <h5>Feeds</h5>
+
+
+       
+
+        <div>
+            <hr />
+            <h3>Server logs</h3>
+            <table id="logsTable" class="display"> </table>
+        </div>
+        <div class='loading'>
+            <img src='img/loading.gif' alt=''>
+        </div>
+
         <table class="table striped white">
           <tr>
             <td><i class="fa fa-user text-blue large"></i></td>
@@ -280,9 +310,17 @@
 </div>
 
 
-
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/2.1.8/js/dataTables.js"></script>
 
 <script>
+
+async function getUserInfo()
+{
+    const info = await Tools.ipLookUp()
+    document.getElementById('ip_id').innerHTML =  "<pre>"+JSON.stringify(info,null, '\t') +"</pre>"
+} 
+
+
   document.addEventListener('DOMContentLoaded', function() {
     const hoverElement = document.getElementById('hoverElement');
 
@@ -302,15 +340,90 @@
 
   });
 
-  document.addEventListener('DOMContentLoaded', function() {
-      const viewsCard = document.querySelector('#viewsCard');
-      console.log(viewsCard.textContent); // Access the text content of the h3 element
-      viewsCard.textContent= 100;
+  
+
+
+
+const loadingElement = document.querySelector('.loading');
+const logsElement = document.querySelector('.logs');
+
+
+const localUrl =  <%- JSON.stringify(localUrl) %>;
+console.log('localUrl', localUrl)
+//const API_URL = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') ? 'http://localhost:3001/meows/v2/logs' : 'https://meower-api.now.sh/v2/logs';
+const LOCAL_URL =  localUrl + '/v2/logs' 
+
+
+let skip = 0;
+let limit = 2000;  //   TODO:  si il y a plus de 2000 logs....
+let loading = false;
+
+
+
+listAllLogs();
+
+
+function listAllLogs() {
+  loading = true;
+  loadingElement.style.display = '';
+
+  //const url = `${LOCAL_URL}`
+    const url = `${LOCAL_URL}?skip=${skip}&limit=${limit}`
+
+ const options =  {
+    method: 'GET', // *GET, POST, PUT, DELETE, etc.
+    mode: 'no-cors'/*  , // cors, no-cors, *cors, same-origin
+    cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+    credentials: 'same-origin', // include, *same-origin, omit
+    headers: {
+      'Content-Type': 'application/json'
+      // 'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    redirect: 'follow', // manual, *follow, error
+    referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+    body: JSON.stringify(data) // body data type must match 'Content-Type' header
+    */
+  }
+
+
+  fetch(url, {options})
+    .then(response => response.json())
+    .then(result => {
+
+        console.log('result', result.logs)
+
+         // Check if there are logs and get the keys from the first log entry
+        const columns = result.logs.length > 0 ? Object.keys(result.logs[0]).map(key => ({
+            title: key.charAt(0).toUpperCase() + key.slice(1), // Capitalize the first letter of the key
+            data: key,
+            render: key === 'date' ? function(data, type, row) {
+                // Convert the timestamp to a human-readable date string
+                const date = new Date(data);
+                return date.toLocaleString(); // Customize the format as needed
+            } : null
+            })) : [];
+
+
+        // Initialize the DataTable
+        const table = $('#logsTable').DataTable({
+                destroy: true, // Allow reinitialization of the DataTable
+                paging: true,
+                data: result.logs,
+                columns: columns,
+                //autoWidth: false, // Disable automatic column width expansion
+            });
+
+
+       
+     
     });
+    loadingElement.style.display = 'none';
+
+}
 
 
-</script>
-<script>
+
+
 // Get the Sidebar
 var mySidebar = document.getElementById("mySidebar");
 

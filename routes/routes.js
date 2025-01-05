@@ -16,7 +16,7 @@ const apiUrl = process.env.DATA_API_IP
 const mqttUrl = process.env.MQTT_IP
 console.log('API url: ' + apiUrl)
 
-
+const PROTOCOL = process.env.NODE_ENV === 'production' ? 'https://' : 'http://' 
 
 let liveDatas = require('../scripts/liveData.js')
 
@@ -33,13 +33,22 @@ router.get("/", async (req, res) => {
     let ip = req.socket.remoteAddress;             console.log('Client IP: ', ip)
 
     let count = await counter.increaseCount()
+
+
+
+
     //res.render('index', { menuId: 'home', hitCount: count, localUrl: req.protocol + '://' + req.get('host') })
-    res.render('index', { menuId: 'home', hitCount: count, localUrl: 'https://' + req.get('host') })
+    res.render('index', { menuId: 'home', hitCount: count, localUrl: PROTOCOL + req.get('host') })
 })
 
 router.get('/index', async (req, res) => {
     let count = await counter.getCount()
-    res.render('index', { menuId: 'home', hitCount: count, localUrl: 'https://' + req.get('host') })
+    res.render('index', { menuId: 'home', hitCount: count, localUrl: PROTOCOL + req.get('host') })
+})
+
+router.get('/dashboard', async (req, res) => {
+    let count = await counter.getCount()
+    res.render('dashboard', { menuId: 'home', hitCount: count, localUrl: PROTOCOL + req.get('host') })
 })
 
 router.get("/iGrow", (req, res) => {
@@ -71,9 +80,6 @@ router.get('/empty', (req, res) => {
     res.render('empty')
 })
 
-router.get('/cv_yanikbeaulieu', (req, res) => {
-    res.render('cv')
-})
 
 router.get('/specs', (req, res) => {
     res.render('specs')
@@ -109,8 +115,8 @@ router.get('/weather/:latlon', async (req, res) => {
     const latlon = req.params.latlon.split(',');
     const lat = latlon[0];
     const lon = latlon[1];
-    const weatherURL = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&&units=metric&APPID=${process.env.WEATHER_API}`
-    const aq_url = `https://api.openaq.org/v2/latest?has_geo=true&coordinates=${lat},${lon}&radius=5000&order_by=lastUpdated`   //  TODO: last updated change tjrs la structure des data car pas les meme sensors par site...  mais ca garantie des données actualisée....
+    const weatherURL = PROTOCOL + `api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&&units=metric&APPID=${process.env.WEATHER_API}`
+    const aq_url = PROTOCOL + `api.openaq.org/v2/latest?has_geo=true&coordinates=${lat},${lon}&radius=5000&order_by=lastUpdated`   //  TODO: last updated change tjrs la structure des data car pas les meme sensors par site...  mais ca garantie des données actualisée....
     // console.log(lat, lon);
        
     const weather_response = await fetch(weatherURL);
@@ -153,6 +159,74 @@ router.post('/alert', async (req, res) => {
     mailman.sendEmail(dest, msg, image64)
    
 })
+
+
+
+
+
+
+router.get('/v2/logs', async (req, res, next) => {
+    // let skip = Number(req.query.skip) || 0
+    // let limit = Number(req.query.limit) || 10
+    let { skip = 0, limit = 5, sort = 'desc' } = req.query
+    skip = parseInt(skip) || 0
+    limit = parseInt(limit) || 5
+
+    skip = skip < 0 ? 0 : skip;
+    limit = Math.min(2000, Math.max(1, limit))
+
+    const logsdb =  req.app.locals.collections['server']
+    console.log(logsdb.namespace)
+
+    Promise.all([
+        logsdb.countDocuments(),
+        logsdb.find({}, { skip, limit, sort: {  created: sort === 'desc' ? -1 : 1     } }).toArray()
+    ])
+    .then(([ total, logs ]) => {
+        // console.log(mews)
+        res.json({
+        logs,
+        meta: { total, skip, limit, has_more: total - (skip + limit) > 0, } })
+    })
+    .catch(next)
+
+})
+
+function isValidLog(log) {
+    return log.name && log.name.toString().trim() !== '' && log.name.toString().trim().length <= 50 &&
+        log.content && log.content.toString().trim() !== '' && log.content.toString().trim().length <= 140
+}
+
+
+const createLog = async (req, res, next) => {
+    if (isValidLog(req.body)) {
+        const log = {
+        name: req.body.name.toString().trim(),
+        content: req.body.content.toString().trim(),
+        created: new Date()
+        }
+        
+        const logsdb =  req.app.locals.collections.server;
+    try{
+        const createdLog = await logsdb.insertOne(log)
+        console.log(
+        `${createdLog.insertedCount} documents were inserted with the _id: ${createdLog.insertedId}`,
+        )
+        // console.log(createdLog.ops)
+        res.json(createdLog)
+    }
+    catch(err) {console.log(err); next() }
+        
+    } else {
+        res.status(422)
+        res.json({
+        message: 'Hey! Invalid log....'
+        })
+    }
+}
+
+router.post('/v2/logs', createLog)
+
 
 
 
