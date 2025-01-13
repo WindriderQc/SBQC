@@ -325,31 +325,61 @@ async function getUserInfo()
 } 
 
 function setWorlGraph(data) {
-               
+    
+      // Mapping of incorrect country names to correct country names
+      const countryNameCorrections = {
+        "United States" : "United States of America",
+        "Russia": "Russian Federation",
+        "South Korea": "Korea, Republic of",
+        // Add more mappings as needed
+    };
+
     const countryCounts = data.reduce((acc, entry) => {
-        acc[entry.CountryName] = (acc[entry.CountryName] || 0) + 1;
+        // Correct the country name if it exists in the mapping
+        const correctedCountryName = countryNameCorrections[entry.CountryName] || entry.CountryName;
+        acc[correctedCountryName] = (acc[correctedCountryName] || 0) + 1;
         return acc;
-    }, []);
+    }, {});
     console.log('worldMapData', countryCounts);
+
+ 
+
 
     // Fetch or define the geo data (e.g., world geoJSON) 
     fetch('https://unpkg.com/world-atlas/countries-50m.json')
         .then(response => response.json())
         .then(world => {
+        
             const countries = ChartGeo.topojson.feature(world, world.objects.countries).features;
+            console.log('countries', countries);
+
+             // Create a set of valid country names
+             const validCountryNames = new Set(countries.map(country => country.properties.name));
+            // Check for missing country names
+            Object.keys(countryCounts).forEach(countryName => {
+                
+            if (!validCountryNames.has(countryName)) {
+                    console.warn(`Country name not found in ChartGeo countries list: ${countryName}`);
+                }
+            });
 
             // Prepare the dataset
-            const data = {
+            const chartData = {
                 labels: countries.map(d => d.properties.name),
                 datasets: [{
                     label: 'Countries',
-                    data: countries.map(country => ({
+                  data: countries.map(country => ({
                         feature: country,
                         value: countryCounts[country.properties.name] || 0
                     })),
+                     /* data: countries.map((d) => ({
+                        feature: d,
+                        value: Math.random(),
+                    })),*/
                     outline: countries,
                     backgroundColor: (context) => {
                         const dataItem = context.dataset.data[context.dataIndex];
+                       
                         if (!dataItem || !dataItem.value) {
                             return 'rgba(200, 200, 200, 0.5)'; // Default color for undefined values
                         }
@@ -360,15 +390,26 @@ function setWorlGraph(data) {
             };
             const config = {
                 type: 'choropleth',
-                data: data,
+                data: chartData,
                 options: {
                     showOutline: true,
                     showGraticule: true,
-                    scales: {xy: { projection: 'equalEarth' }},
-                    geo: {colorScale: {  display: true  }}
+                    scales: {
+                        projection: {
+                            axis: 'x',
+                            projection: 'equalEarth',
+                        },
+                    },
+                    onClick: (evt, elems) => {
+                        console.log(elems.map((elem) => elem.element.feature.properties.name));
+                    },
+                   /* geo: {
+                        colorScale: {  display: true  }
+                    }*/
                 }
             };
-            const worlMap = new Chart( document.getElementById('worlMap'), config);
+            const worldMap = new Chart( document.getElementById('worldMap'), config);
+
         });       
 }
 
