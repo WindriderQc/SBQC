@@ -2,30 +2,30 @@
 <html lang='en'>
 
 <head>
-    <!--HEADER-->
-<meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="description" content="Server Dashboard App">
-<meta name="author" content="SpecialBlend Production">
-<link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Server Dashboard App">
+    <meta name="author" content="SpecialBlend Production">
+    <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon">
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+   
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.css">
+    <link rel="stylesheet" href="/css/sbqc.css">
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <script src="https://cdn.socket.io/4.3.2/socket.io.min.js" integrity="sha384-KAZ4DtjNhLChOB/hxXuKqhMLYvx3b5MlT55xPEiNmREKRzeEm+RVPlTnAn0ajQNs" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@latest/moment.min.js"></script>
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.datatables.net/2.1.8/js/dataTables.js" type="text/javascript" charset="utf8" ></script>
 
-<script src="https://cdn.socket.io/4.3.2/socket.io.min.js" integrity="sha384-KAZ4DtjNhLChOB/hxXuKqhMLYvx3b5MlT55xPEiNmREKRzeEm+RVPlTnAn0ajQNs" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/mqtt/dist/mqtt.min.js" ></script>
-<script src="https://cdn.jsdelivr.net/npm/moment@latest/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-geo"></script>
 
-
-<title>SBQC Server Dashboard</title>
-
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
-
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.css">
-
-<link rel="stylesheet" href="/css/sbqc.css">
+    <title>SBQC Server Dashboard</title>
 </head>
 
 <body class="light-grey">
@@ -58,12 +58,6 @@
     <a href="#" class="bar-item btn padding blue"><i class="fa fa-users fa-fw"></i>  Overview</a>
     <a href="#" class="bar-item btn padding"><i class="fa fa-eye fa-fw"></i>  Views</a>
     <a href="#" class="bar-item btn padding"><i class="fa fa-users fa-fw"></i>  Traffic</a>
-    <a href="#" class="bar-item btn padding"><i class="fa fa-bullseye fa-fw"></i>  Geo</a>
-    <a href="#" class="bar-item btn padding"><i class="fa fa-diamond fa-fw"></i>  Orders</a>
-    <a href="#" class="bar-item btn padding"><i class="fa fa-bell fa-fw"></i>  News</a>
-    <a href="#" class="bar-item btn padding"><i class="fa fa-bank fa-fw"></i>  General</a>
-    <a href="#" class="bar-item btn padding"><i class="fa fa-history fa-fw"></i>  History</a>
-    <a href="#" class="bar-item btn padding"><i class="fa fa-cog fa-fw"></i>  Settings</a><br><br>
   </div>
 </nav>
 
@@ -128,11 +122,22 @@
         <h5>Regions</h5>
         <img src="/img/region.jpg" style="width:100%" alt="Google Regional Map">
       </div>
+      <div>
+        <canvas id="worldMap" width="800" height="600"></canvas>
+      </div>
+
+
       <div class="col col-8">
         <h5>Feeds</h5>
 
+        <div class="container">
+            <label for="sourceSelect">Select Source:</label>
+            <select id="sourceSelect">
+            <option value="server">Server Logs</option>
+            <option value="userLogs">User Logs</option>
 
-       
+            </select>
+        </div>
 
         <div>
             <hr />
@@ -214,22 +219,6 @@
         <td>UK</td>
         <td>15.7%</td>
       </tr>
-      <tr>
-        <td>Russia</td>
-        <td>5.6%</td>
-      </tr>
-      <tr>
-        <td>Spain</td>
-        <td>2.1%</td>
-      </tr>
-      <tr>
-        <td>India</td>
-        <td>1.9%</td>
-      </tr>
-      <tr>
-        <td>France</td>
-        <td>1.5%</td>
-      </tr>
     </table><br>
     <button class="btn dark-grey">More Countries  <i class="fa fa-arrow-right"></i></button>
   </div>
@@ -261,7 +250,7 @@
       </div>
       <div class="col m10 container">
         <h4>John <span class="opacity medium">Sep 29, 2014, 9:12 PM</span></h4>
-        <p>Keep up the GREAT work! I am cheering for you!! Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p><br>
+        <p>Keep up the GREAT work! I am cheering for you!!</p><br>
       </div>
     </div>
 
@@ -271,7 +260,7 @@
       </div>
       <div class="col m10 container">
         <h4>Bo <span class="opacity medium">Sep 28, 2014, 10:15 PM</span></h4>
-        <p>Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p><br>
+        <p>Sed do eiusmod tempo.</p><br>
       </div>
     </div>
   </div>
@@ -300,137 +289,135 @@
     </div>
   </div>
 <div id="hoverElement" class="blue">Hover over me to animate!</div>
-  <!-- Footer -->
   <footer class="container padding-16 light-grey">
     <h4>FOOTER</h4>
     <p>Powered by <a href="https:/specialblend.ca" target="_blank">specialblend.ca</a>, inspired by<a href="https://www.w3schools.com/w3css/default.asp" target="_blank"> w3.css</a></p>
   </footer>
-
-  <!-- End page content -->
 </div>
 
-
-<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/2.1.8/js/dataTables.js"></script>
-
 <script>
+document.addEventListener('DOMContentLoaded', function() {
 
-async function getUserInfo()
-{
-    const info = await Tools.ipLookUp()
-    document.getElementById('ip_id').innerHTML =  "<pre>"+JSON.stringify(info,null, '\t') +"</pre>"
-} 
-
-
-  document.addEventListener('DOMContentLoaded', function() {
     const hoverElement = document.getElementById('hoverElement');
 
     hoverElement.addEventListener('mouseenter', function() {
       hoverElement.classList.add('animate-fading');
     });
 
-  /*  hoverElement.addEventListener('mouseleave', function() {
-      
-      hoverElement.classList.remove('animate-opacity');
-    });*/
-
     hoverElement.addEventListener('mouseleave', function() {
-      
       hoverElement.classList.add('animate-opacity');
     });
 
-  });
+    const sourceSelect = document.getElementById('sourceSelect');
+      sourceSelect.addEventListener('change', function() {
+        source = this.value;
+        skip = 0; 
+        listAllLogs(); 
+      });
+    listAllLogs();
+});
 
   
+async function getUserInfo()
+{
+    const info = await Tools.ipLookUp()
+    document.getElementById('ip_id').innerHTML =  "<pre>"+JSON.stringify(info,null, '\t') +"</pre>"
+} 
 
+function setWorlGraph(data) {
+               
+    const countryCounts = data.reduce((acc, entry) => {
+        acc[entry.CountryName] = (acc[entry.CountryName] || 0) + 1;
+        return acc;
+    }, []);
+    console.log('worldMapData', countryCounts);
 
+    // Fetch or define the geo data (e.g., world geoJSON) 
+    fetch('https://unpkg.com/world-atlas/countries-50m.json')
+        .then(response => response.json())
+        .then(world => {
+            const countries = ChartGeo.topojson.feature(world, world.objects.countries).features;
+
+            // Prepare the dataset
+            const data = {
+                labels: countries.map(d => d.properties.name),
+                datasets: [{
+                    label: 'Countries',
+                    data: countries.map(country => ({
+                        feature: country,
+                        value: countryCounts[country.properties.name] || 0
+                    })),
+                    outline: countries,
+                    backgroundColor: (context) => {
+                        const dataItem = context.dataset.data[context.dataIndex];
+                        if (!dataItem || !dataItem.value) {
+                            return 'rgba(200, 200, 200, 0.5)'; // Default color for undefined values
+                        }
+                        const value = dataItem.value;
+                        return `rgba(0, 100, 200, ${value / 100})`;
+                    },
+                }]
+            };
+            const config = {
+                type: 'choropleth',
+                data: data,
+                options: {
+                    showOutline: true,
+                    showGraticule: true,
+                    scales: {xy: { projection: 'equalEarth' }},
+                    geo: {colorScale: {  display: true  }}
+                }
+            };
+            const worlMap = new Chart( document.getElementById('worlMap'), config);
+        });       
+}
 
 const loadingElement = document.querySelector('.loading');
 const logsElement = document.querySelector('.logs');
-
-
 const localUrl =  <%- JSON.stringify(localUrl) %>;
 console.log('localUrl', localUrl)
-//const API_URL = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') ? 'http://localhost:3001/meows/v2/logs' : 'https://meower-api.now.sh/v2/logs';
 const LOCAL_URL =  localUrl + '/v2/logs' 
 
-
 let skip = 0;
-let source = "server"; 
+let source = "userLogs";
+let sort = 'desc'; 
 let loading = false;
-
-
-
-listAllLogs();
 
 
 function listAllLogs() {
   loading = true;
   loadingElement.style.display = '';
-
-  const url = `${LOCAL_URL}?skip=${skip}&source=${source}`
-
-  const options =  {
-    method: 'GET', // *GET, POST, PUT, DELETE, etc.
-    mode: 'no-cors'/*  , // cors, no-cors, *cors, same-origin
-    cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-    credentials: 'same-origin', // include, *same-origin, omit
-    headers: {
-      'Content-Type': 'application/json'
-      // 'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    redirect: 'follow', // manual, *follow, error
-    referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-    body: JSON.stringify(data) // body data type must match 'Content-Type' header
-    */
-  }
-
+  const url = `${LOCAL_URL}?skip=${skip}&sort=${sort}&source=${source}`
+  const options =  {    method: 'GET',    mode: 'no-cors'  }
 
   fetch(url, {options})
     .then(response => response.json())
     .then(result => {
+        setWorlGraph(result.logs)
 
-        console.log('result', result.logs)
-
-         // Check if there are logs and get the keys from the first log entry
         const columns = result.logs.length > 0 ? Object.keys(result.logs[0]).map(key => ({
             title: key.charAt(0).toUpperCase() + key.slice(1), // Capitalize the first letter of the key
             data: key,
-            render: key === 'date' ? function(data, type, row) {
-                // Convert the timestamp to a human-readable date string
-                const date = new Date(data);
+            render: (key === 'date' || key === 'created') ? function(data, type, row) {
+                const date = new Date(data); // Convert the timestamp to a human-readable date string
                 return date.toLocaleString(); // Customize the format as needed
             } : null
             })) : [];
 
-
-        // Initialize the DataTable
         const table = $('#logsTable').DataTable({
-                destroy: true, // Allow reinitialization of the DataTable
+                destroy: true, 
                 paging: true,
                 data: result.logs,
                 columns: columns,
-                scrollX: true // Enable horizontal scrolling
-                //autoWidth: false, // Disable automatic column width expansion
+                scrollX: true 
             });
-
-
-       
-     
     });
     loadingElement.style.display = 'none';
-
 }
 
-
-
-
-// Get the Sidebar
 var mySidebar = document.getElementById("mySidebar");
-
-// Get the DIV with overlay effect
 var overlayBg = document.getElementById("myOverlay");
-
-// Toggle between showing and hiding the sidebar, and add overlay effect
+// Toggle and add overlay effect
 function w3_open() {
   if (mySidebar.style.display === 'block') {
     mySidebar.style.display = 'none';
@@ -440,7 +427,6 @@ function w3_open() {
     overlayBg.style.display = "block";
   }
 }
-
 // Close the sidebar with the close button
 function w3_close() {
   mySidebar.style.display = "none";
