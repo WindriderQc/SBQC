@@ -78,7 +78,7 @@
       <div class="container green text-black padding-16">
         <div class="left"><i class="fa fa-comment xxxlarge"></i></div>
         <div class="right">
-          <h3 id="msgCard">52</h3>
+          <h3 id="msgCard"><%- collectionInfo.mews %>  </h3>
         </div>
         <div class="clear"></div>
         <h4>Messages</h4>
@@ -88,7 +88,7 @@
       <div class="container indigo text-black padding-16">
         <div class="left"><i class="fa fa-eye xxxlarge"></i></div>
         <div class="right">
-          <h3 id="viewsCard"><%- hitCount %></h3>
+          <h3 id="viewsCard"><%- collectionInfo.userLogs %></h3>
         </div>
         <div class="clear"></div>
         <h4>Views</h4>
@@ -98,7 +98,7 @@
       <div class="container khaki padding-16">
         <div class="left"><i class="fa fa-share-alt xxxlarge"></i></div>
         <div class="right">
-          <h3 id="devicesCard">2</h3>
+          <h3 id="devicesCard"><%- collectionInfo.server %></h3>
         </div>
         <div class="clear"></div>
         <h4>Devices</h4>
@@ -108,7 +108,7 @@
       <div class="container grey padding-16">
         <div class="left"><i class="fa fa-users xxxlarge"></i></div>
         <div class="right">
-          <h3 id="usersCard">50</h3>
+          <h3 id="usersCard"><%- collectionInfo.users %></h3>
         </div>
         <div class="clear"></div>
         <h4>Users</h4>
@@ -118,73 +118,73 @@
 
   <div class="panel">
     <div class="row-padding" style="margin:0 -16px">
-      <div class="col col-4">
-        <h5>Regions</h5>
-        <img src="/img/region.jpg" style="width:100%" alt="Google Regional Map">
-      </div>
-      <div>
-        <canvas id="worldMap" width="800" height="600"></canvas>
-      </div>
-
-
-      <div class="col col-8">
-        <h5>Feeds</h5>
-
-        <div class="container">
-            <label for="sourceSelect">Select Source:</label>
-            <select id="sourceSelect">
-            <option value="server">Server Logs</option>
-            <option value="userLogs">User Logs</option>
-
-            </select>
+      
+        <div class="col col-12 col-l6 black" >
+            <h5>World</h5>
+            <!--<img src="/img/region.jpg" style="width:100%" alt="Google Regional Map">-->
+            <canvas id="worldMap" width="800" height="600"></canvas>
+           
         </div>
+  
+    
+        <div class="col col-12 col-l6 ">
+            <h5>Feeds - hitcount:  <%- hitCount %></h5>
 
-        <div>
-            <hr />
-            <h3>Server logs</h3>
-            <table id="logsTable" class="display"> </table>
-        </div>
-        <div class='loading'>
-            <img src='img/loading.gif' alt=''>
-        </div>
+            <div class="container">
+                <label for="sourceSelect">Select Source:</label>
+                <select id="sourceSelect">
+                    <% for (const collection in collectionInfo) { %>
+                        <option value="<%= collection %>" <%= collection === 'userLogs' ? 'selected' : '' %>><%= collection.charAt(0).toUpperCase() + collection.slice(1) %> </option>
+                    <% } %>
+                </select>
+            </div>
 
-        <table class="table striped white">
-          <tr>
-            <td><i class="fa fa-user text-blue large"></i></td>
-            <td>New record, over 90 views.</td>
-            <td><i>10 mins</i></td>
-          </tr>
-          <tr>
-            <td><i class="fa fa-bell text-red large"></i></td>
-            <td>Database error.</td>
-            <td><i>15 mins</i></td>
-          </tr>
-          <tr>
-            <td><i class="fa fa-users text-yellow large"></i></td>
-            <td>New record, over 40 users.</td>
-            <td><i>17 mins</i></td>
-          </tr>
-          <tr>
-            <td><i class="fa fa-comment text-red large"></i></td>
-            <td>New comments.</td>
-            <td><i>25 mins</i></td>
-          </tr>
-          <tr>
-            <td><i class="fa fa-bookmark text-blue large"></i></td>
-            <td>Check transactions.</td>
-            <td><i>28 mins</i></td>
-          </tr>
-          <tr>
-            <td><i class="fa fa-laptop text-red large"></i></td>
-            <td>CPU overload.</td>
-            <td><i>35 mins</i></td>
-          </tr>
-          <tr>
-            <td><i class="fa fa-share-alt text-green large"></i></td>
-            <td>New shares.</td>
-            <td><i>39 mins</i></td>
-          </tr>
-        </table>
+            <div>
+                <hr />
+                <h3>Server logs</h3>
+                <table id="logsTable" class="display"> </table>
+            </div>
+            <div class='loading'>
+                <img src='img/loading.gif' alt=''>
+            </div>
+
+            <table class="table striped white">
+                <tr>
+                    <td><i class="fa fa-user text-blue large"></i></td>
+                    <td>New record, over 90 views.</td>
+                    <td><i>10 mins</i></td>
+                </tr>
+                <tr>
+                    <td><i class="fa fa-bell text-red large"></i></td>
+                    <td>Database error.</td>
+                    <td><i>15 mins</i></td>
+                </tr>
+                <tr>
+                    <td><i class="fa fa-users text-yellow large"></i></td>
+                    <td>New record, over 40 users.</td>
+                    <td><i>17 mins</i></td>
+                </tr>
+                <tr>
+                    <td><i class="fa fa-comment text-red large"></i></td>
+                    <td>New comments.</td>
+                    <td><i>25 mins</i></td>
+                </tr>
+                <tr>
+                    <td><i class="fa fa-bookmark text-blue large"></i></td>
+                    <td>Check transactions.</td>
+                    <td><i>28 mins</i></td>
+                </tr>
+                <tr>
+                    <td><i class="fa fa-laptop text-red large"></i></td>
+                    <td>CPU overload.</td>
+                    <td><i>35 mins</i></td>
+                </tr>
+                <tr>
+                    <td><i class="fa fa-share-alt text-green large"></i></td>
+                    <td>New shares.</td>
+                    <td><i>39 mins</i></td>
+                </tr>
+            </table>
       </div>
     </div>
   </div>
@@ -209,6 +209,11 @@
   <hr>
 
   <div class="container">
+    <h5>TimeZone</h5>
+    <div id="ip_id"></div>
+    <br>
+  </div>
+  <div class="container">
     <h5>Countries</h5>
     <table class="table striped bordered border hoverable white">
       <tr>
@@ -222,6 +227,7 @@
     </table><br>
     <button class="btn dark-grey">More Countries  <i class="fa fa-arrow-right"></i></button>
   </div>
+
   <hr>
   <div class="container">
     <h5>Recent Users</h5>
@@ -294,9 +300,12 @@
     <p>Powered by <a href="https:/specialblend.ca" target="_blank">specialblend.ca</a>, inspired by<a href="https://www.w3schools.com/w3css/default.asp" target="_blank"> w3.css</a></p>
   </footer>
 </div>
-
+<script src="/js/tools.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+
+let worldMap;
+
+document.addEventListener('DOMContentLoaded', async function() {
 
     const hoverElement = document.getElementById('hoverElement');
 
@@ -312,17 +321,25 @@ document.addEventListener('DOMContentLoaded', function() {
       sourceSelect.addEventListener('change', function() {
         source = this.value;
         skip = 0; 
-        listAllLogs(); 
+        listAllLogs(source); 
       });
-    listAllLogs();
+    
+    
+    listAllLogs("userLogs");
+
+    await getUserInfo()
+
+
 });
+
 
   
 async function getUserInfo()
 {
     const info = await Tools.ipLookUp()
-    document.getElementById('ip_id').innerHTML =  "<pre>"+JSON.stringify(info,null, '\t') +"</pre>"
+    document.getElementById('ip_id').innerHTML =  "<pre>"+JSON.stringify(info.TimeZone,null, '\t') +"</pre>"
 } 
+
 
 function setWorlGraph(data) {
     
@@ -340,7 +357,7 @@ function setWorlGraph(data) {
         acc[correctedCountryName] = (acc[correctedCountryName] || 0) + 1;
         return acc;
     }, {});
-    console.log('worldMapData', countryCounts);
+    //console.log('worldMapData', countryCounts);
 
  
 
@@ -351,16 +368,16 @@ function setWorlGraph(data) {
         .then(world => {
         
             const countries = ChartGeo.topojson.feature(world, world.objects.countries).features;
-            console.log('countries', countries);
+            //console.log('countries', countries);
 
-             // Create a set of valid country names
-             const validCountryNames = new Set(countries.map(country => country.properties.name));
+            // Create a set of valid country names
+            const validCountryNames = new Set(countries.map(country => country.properties.name));
             // Check for missing country names
             Object.keys(countryCounts).forEach(countryName => {
                 
-            if (!validCountryNames.has(countryName)) {
-                    console.warn(`Country name not found in ChartGeo countries list: ${countryName}`);
-                }
+                if (!validCountryNames.has(countryName)) {
+                        console.warn(`Country name not found in ChartGeo countries list: ${countryName}`);
+                    }
             });
 
             // Prepare the dataset
@@ -372,19 +389,16 @@ function setWorlGraph(data) {
                         feature: country,
                         value: countryCounts[country.properties.name] || 0
                     })),
-                     /* data: countries.map((d) => ({
-                        feature: d,
-                        value: Math.random(),
-                    })),*/
                     outline: countries,
                     backgroundColor: (context) => {
                         const dataItem = context.dataset.data[context.dataIndex];
                        
                         if (!dataItem || !dataItem.value) {
-                            return 'rgba(200, 200, 200, 0.5)'; // Default color for undefined values
+                            return 'rgba(200, 200, 200, 0.15)'; // Default color for undefined values
                         }
                         const value = dataItem.value;
-                        return `rgba(0, 100, 200, ${value / 100})`;
+                        //return `rgba( ${value}, 100, ${value*50 }, 1.0 )`;
+                        return `rgba(0, 200, 100, ${(value*10)/100})`;
                     },
                 }]
             };
@@ -392,8 +406,8 @@ function setWorlGraph(data) {
                 type: 'choropleth',
                 data: chartData,
                 options: {
-                    showOutline: true,
-                    showGraticule: true,
+                    showOutline: false,
+                    showGraticule: false,
                     scales: {
                         projection: {
                             axis: 'x',
@@ -403,12 +417,23 @@ function setWorlGraph(data) {
                     onClick: (evt, elems) => {
                         console.log(elems.map((elem) => elem.element.feature.properties.name));
                     },
-                   /* geo: {
-                        colorScale: {  display: true  }
-                    }*/
+                    geo: {
+                        colorScale: {
+                            display: false,
+                        }
+                    }, 
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
                 }
             };
-            const worldMap = new Chart( document.getElementById('worldMap'), config);
+            //worldMap = new Chart( document.getElementById('worldMap'), config);
+            if (worldMap) {
+                    worldMap.destroy();
+                }
+                worldMap = new Chart(document.getElementById('worldMap'), config);
 
         });       
 }
@@ -420,41 +445,76 @@ console.log('localUrl', localUrl)
 const LOCAL_URL =  localUrl + '/v2/logs' 
 
 let skip = 0;
-let source = "userLogs";
 let sort = 'desc'; 
 let loading = false;
 
 
-function listAllLogs() {
+function listAllLogs(source) {
   loading = true;
   loadingElement.style.display = '';
   const url = `${LOCAL_URL}?skip=${skip}&sort=${sort}&source=${source}`
-  const options =  {    method: 'GET',    mode: 'no-cors'  }
+  const options =  { method: 'GET',    mode: 'no-cors' }
 
-  fetch(url, {options})
+  fetch(url, options)
     .then(response => response.json())
     .then(result => {
+
+        if (!result.logs || result.logs.length === 0) {
+                console.warn('No logs available to display.');
+                loadingElement.style.display = 'none';
+                return;
+            }
+
+        //console.log('result', result)
         setWorlGraph(result.logs)
 
-        const columns = result.logs.length > 0 ? Object.keys(result.logs[0]).map(key => ({
-            title: key.charAt(0).toUpperCase() + key.slice(1), // Capitalize the first letter of the key
-            data: key,
-            render: (key === 'date' || key === 'created') ? function(data, type, row) {
-                const date = new Date(data); // Convert the timestamp to a human-readable date string
-                return date.toLocaleString(); // Customize the format as needed
-            } : null
-            })) : [];
 
-        const table = $('#logsTable').DataTable({
-                destroy: true, 
-                paging: true,
-                data: result.logs,
-                columns: columns,
-                scrollX: true 
-            });
+
+        // Dynamically generate DataTable columns
+        const columns = Object.keys(result.logs[0]).map((key) => ({
+                title: key.charAt(0).toUpperCase() + key.slice(1), // Capitalize column names
+                data: key,
+                render:
+                    key === 'date' || key === 'created'
+                        ? function (data) {
+                              const date = new Date(data); // Convert to Date object
+                              return date.toLocaleString(); // Format the date
+                          }
+                        : null,
+            }));
+
+   
+        loadDataTable({ data: result.logs,  columns });
+        
+        loadingElement.style.display = 'none';
+    })
+    .catch(error => {
+        console.error('Error fetching logs:', error);
+        loadingElement.style.display = 'none';
     });
-    loadingElement.style.display = 'none';
+   
 }
+
+function loadDataTable(dataset) {
+    console.log('dataset', dataset);
+
+    // Clear the table and remove lingering DataTable instance
+    const table = $('#logsTable');
+    if ($.fn.DataTable.isDataTable(table)) {
+        table.DataTable().clear().destroy(); // Fully destroy the instance
+    }
+
+    // Empty the table structure to remove old columns
+    table.empty();
+
+    // Reinitialize the DataTable with the new dataset and columns
+    table.DataTable({
+        data: dataset.data,
+        columns: dataset.columns,
+        destroy: true, // Ensure old table is destroyed (redundant here for safety)
+    });
+}
+
 
 var mySidebar = document.getElementById("mySidebar");
 var overlayBg = document.getElementById("myOverlay");

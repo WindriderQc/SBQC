@@ -32,28 +32,43 @@ router.get("/", async (req, res) => {
     let origin = req.headers['host'];              
     let ip = req.socket.remoteAddress;     
 
+    let queryParams = req.query; // Query parameters
+    let path = req.path; // Path of the request URL
+    let method = req.method; // HTTP method
+    let protocol = req.protocol; // Protocol (HTTP or HTTPS)
+    let hostname = req.hostname; // Hostname of the request
+    let originalUrl = req.originalUrl; // Original URL of the request
+    let cookies = req.cookies; // Cookies sent by the client (if any)   const cookieParser = require('cookie-parser');      app.use(cookieParser());
+
     let count = await counter.increaseCount()
 
    const log = {
         logType: 'checkin',
         client: client ? client.toString().trim() : 'none',
         content: content ? content.toString().trim() : 'none',
-        authorization: autorize ? autorize.toString().trim() : 'none',
+        authorization: authorize ? authorize.toString().trim() : 'none',
         host: origin ? origin.toString().trim() : 'none',
-        ip: ip ? ip.toString().trim() : 'none',   
+        ip: ip ? ip.toString().trim() : 'none',
         hitCount: count,
-        created: new Date()
+        created: new Date(),
+        queryParams: queryParams ? JSON.stringify(queryParams) : 'none',
+        path: path ? path.toString().trim() : 'none',
+        method: method ? method.toString().trim() : 'none',
+        protocol: protocol ? protocol.toString().trim() : 'none',
+        hostname: hostname ? hostname.toString().trim() : 'none',
+        originalUrl: originalUrl ? originalUrl.toString().trim() : 'none',
+        cookies: cookies ? JSON.stringify(cookies) : 'none'
         }
         
         const logsdb =  req.app.locals.collections.server;
-    try{
-        const createdLog = await logsdb.insertOne(log)
-        console.log(
-        `${createdLog.insertedCount} documents were inserted with the _id: ${createdLog.insertedId}`,
-        )
-         console.log(createdLog.ops)
-    }
-    catch(err) {console.log(err); next() }
+        try{
+            const createdLog = await logsdb.insertOne(log)
+            console.log(
+            `${createdLog.insertedCount} documents were inserted with the _id: ${createdLog.insertedId}`,
+            )
+            console.log(createdLog.ops)
+        }
+        catch(err) {console.log(err); next() }
 
 
 
@@ -68,7 +83,7 @@ router.get('/index', async (req, res) => {
 
 router.get('/dashboard', async (req, res) => {
     let count = await counter.getCount()
-    res.render('dashboard', { menuId: 'home', hitCount: count, localUrl: PROTOCOL + req.get('host') })
+    res.render('dashboard', { menuId: 'home', hitCount: count, localUrl: PROTOCOL + req.get('host'), collectionInfo: req.app.locals.collectionInfo })
 })
 
 router.get("/iGrow", (req, res) => {

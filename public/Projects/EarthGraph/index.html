@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Choropleth Map Example</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-geo"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon"></script>
+    <script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
+</head>
+<body>
+    <canvas id="worldMap" width="800" height="600"></canvas>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('https://unpkg.com/world-atlas/countries-50m.json')
+                .then(response => response.json())
+                .then(world => {
+                    const countries = ChartGeo.topojson.feature(world, world.objects.countries).features;
+
+                    const countryCounts = {
+                        "Canada": 10,
+                        "United States": 15
+                        // Add more country counts here
+                    };
+
+                    const chartData = {
+                        labels: countries.map(d => d.properties.name),
+                        datasets: [{
+                            label: 'Countries',
+                            data: countries.map(country => ({
+                                feature: country,
+                                value: countryCounts[country.properties.name] || 0
+                            })),
+                            outline: countries,
+                            backgroundColor: (context) => {
+                                const dataItem = context.dataset.data[context.dataIndex];
+                                if (!dataItem || !dataItem.value) {
+                                    return 'rgba(200, 200, 200, 0.5)'; // Default color for undefined values
+                                }
+                                const value = dataItem.value;
+                                return `rgba(0, 100, 200, ${value / 100})`;
+                            },
+                        }]
+                    };
+
+                    const config = {
+                        type: 'choropleth',
+                        data: chartData,
+                        options: {
+                            showOutline: true,
+                            showGraticule: true,
+                            scales: {
+                                xy: {
+                                    projection: 'equalEarth'
+                                }
+                            },
+                            geo: {
+                                colorScale: {
+                                    display: true,
+                                    quantize: 5, // Number of color bins
+                                    interpolate: d3.interpolateYlGnBu // Color interpolation function
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    labels: {
+                                        color: 'rgb(0, 0, 0)', // Custom legend text color
+                                        font: {
+                                            size: 14 // Custom legend font size
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    };
+
+                    const worldMap = new Chart(document.getElementById('worldMap'), config);
+                });
+        });
+    </script>
+</body>
+</html>

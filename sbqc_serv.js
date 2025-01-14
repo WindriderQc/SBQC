@@ -91,6 +91,8 @@ mongo.connectDb( process.env.MONGO_CLOUD, 'SBQC', async (db) =>{    // dbServ, t
         app.locals.collections[coll.name] =  mongo.getDb(coll.name)
     }
     
+
+
     app.locals.collections.server.insertOne({ 
         logType: 'boot',
         client: 'server',
@@ -102,6 +104,14 @@ mongo.connectDb( process.env.MONGO_CLOUD, 'SBQC', async (db) =>{    // dbServ, t
         created: Date.now() 
     })   //   TODO:  Server may not exist
 
+    // Fetch collection names and document counts
+    app.locals.collectionInfo = {}
+    for (const coll of list) {
+        const count = await app.locals.collections[coll.name].countDocuments()
+        app.locals.collectionInfo[coll.name] = count
+    }
+
+    console.log("Collection Info:", app.locals.collectionInfo)
 })
 
 
