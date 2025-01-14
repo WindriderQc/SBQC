@@ -81,7 +81,7 @@ const mongo = require('./scripts/mongoClientDB')
 
 mongo.connectDb( process.env.MONGO_CLOUD, 'SBQC', async (db) =>{    // dbServ, test, admin, local 
     
-    //db.createCollection('server')     TODO:  faire un test conditionnel et creer si non exist
+    
     app.locals.collections = [] 
     const list = await mongo.getCollectionsList()
 
@@ -91,9 +91,8 @@ mongo.connectDb( process.env.MONGO_CLOUD, 'SBQC', async (db) =>{    // dbServ, t
         app.locals.collections[coll.name] =  mongo.getDb(coll.name)
     }
     
-
-
-    app.locals.collections.server.insertOne({ 
+    //db.createCollection('boot')     TODO:  faire un test conditionnel et creer si non exist    Boot may not exist
+    app.locals.collections.boot.insertOne({ 
         logType: 'boot',
         client: 'server',
         content: 'dbServer boot',
@@ -102,7 +101,7 @@ mongo.connectDb( process.env.MONGO_CLOUD, 'SBQC', async (db) =>{    // dbServ, t
         ip: 'localhost',
         hitCount: 'N/A',
         created: Date.now() 
-    })   //   TODO:  Server may not exist
+    })  
 
     // Fetch collection names and document counts
     app.locals.collectionInfo = {}
