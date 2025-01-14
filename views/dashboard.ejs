@@ -512,6 +512,7 @@ function loadDataTable(dataset) {
         data: dataset.data,
         columns: dataset.columns,
         destroy: true, // Ensure old table is destroyed (redundant here for safety)
+        scrollX: true 
     });
 }
 
