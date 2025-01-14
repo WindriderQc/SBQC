@@ -22,13 +22,12 @@ let liveDatas = require('../scripts/liveData.js')
 
 
 
-// free routes
+function requestLog(req) {
 
-router.get("/", async (req, res) => {
     //  TODO: send dans BD ces infos pour un checkin log de qui vient sur root /
     let client = req.headers['user-agent'];        
     let content = req.headers['Content-Type'];     
-    let autorize = req.headers['Authorization'];   
+    let authorize = req.headers['Authorization'];   
     let origin = req.headers['host'];              
     let ip = req.socket.remoteAddress;     
 
@@ -40,16 +39,15 @@ router.get("/", async (req, res) => {
     let originalUrl = req.originalUrl; // Original URL of the request
     let cookies = req.cookies; // Cookies sent by the client (if any)   const cookieParser = require('cookie-parser');      app.use(cookieParser());
 
-    let count = await counter.increaseCount()
-
-   const log = {
+    
+    const log = {
         logType: 'checkin',
         client: client ? client.toString().trim() : 'none',
         content: content ? content.toString().trim() : 'none',
         authorization: authorize ? authorize.toString().trim() : 'none',
         host: origin ? origin.toString().trim() : 'none',
         ip: ip ? ip.toString().trim() : 'none',
-        hitCount: count,
+        hitCount: counter.getCount(),
         created: new Date(),
         queryParams: queryParams ? JSON.stringify(queryParams) : 'none',
         path: path ? path.toString().trim() : 'none',
@@ -58,32 +56,44 @@ router.get("/", async (req, res) => {
         hostname: hostname ? hostname.toString().trim() : 'none',
         originalUrl: originalUrl ? originalUrl.toString().trim() : 'none',
         cookies: cookies ? JSON.stringify(cookies) : 'none'
-        }
+    }
+
+    return log
+}
+
+// free routes
+
+router.get("/", async (req, res) => {
+   
+
+    let count = await counter.increaseCount()
+
+    const log = requestLog(req)
         
-        const logsdb =  req.app.locals.collections.server;
-        try{
+    const logsdb =  req.app.locals.collections.server;
+        
+    try{
             const createdLog = await logsdb.insertOne(log)
             console.log(
             `${createdLog.insertedCount} documents were inserted with the _id: ${createdLog.insertedId}`,
             )
             console.log(createdLog.ops)
-        }
-        catch(err) {console.log(err); next() }
+    }
+    catch(err) {console.log(err); next() }
 
 
 
     //res.render('index', { menuId: 'home', hitCount: count, localUrl: req.protocol + '://' + req.get('host') })
-    res.render('index', { menuId: 'home', hitCount: count, localUrl: PROTOCOL + req.get('host') })
+    res.render('index', { menuId: 'home', hitCount: count, requestLog: log })
 })
 
 router.get('/index', async (req, res) => {
-    let count = await counter.getCount()
-    res.render('index', { menuId: 'home', hitCount: count, localUrl: PROTOCOL + req.get('host') })
+    const log = requestLog(req)
+    res.render('index', { menuId: 'home', hitCount: counter.getCount(), requestLog: log })
 })
 
 router.get('/dashboard', async (req, res) => {
-    let count = await counter.getCount()
-    res.render('dashboard', { menuId: 'home', hitCount: count, localUrl: PROTOCOL + req.get('host'), collectionInfo: req.app.locals.collectionInfo })
+    res.render('dashboard', { menuId: 'home', hitCount: counter.getCount(), collectionInfo: req.app.locals.collectionInfo })
 })
 
 router.get("/iGrow", (req, res) => {
@@ -200,7 +210,7 @@ router.post('/alert', async (req, res) => {
 
 
 
-router.get('/v2/logs', async (req, res, next) => {
+ const getUserLogs = async (req, res, next) => {
     // let skip = Number(req.query.skip) || 0
     // let limit = Number(req.query.limit) || 10
     let { skip = 0,  sort = 'desc', source = 'userLogs' } = req.query
@@ -222,13 +232,7 @@ router.get('/v2/logs', async (req, res, next) => {
         meta: { total, skip, source, has_more: 0, } })
     })
     .catch(next)
-
-})
-
-
-
-
-
+}
 
 const createUserLog = async (req, res, next) => {
     if (req.body) {
@@ -254,6 +258,8 @@ const createUserLog = async (req, res, next) => {
     }
 }
 
+
+router.get('/v2/logs', getUserLogs)
 router.post('/v2/logs', createUserLog)
 
 

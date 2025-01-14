@@ -1,539 +1,242 @@
 <!DOCTYPE html>
 <html lang='en'>
-
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="Server Dashboard App">
-    <meta name="author" content="SpecialBlend Production">
-    <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon">
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-   
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.css">
-    <link rel="stylesheet" href="/css/sbqc.css">
-
-    <script src="https://cdn.socket.io/4.3.2/socket.io.min.js" integrity="sha384-KAZ4DtjNhLChOB/hxXuKqhMLYvx3b5MlT55xPEiNmREKRzeEm+RVPlTnAn0ajQNs" crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/moment@latest/moment.min.js"></script>
-    
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="https://cdn.datatables.net/2.1.8/js/dataTables.js" type="text/javascript" charset="utf8" ></script>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-geo"></script>
-
-    <title>SBQC Server Dashboard</title>
-</head>
-
+<%- include('partials/miniHeader', { title: 'SBQC Server Dashboard' }) %> 
 <body class="light-grey">
+<%- include('partials/miniNav') %> 
 
-<!-- Top container -->
-<div class="bar top black large" style="z-index:4">
-  <button class="bar-item btn hide-large hover-none hover-text-light-grey" onclick="w3_open();"><i class="fa fa-bars"></i>  Menu</button>
-  <span class="bar-item right"><img src="/img/favicon.ico" class="" style="width:46px"></span>
-</div>
-
-<!-- Sidebar/menu -->
-<nav class="sidebar collapse white animate-left" style="z-index:3;width:300px;" id="mySidebar"><br>
-  <div class="container row">
-    <div class="col s4">
-      <img src="/img/avatar2.png" class="circle margin-right" style="width:46px">
-    </div>
-    <div class="col s8 bar">
-      <span>Welcome, <strong>Mike</strong></span><br>
-      <a href="#" class="bar-item btn"><i class="fa fa-envelope"></i></a>
-      <a href="#" class="bar-item btn"><i class="fa fa-user"></i></a>
-      <a href="#" class="bar-item btn"><i class="fa fa-cog"></i></a>
-    </div>
-  </div>
-  <hr>
-  <div class="container">
-    <h5>Dashboard</h5>
-  </div>
-  <div class="bar-block">
-    <a href="#" class="bar-item btn padding-16 hide-large dark-grey hover-black" onclick="w3_close()" title="close menu"><i class="fa fa-remove fa-fw"></i>  Close Menu</a>
-    <a href="#" class="bar-item btn padding blue"><i class="fa fa-users fa-fw"></i>  Overview</a>
-    <a href="#" class="bar-item btn padding"><i class="fa fa-eye fa-fw"></i>  Views</a>
-    <a href="#" class="bar-item btn padding"><i class="fa fa-users fa-fw"></i>  Traffic</a>
-  </div>
-</nav>
-
-
-<!-- Overlay effect when opening sidebar on small screens -->
-<div class="overlay hide-large animate-opacity" onclick="w3_close()" style="cursor:pointer" title="close side menu" id="myOverlay"></div>
-
-<!-- !PAGE CONTENT! -->
 <div class="main" style="margin-left:300px;margin-top:43px;">
 
-  <!-- Header -->
-  <header class="container" style="padding-top:22px">
-    <h5><b><i class="fa fa-dashboard"></i> My Dashboard</b></h5>
-  </header>
+   
+    <header class="container" style="padding-top:22px">
+        <h5><b><i class="fa fa-dashboard"></i> My Dashboard</b></h5>
+    </header>
 
-  <div class="row-padding margin-bottom">
-    <div class="col col-3">
-      <div class="container green text-black padding-16">
-        <div class="left"><i class="fa fa-comment xxxlarge"></i></div>
-        <div class="right">
-          <h3 id="msgCard"><%- collectionInfo.mews %>  </h3>
+    <div class="row-padding margin-bottom">
+        <div class="col col-3">
+            <div class="container green text-black padding-16 card-4">
+                <div class="left"><i class="fa fa-comment xxxlarge"></i></div>
+                <div class="right">
+                <h3 id="msgCard"><%- collectionInfo.mews %>  </h3>
+                </div>
+                <div class="clear"></div>
+                <h4>Messages</h4>
+            </div>
         </div>
-        <div class="clear"></div>
-        <h4>Messages</h4>
-      </div>
-    </div>
-    <div class="col col-3">
-      <div class="container indigo text-black padding-16">
-        <div class="left"><i class="fa fa-eye xxxlarge"></i></div>
-        <div class="right">
-          <h3 id="viewsCard"><%- collectionInfo.userLogs %></h3>
+        <div class="col col-3">
+            <div class="container indigo text-black padding-16 card-4">
+                <div class="left"><i class="fa fa-eye xxxlarge"></i></div>
+                <div class="right">
+                <h3 id="viewsCard"><%- collectionInfo.userLogs %></h3>
+                </div>
+                <div class="clear"></div>
+                <h4>Views</h4>
+            </div>
         </div>
-        <div class="clear"></div>
-        <h4>Views</h4>
-      </div>
-    </div>
-    <div class="col col-3">
-      <div class="container khaki padding-16">
-        <div class="left"><i class="fa fa-share-alt xxxlarge"></i></div>
-        <div class="right">
-          <h3 id="devicesCard"><%- collectionInfo.server %></h3>
+        <div class="col col-3">
+            <div class="container khaki padding-16 card-4">
+                <div class="left"><i class="fa fa-share-alt xxxlarge"></i></div>
+                <div class="right">
+                <h3 id="devicesCard"><%- collectionInfo.server %></h3>
+                </div>
+                <div class="clear"></div>
+                <h4>Devices</h4>
+            </div>
         </div>
-        <div class="clear"></div>
-        <h4>Devices</h4>
-      </div>
-    </div>
-    <div class="col col-3">
-      <div class="container grey padding-16">
-        <div class="left"><i class="fa fa-users xxxlarge"></i></div>
-        <div class="right">
-          <h3 id="usersCard"><%- collectionInfo.users %></h3>
+        <div class="col col-3">
+            <div class="container grey padding-16 card-4">
+                <div class="left"><i class="fa fa-users xxxlarge"></i></div>
+                <div class="right">
+                <h3 id="usersCard"><%- collectionInfo.users %></h3>
+                </div>
+                <div class="clear"></div>
+                <h4>Users</h4>
+            </div>
         </div>
-        <div class="clear"></div>
-        <h4>Users</h4>
-      </div>
     </div>
-  </div>
 
-  <div class="panel">
-    <div class="row-padding" style="margin:0 -16px">
-      
-        <div class="col col-12 col-l6 black" >
-            <h5>World</h5>
-            <!--<img src="/img/region.jpg" style="width:100%" alt="Google Regional Map">-->
-            <canvas id="worldMap" width="800" height="600"></canvas>
-           
-        </div>
-  
+    <div class="panel">
+        <div class="row-padding">
+        
+            <div class="col col-12 col-l6 black card-2" >
+                <h5>World</h5>
+                <!--<img src="/img/region.jpg" style="width:100%" alt="Google Regional Map">-->
+                <canvas id="worldMap" width="800" height="600"></canvas>
+            
+            </div>
     
-        <div class="col col-12 col-l6 ">
-            <h5>Feeds - hitcount:  <%- hitCount %></h5>
+        
+            <div class="col col-12 col-l6 ">
+                <h5>Feeds - hitcount:  <%- hitCount %></h5>
 
-            <div class="container">
-                <label for="sourceSelect">Select Source:</label>
-                <select id="sourceSelect">
-                    <% for (const collection in collectionInfo) { %>
-                        <option value="<%= collection %>" <%= collection === 'userLogs' ? 'selected' : '' %>><%= collection.charAt(0).toUpperCase() + collection.slice(1) %> </option>
-                    <% } %>
-                </select>
-            </div>
+                <div class="container">
+                    <label for="sourceSelect">Select Source:</label>
+                    <select id="sourceSelect">
+                        <% for (const collection in collectionInfo) { %>
+                            <option value="<%= collection %>" <%= collection === 'userLogs' ? 'selected' : '' %>><%= collection.charAt(0).toUpperCase() + collection.slice(1) %> </option>
+                        <% } %>
+                    </select>
+                </div>
 
-            <div>
-                <hr />
-                <h3>Server logs</h3>
-                <table id="logsTable" class="display"> </table>
-            </div>
-            <div class='loading'>
-                <img src='img/loading.gif' alt=''>
-            </div>
+                <div>
+                    <hr />
+                    <h3>Server logs</h3>
+                    <table id="logsTable" class="display"> </table>
+                </div>
+                <div class='loading'>
+                    <img src='img/loading.gif' alt=''>
+                </div>
 
-            <table class="table striped white">
-                <tr>
-                    <td><i class="fa fa-user text-blue large"></i></td>
-                    <td>New record, over 90 views.</td>
-                    <td><i>10 mins</i></td>
-                </tr>
-                <tr>
-                    <td><i class="fa fa-bell text-red large"></i></td>
-                    <td>Database error.</td>
-                    <td><i>15 mins</i></td>
-                </tr>
-                <tr>
-                    <td><i class="fa fa-users text-yellow large"></i></td>
-                    <td>New record, over 40 users.</td>
-                    <td><i>17 mins</i></td>
-                </tr>
-                <tr>
-                    <td><i class="fa fa-comment text-red large"></i></td>
-                    <td>New comments.</td>
-                    <td><i>25 mins</i></td>
-                </tr>
-                <tr>
-                    <td><i class="fa fa-bookmark text-blue large"></i></td>
-                    <td>Check transactions.</td>
-                    <td><i>28 mins</i></td>
-                </tr>
-                <tr>
-                    <td><i class="fa fa-laptop text-red large"></i></td>
-                    <td>CPU overload.</td>
-                    <td><i>35 mins</i></td>
-                </tr>
-                <tr>
-                    <td><i class="fa fa-share-alt text-green large"></i></td>
-                    <td>New shares.</td>
-                    <td><i>39 mins</i></td>
-                </tr>
-            </table>
-      </div>
+                <table class="table striped white">
+                    <tr>
+                        <td><i class="fa fa-user text-blue large"></i></td>
+                        <td>New record, over 90 views.</td>
+                        <td><i>10 mins</i></td>
+                    </tr>
+                    <tr>
+                        <td><i class="fa fa-bell text-red large"></i></td>
+                        <td>Database error.</td>
+                        <td><i>15 mins</i></td>
+                    </tr>
+                    <tr>
+                        <td><i class="fa fa-users text-yellow large"></i></td>
+                        <td>New record, over 40 users.</td>
+                        <td><i>17 mins</i></td>
+                    </tr>
+                    <tr>
+                        <td><i class="fa fa-comment text-red large"></i></td>
+                        <td>New comments.</td>
+                        <td><i>25 mins</i></td>
+                    </tr>
+                    <tr>
+                        <td><i class="fa fa-bookmark text-blue large"></i></td>
+                        <td>Check transactions.</td>
+                        <td><i>28 mins</i></td>
+                    </tr>
+                    <tr>
+                        <td><i class="fa fa-laptop text-red large"></i></td>
+                        <td>CPU overload.</td>
+                        <td><i>35 mins</i></td>
+                    </tr>
+                    <tr>
+                        <td><i class="fa fa-share-alt text-green large"></i></td>
+                        <td>New shares.</td>
+                        <td><i>39 mins</i></td>
+                    </tr>
+                </table>
+        </div>
+        </div>
     </div>
-  </div>
-  <hr>
-  <div class="container">
-    <h5>General Stats</h5>
-    <p>New Visitors</p>
-    <div class="grey">
-      <div class="container center padding green" style="width:25%">+25%</div>
+    <hr>
+    <div class="container">
+        <h5>General Stats</h5>
+        <p>New Visitors</p>
+        <div class="grey">
+        <div class="container center padding green" style="width:25%">+25%</div>
+        </div>
+
+        <p>New Users</p>
+        <div class="grey">
+        <div class="container center padding orange" style="width:50%">50%</div>
+        </div>
+
+        <p>Bounce Rate</p>
+        <div class="grey">
+        <div class="container center padding red" style="width:75%">75%</div>
+        </div>
+    </div>
+    <hr>
+
+    <div class="container">
+        <h5>TimeZone</h5>
+        <div id="ip_id"></div>
+        <br>
+    </div>
+    <div class="container">
+        <h5>Countries</h5>
+        <table class="table striped bordered border hoverable white">
+        <tr>
+            <td>United States</td>
+            <td>65%</td>
+        </tr>
+        <tr>
+            <td>UK</td>
+            <td>15.7%</td>
+        </tr>
+        </table><br>
+        <button class="btn dark-grey">More Countries  <i class="fa fa-arrow-right"></i></button>
     </div>
 
-    <p>New Users</p>
-    <div class="grey">
-      <div class="container center padding orange" style="width:50%">50%</div>
+    <hr>
+    <div class="container">
+        <h5>Recent Users</h5>
+        <ul class="ul card-4 white">
+        <li class="padding-16">
+            <img src="/img/avatar2.png" class="left circle margin-right" style="width:35px">
+            <span class="xlarge">Mike</span><br>
+        </li>
+        <li class="padding-16">
+            <img src="/img/avatar5.png" class="left circle margin-right" style="width:35px">
+            <span class="xlarge">Jill</span><br>
+        </li>
+        <li class="padding-16">
+            <img src="/img/avatar6.png" class="left circle margin-right" style="width:35px">
+            <span class="xlarge">Jane</span><br>
+        </li>
+        </ul>
     </div>
+    <hr>
 
-    <p>Bounce Rate</p>
-    <div class="grey">
-      <div class="container center padding red" style="width:75%">75%</div>
+    <div class="container">
+        <h5>Recent Comments</h5>
+        <div class="row">
+        <div class="col m2 text-center">
+            <img class="circle" src="/img/avatar3.png" style="width:96px;height:96px">
+        </div>
+        <div class="col m10 container">
+            <h4>John <span class="opacity medium">Sep 29, 2014, 9:12 PM</span></h4>
+            <p>Keep up the GREAT work! I am cheering for you!!</p><br>
+        </div>
+        </div>
+
+        <div class="row">
+        <div class="col m2 text-center">
+            <img class="circle" src="/img/avatar1.png" style="width:96px;height:96px">
+        </div>
+        <div class="col m10 container">
+            <h4>Bo <span class="opacity medium">Sep 28, 2014, 10:15 PM</span></h4>
+            <p>Sed do eiusmod tempo.</p><br>
+        </div>
+        </div>
     </div>
-  </div>
-  <hr>
-
-  <div class="container">
-    <h5>TimeZone</h5>
-    <div id="ip_id"></div>
     <br>
-  </div>
-  <div class="container">
-    <h5>Countries</h5>
-    <table class="table striped bordered border hoverable white">
-      <tr>
-        <td>United States</td>
-        <td>65%</td>
-      </tr>
-      <tr>
-        <td>UK</td>
-        <td>15.7%</td>
-      </tr>
-    </table><br>
-    <button class="btn dark-grey">More Countries  <i class="fa fa-arrow-right"></i></button>
-  </div>
-
-  <hr>
-  <div class="container">
-    <h5>Recent Users</h5>
-    <ul class="ul card-4 white">
-      <li class="padding-16">
-        <img src="/img/avatar2.png" class="left circle margin-right" style="width:35px">
-        <span class="xlarge">Mike</span><br>
-      </li>
-      <li class="padding-16">
-        <img src="/img/avatar5.png" class="left circle margin-right" style="width:35px">
-        <span class="xlarge">Jill</span><br>
-      </li>
-      <li class="padding-16">
-        <img src="/img/avatar6.png" class="left circle margin-right" style="width:35px">
-        <span class="xlarge">Jane</span><br>
-      </li>
-    </ul>
-  </div>
-  <hr>
-
-  <div class="container">
-    <h5>Recent Comments</h5>
-    <div class="row">
-      <div class="col m2 text-center">
-        <img class="circle" src="/img/avatar3.png" style="width:96px;height:96px">
-      </div>
-      <div class="col m10 container">
-        <h4>John <span class="opacity medium">Sep 29, 2014, 9:12 PM</span></h4>
-        <p>Keep up the GREAT work! I am cheering for you!!</p><br>
-      </div>
+    <div class="container dark-grey padding-32">
+        <div class="row">
+        <div class="container third">
+            <h5 class="bottombar border-green">Demographic</h5>
+            <p>Language</p>
+            <p>Country</p>
+            <p>City</p>
+        </div>
+        <div class="container third">
+            <h5 class="bottombar border-red">System</h5>
+            <p>Browser</p>
+            <p>OS</p>
+            <p>More</p>
+        </div>
+        <div class="container third">
+            <h5 class="bottombar border-orange">Target</h5>
+            <p>Users</p>
+            <p>Active</p>
+            <p>Geo</p>
+            <p>Interests</p>
+        </div>
+        </div>
     </div>
 
-    <div class="row">
-      <div class="col m2 text-center">
-        <img class="circle" src="/img/avatar1.png" style="width:96px;height:96px">
-      </div>
-      <div class="col m10 container">
-        <h4>Bo <span class="opacity medium">Sep 28, 2014, 10:15 PM</span></h4>
-        <p>Sed do eiusmod tempo.</p><br>
-      </div>
-    </div>
-  </div>
-  <br>
-  <div class="container dark-grey padding-32">
-    <div class="row">
-      <div class="container third">
-        <h5 class="bottombar border-green">Demographic</h5>
-        <p>Language</p>
-        <p>Country</p>
-        <p>City</p>
-      </div>
-      <div class="container third">
-        <h5 class="bottombar border-red">System</h5>
-        <p>Browser</p>
-        <p>OS</p>
-        <p>More</p>
-      </div>
-      <div class="container third">
-        <h5 class="bottombar border-orange">Target</h5>
-        <p>Users</p>
-        <p>Active</p>
-        <p>Geo</p>
-        <p>Interests</p>
-      </div>
-    </div>
-  </div>
-<div id="hoverElement" class="blue">Hover over me to animate!</div>
-  <footer class="container padding-16 light-grey">
-    <h4>FOOTER</h4>
-    <p>Powered by <a href="https:/specialblend.ca" target="_blank">specialblend.ca</a>, inspired by<a href="https://www.w3schools.com/w3css/default.asp" target="_blank"> w3.css</a></p>
-  </footer>
 </div>
 <script src="/js/tools.js"></script>
-<script>
+<script src="/js/dashboard.js"></script>
 
-let worldMap;
-
-document.addEventListener('DOMContentLoaded', async function() {
-
-    const hoverElement = document.getElementById('hoverElement');
-
-    hoverElement.addEventListener('mouseenter', function() {
-      hoverElement.classList.add('animate-fading');
-    });
-
-    hoverElement.addEventListener('mouseleave', function() {
-      hoverElement.classList.add('animate-opacity');
-    });
-
-    const sourceSelect = document.getElementById('sourceSelect');
-      sourceSelect.addEventListener('change', function() {
-        source = this.value;
-        skip = 0; 
-        listAllLogs(source); 
-      });
-    
-    
-    listAllLogs("userLogs");
-
-    await getUserInfo()
-
-
-});
-
-
-  
-async function getUserInfo()
-{
-    const info = await Tools.ipLookUp()
-    document.getElementById('ip_id').innerHTML =  "<pre>"+JSON.stringify(info.TimeZone,null, '\t') +"</pre>"
-} 
-
-
-function setWorlGraph(data) {
-    
-      // Mapping of incorrect country names to correct country names
-      const countryNameCorrections = {
-        "United States" : "United States of America",
-        "Russia": "Russian Federation",
-        "South Korea": "Korea, Republic of",
-        // Add more mappings as needed
-    };
-
-    const countryCounts = data.reduce((acc, entry) => {
-        // Correct the country name if it exists in the mapping
-        const correctedCountryName = countryNameCorrections[entry.CountryName] || entry.CountryName;
-        acc[correctedCountryName] = (acc[correctedCountryName] || 0) + 1;
-        return acc;
-    }, {});
-    //console.log('worldMapData', countryCounts);
-
- 
-
-
-    // Fetch or define the geo data (e.g., world geoJSON) 
-    fetch('https://unpkg.com/world-atlas/countries-50m.json')
-        .then(response => response.json())
-        .then(world => {
-        
-            const countries = ChartGeo.topojson.feature(world, world.objects.countries).features;
-            //console.log('countries', countries);
-
-            // Create a set of valid country names
-            const validCountryNames = new Set(countries.map(country => country.properties.name));
-            // Check for missing country names
-            Object.keys(countryCounts).forEach(countryName => {
-                
-                if (!validCountryNames.has(countryName)) {
-                        console.warn(`Country name not found in ChartGeo countries list: ${countryName}`);
-                    }
-            });
-
-            // Prepare the dataset
-            const chartData = {
-                labels: countries.map(d => d.properties.name),
-                datasets: [{
-                    label: 'Countries',
-                  data: countries.map(country => ({
-                        feature: country,
-                        value: countryCounts[country.properties.name] || 0
-                    })),
-                    outline: countries,
-                    backgroundColor: (context) => {
-                        const dataItem = context.dataset.data[context.dataIndex];
-                       
-                        if (!dataItem || !dataItem.value) {
-                            return 'rgba(200, 200, 200, 0.15)'; // Default color for undefined values
-                        }
-                        const value = dataItem.value;
-                        //return `rgba( ${value}, 100, ${value*50 }, 1.0 )`;
-                        return `rgba(0, 200, 100, ${(value*10)/100})`;
-                    },
-                }]
-            };
-            const config = {
-                type: 'choropleth',
-                data: chartData,
-                options: {
-                    showOutline: false,
-                    showGraticule: false,
-                    scales: {
-                        projection: {
-                            axis: 'x',
-                            projection: 'equalEarth',
-                        },
-                    },
-                    onClick: (evt, elems) => {
-                        console.log(elems.map((elem) => elem.element.feature.properties.name));
-                    },
-                    geo: {
-                        colorScale: {
-                            display: false,
-                        }
-                    }, 
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            };
-            //worldMap = new Chart( document.getElementById('worldMap'), config);
-            if (worldMap) {
-                    worldMap.destroy();
-                }
-                worldMap = new Chart(document.getElementById('worldMap'), config);
-
-        });       
-}
-
-const loadingElement = document.querySelector('.loading');
-const logsElement = document.querySelector('.logs');
-const localUrl =  <%- JSON.stringify(localUrl) %>;
-console.log('localUrl', localUrl)
-const LOCAL_URL =  localUrl + '/v2/logs' 
-
-let skip = 0;
-let sort = 'desc'; 
-let loading = false;
-
-
-function listAllLogs(source) {
-  loading = true;
-  loadingElement.style.display = '';
-  const url = `${LOCAL_URL}?skip=${skip}&sort=${sort}&source=${source}`
-  const options =  { method: 'GET',    mode: 'no-cors' }
-
-  fetch(url, options)
-    .then(response => response.json())
-    .then(result => {
-
-        if (!result.logs || result.logs.length === 0) {
-                console.warn('No logs available to display.');
-                loadingElement.style.display = 'none';
-                return;
-            }
-
-        //console.log('result', result)
-        setWorlGraph(result.logs)
-
-
-
-        // Dynamically generate DataTable columns
-        const columns = Object.keys(result.logs[0]).map((key) => ({
-                title: key.charAt(0).toUpperCase() + key.slice(1), // Capitalize column names
-                data: key,
-                render:
-                    key === 'date' || key === 'created'
-                        ? function (data) {
-                              const date = new Date(data); // Convert to Date object
-                              return date.toLocaleString(); // Format the date
-                          }
-                        : null,
-            }));
-
-   
-        loadDataTable({ data: result.logs,  columns });
-        
-        loadingElement.style.display = 'none';
-    })
-    .catch(error => {
-        console.error('Error fetching logs:', error);
-        loadingElement.style.display = 'none';
-    });
-   
-}
-
-function loadDataTable(dataset) {
-    console.log('dataset', dataset);
-
-    // Clear the table and remove lingering DataTable instance
-    const table = $('#logsTable');
-    if ($.fn.DataTable.isDataTable(table)) {
-        table.DataTable().clear().destroy(); // Fully destroy the instance
-    }
-
-    // Empty the table structure to remove old columns
-    table.empty();
-
-    // Reinitialize the DataTable with the new dataset and columns
-    table.DataTable({
-        data: dataset.data,
-        columns: dataset.columns,
-        destroy: true, // Ensure old table is destroyed (redundant here for safety)
-    });
-}
-
-
-var mySidebar = document.getElementById("mySidebar");
-var overlayBg = document.getElementById("myOverlay");
-// Toggle and add overlay effect
-function w3_open() {
-  if (mySidebar.style.display === 'block') {
-    mySidebar.style.display = 'none';
-    overlayBg.style.display = "none";
-  } else {
-    mySidebar.style.display = 'block';
-    overlayBg.style.display = "block";
-  }
-}
-// Close the sidebar with the close button
-function w3_close() {
-  mySidebar.style.display = "none";
-  overlayBg.style.display = "none";
-}
-</script>
-
+<%- include('partials/miniFooter') %>
 </body>
 </html>
