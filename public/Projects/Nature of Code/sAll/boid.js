@@ -184,10 +184,17 @@ class Boid {
     let ali = this.align(boids);    // Alignment
     let coh = this.cohesion(boids); // Cohesion
     
+
+    // Get slider values
+    let sepMult = separationSlider.value();
+    let aliMult = alignmentSlider.value();
+    let cohMult = cohesionSlider.value();
+
+   // console.log(sepMult)
     // Arbitrarily weight these forces
-    sep.mult(1) //separationSlider.value());
-    ali.mult(3) //alignmentSlider.value());
-    coh.mult(1) //cohesionSlider.value());
+    sep.mult(sepMult) // 1
+    ali.mult(aliMult) // 3
+    coh.mult(cohMult) // 1
 
     if(obstacles){
       let avoid = this.separate(obstacles); 

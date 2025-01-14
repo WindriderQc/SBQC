@@ -1,5 +1,4 @@
 // Daniel Shiffman
-// https://www.kadenze.com/courses/the-nature-of-code
 // http://natureofcode.com/
 // Session 2: Drag Force
 

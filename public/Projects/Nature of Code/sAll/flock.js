@@ -8,7 +8,7 @@ class Flock {
   }
   
 
-  run(obstacles) 
+  run( obstacles) 
   {
     for (let i = 0; i < this.boids.length; i++) {
       this.boids[i].flock(this.boids, obstacles)// Passing the entire list of boids to each boid individually
