@@ -1,4 +1,4 @@
-
+// Requires tools.js and chartjs-chart-geo libraries
 let worldMap;
 
 document.addEventListener('DOMContentLoaded', async function() {
