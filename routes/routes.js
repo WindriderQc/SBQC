@@ -89,11 +89,12 @@ router.get("/", async (req, res) => {
 
 router.get('/index', async (req, res) => {
     const log = requestLog(req)
-    res.render('index', { menuId: 'home', hitCount: counter.getCount(), requestLog: log })
+    res.render('index', { menuId: 'home', hitCount: await counter.getCount(), requestLog: log })
 })
 
 router.get('/dashboard', async (req, res) => {
-    res.render('dashboard', { menuId: 'home', hitCount: counter.getCount(), collectionInfo: req.app.locals.collectionInfo })
+
+    res.render('dashboard', { menuId: 'home', hitCount: await counter.getCount(), collectionInfo: req.app.locals.collectionInfo })
 })
 
 router.get("/iGrow", (req, res) => {
