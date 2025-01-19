@@ -3,9 +3,9 @@ const express = require('express'),
   session = require('express-session'),
   MongoDBStore = require('connect-mongodb-session')(session),
   serveIndex = require('serve-index'),
-  path = require('path'),
+  path = require('path')//,
   //mongoose = require('mongoose'),
-  nodeTools = require('./scripts/nodeTools')
+ // nodeTools = require('nodeTools')
 
 //rateLimit = require('express-rate-limit'),
 const cors = require('cors')
@@ -92,16 +92,20 @@ mongo.connectDb( process.env.MONGO_CLOUD, 'SBQC', async (db) =>{    // dbServ, t
     }
     
     //db.createCollection('boot')     TODO:  faire un test conditionnel et creer si non exist    Boot may not exist
-    app.locals.collections.boot.insertOne({ 
-        logType: 'boot',
-        client: 'server',
-        content: 'dbServer boot',
-        authorization: 'none',
-        host: IN_PROD ? "Production Mode" : "Developpement Mode",
-        ip: 'localhost',
-        hitCount: 'N/A',
-        created: Date.now() 
-    })  
+   
+    if(IN_PROD) {
+        app.locals.collections.boot.insertOne({ 
+                logType: 'boot',
+                client: 'server',
+                content: 'dbServer boot',
+                authorization: 'none',
+                host: IN_PROD ? "Production Mode" : "Developpement Mode",
+                ip: 'localhost',
+                hitCount: 'N/A',
+                created: Date.now() 
+            }) 
+    }
+  
 
     // Fetch collection names and document counts
     app.locals.collectionInfo = {}

@@ -3,7 +3,7 @@
 // Dynamic import for node-fetch
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
-const nodeTools = require('./nodeTools') //nodeTools.readFile("greetings.txt")
+const nodeTools = require('nodetools') //nodeTools.readFile("greetings.txt")
 const socketio = require('./socket')
 
 

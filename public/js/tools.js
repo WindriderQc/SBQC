@@ -17,7 +17,28 @@ const Tools = {
             }
         },
 
+    // Returns a substring between two substrings. 
+    // If the beginning of end "tag" is not found, the function returns an empty string.
+    giveMeTextBetween: (source,  startTag,  endTag) => {
+            // Find the index of the beginning tag
+            let startIndex = source.indexOf(startTag);
+            // If I don't find anything
+            if (startIndex == -1) {
+                return "";
+            }
+            // Move to the end of the beginning tag
+            startIndex += startTag.length();
 
+            // Find the index of the end tag
+            let endIndex = source.indexOf(endTag, startIndex);
+            
+            // If I don't find the end tag,
+            if (endIndex == -1) {
+                return "";
+            }
+            // Return the text in between
+            return source.substring(startIndex, endIndex);
+        },
 
     scale: (num, in_min, in_max, out_min, out_max) =>{         
             return (num - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
@@ -120,7 +141,6 @@ const Tools = {
                 timeout  : Is a positive long value representing the maximum length of time (in milliseconds) the device is allowed to take in order to return a position. The default value is Infinity, meaning that getCurrentPosition() won't return until the position is available.
                 enableHighAccuracy   : Is a boolean value that indicates the application would like to receive the best possible results. If true and if the device is able to provide a more accurate position, it will do so. Note that this can result in slower response times or increased power consumption (with a GPS chip on a mobile device for example). On the other hand, if false, the device can take the liberty to save resources by responding more quickly and/or using less power. Default: false.
                 */
-               console.log('yAAAAAAA' )
                 const options = { enableHighAccuracy: true,  maximumAge: 0  }// timeout: 5000,
                 navigator.geolocation.getCurrentPosition(resolve, reject, options)
             })
@@ -184,7 +204,7 @@ const Tools = {
             }
         },
 
-        // converts from Longitude/Latitude to Graphical x,y - Mercator
+        // converts from Longitude/Latitude to Graphical x,y - Mercator      TODO:  zoom is not defined here....
         mercX : (lon) => {
             lon = radians(lon);
             var a = (256 / PI) * pow(2, zoom);
@@ -223,7 +243,7 @@ const Tools = {
             let vecCoord = createVector(x,y,z);
         
             return vecCoord
-        }
+        },
 
           /*  this will invert colors of an image
         for(int y = 0; y < butterflyImage.height; y++){
@@ -235,6 +255,17 @@ const Tools = {
         }
         */
 
+                
+
+        // Check if mouse is over defined rectangle
+        overRect: (x, y, width, height) => {
+            if ((mouseX >= x) && (mouseX <= x+width) && (mouseY >= y) && (mouseY <= y+height)) 
+                return true;
+            else 
+                return false;
+        },
+
+        
     }
 
 }
