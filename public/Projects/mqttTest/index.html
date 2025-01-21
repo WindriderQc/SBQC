@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MQTT WebSocket Test</title>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+<body>
+    <h1>MQTT WebSocket Test</h1>
+    <form id="mqttForm">
+        <label for="topic">Topic:</label>
+        <input type="text" id="topic" name="topic" value="test/topic"><br><br>
+        <label for="message">Message:</label>
+        <input type="text" id="message" name="message" value="Hello MQTT"><br><br>
+        <button type="button" onclick="mqttPost()">Publish</button>
+    </form>
+
+    <script>
+        // Connect to the MQTT broker via WebSocket
+        const client = mqtt.connect('ws://specialblend.ca:9001');
+
+        client.on('connect', () => {
+            console.log('Connected to MQTT broker');
+            client.subscribe('presence', (err) => {
+                if (!err) {
+                    client.publish('presence', 'Hello mqtt');
+                }
+            });
+        });
+
+        client.on('message', (topic, message) => {
+            // message is Buffer
+            console.log(message.toString());
+        });
+
+        function mqttPost() {
+            const topic = document.getElementById('topic').value;
+            const message = document.getElementById('message').value;
+            client.publish(topic, message, (err) => {
+                if (err) {
+                    console.error('Failed to publish message:', err);
+                } else {
+                    console.log('Message published successfully');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -11,14 +11,15 @@ const sysmon = new (require('../scripts/systemMonitor'))()
 console.log("SysInfo: ", sysmon.getinfo().data)
 console.log("CPU: ", sysmon.getinfo().cpus.length)
 
-//const apiUrl = process.env.NODE_ENV === 'production' ?  'https://www.specialblend.ddns.net:3001' : 'http://localhost:3001';
-const apiUrl = process.env.DATA_API_IP
-const mqttUrl = process.env.MQTT_IP
+//const apiUrl = process.env.DATA_API_IP
+const apiUrl = "https://" + (process.env.NODE_ENV === 'production' ? "localhost" : "sbqc.specialblend.ca")
 console.log('API url: ' + apiUrl)
 
-const PROTOCOL = process.env.NODE_ENV === 'production' ? 'https://' : 'http://' 
+
+
 
 let liveDatas = require('../scripts/liveData.js')
+
 
 
 
@@ -73,14 +74,10 @@ router.get("/", async (req, res) => {
     const logsdb =  req.app.locals.collections.server;
         
     try{
-            const createdLog = await logsdb.insertOne(log)
-            console.log(
-            `${createdLog.insertedCount} documents were inserted with the _id: ${createdLog.insertedId}`,
-            )
-            console.log(createdLog.ops)
+        const createdLog = await logsdb.insertOne(log)
+        console.log(`Log document was inserted with the _id: ${createdLog.insertedId}`)
     }
     catch(err) {console.log(err); next() }
-
 
 
     //res.render('index', { menuId: 'home', hitCount: count, localUrl: req.protocol + '://' + req.get('host') })
@@ -93,8 +90,8 @@ router.get('/index', async (req, res) => {
 })
 
 router.get('/dashboard', async (req, res) => {
-
-    res.render('dashboard', { menuId: 'home', hitCount: await counter.getCount(), collectionInfo: req.app.locals.collectionInfo })
+   
+    res.render('dashboard', { menuId: 'home', hitCount: await counter.getCount(), collectionInfo: req.app.locals.collectionInfo/*, mqttUrl: mqttUrl*/ })
 })
 
 router.get("/iGrow", (req, res) => {
@@ -103,7 +100,7 @@ router.get("/iGrow", (req, res) => {
 
 //const liveData = require('liveData')
 router.get('/earth', (req, res) => {
-    res.render('earth', { liveData: liveDatas.datas, mqttUrl: mqttUrl })
+    res.render('earth', { liveData: liveDatas.datas, mqttUrl: process.env.DATA_API_IP })  //  TODO pkoi ca prends pas le meme url que mqttviewer?
 })
 
 router.get('/natureCode', (req, res) => {
@@ -157,6 +154,8 @@ router.get('/serverspec', (req,res) => {
 //  API extra   --   TODO:  doit surement etre dans des routes séparées
 
 router.get('/weather/:latlon', async (req, res) => {
+
+    const PROTOCOL = process.env.NODE_ENV === 'production' ? 'https://' : 'http://' 
 
     const latlon = req.params.latlon.split(',');
     const lat = latlon[0];
@@ -244,9 +243,8 @@ const createUserLog = async (req, res, next) => {
     try{
         const createdLog = await logsdb.insertOne(log)
         console.log(
-        `${createdLog.insertedCount} documents were inserted with the _id: ${createdLog.insertedId}`,
+        `UserLog document was inserted with the _id: ${createdLog.insertedId}`,
         )
-        // console.log(createdLog.ops)
         res.json(createdLog)
     }
     catch(err) {console.log(err); next() }

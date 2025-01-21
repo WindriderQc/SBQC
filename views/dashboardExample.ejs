@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang='en'>
 <%- include('partials/miniHeader', { title: 'SBQC Server Dashboard' }) %> 
-
 <body class="light-grey">
 <%- include('partials/miniNav') %> 
 
@@ -60,16 +59,12 @@
         
             <div class="col col-12 col-l6 black card-2" >
                 <h5>World</h5>
-                <!--<img src="/img/region.jpg" style="width:100%" alt="Google Regional Map">-->
-                <canvas id="worldMap" width="800" height="600"></canvas>
-            
+                <img src="/img/region.jpg" style="width:100%" alt="Google Regional Map">
             </div>
     
         
             <div class="col col-12 col-l6 ">
-                <h5>Feeds - hitcount:  <%- hitCount %></h5>
-
-        
+                <h5>Feeds</h5>
 
                 <table class="table striped white">
                     <tr>
@@ -112,71 +107,115 @@
         </div>
     </div>
     <hr>
-   
+    <div class="container">
+        <h5>General Stats</h5>
+        <p>New Visitors</p>
+        <div class="grey">
+        <div class="container center padding green" style="width:25%">+25%</div>
+        </div>
+
+        <p>New Users</p>
+        <div class="grey">
+        <div class="container center padding orange" style="width:50%">50%</div>
+        </div>
+
+        <p>Bounce Rate</p>
+        <div class="grey">
+        <div class="container center padding red" style="width:75%">75%</div>
+        </div>
+    </div>
     <hr>
 
     <div class="container">
         <h5>TimeZone</h5>
         <div id="ip_id"></div>
         <br>
-        <div>
-            <label for="sourceSelect">Select Source:</label>
-            <select id="sourceSelect">
-                <% for (const collection in collectionInfo) { %>
-                    <option value="<%= collection %>" <%= collection === 'userLogs' ? 'selected' : '' %>><%= collection.charAt(0).toUpperCase() + collection.slice(1) %> </option>
-                <% } %>
-            </select>
-        </div>
-        <div>
-            <hr />
-            <h3>Server logs</h3>
-            <table id="logsTable" class="display"> </table>
-        </div>
-        <div class='loading'>
-            <img src='img/loading.gif' alt=''>
-        </div>
+    </div>
+    <div class="container">
+        <h5>Countries</h5>
+        <table class="table striped bordered border hoverable white">
+        <tr>
+            <td>United States</td>
+            <td>65%</td>
+        </tr>
+        <tr>
+            <td>UK</td>
+            <td>15.7%</td>
+        </tr>
+        </table><br>
+        <button class="btn dark-grey">More Countries  <i class="fa fa-arrow-right"></i></button>
     </div>
 
-
-
-    <div class="row">
-
-              
-
-     </div>
-    
-     <div class="row  mt-2">
-    
-        <div class='col-sm-12'>
-           <div class="card">
-              <div class='card-body'>
-                 <div class="row">
-                   
-                    <div class='col-sm-4'><small><div id='devicesList'></div></small></div>
-                    <div class='col-sm-3'><small><div id='statusList'></div></small></div>
-                 </div>
-              </div>
-           </div>
-        </div>
-     </div>
-    
-    
-
-
-
+    <hr>
+    <div class="container">
+        <h5>Recent Users</h5>
+        <ul class="ul card-4 white">
+        <li class="padding-16">
+            <img src="/img/avatar2.png" class="left circle margin-right" style="width:35px">
+            <span class="xlarge">Mike</span><br>
+        </li>
+        <li class="padding-16">
+            <img src="/img/avatar5.png" class="left circle margin-right" style="width:35px">
+            <span class="xlarge">Jill</span><br>
+        </li>
+        <li class="padding-16">
+            <img src="/img/avatar6.png" class="left circle margin-right" style="width:35px">
+            <span class="xlarge">Jane</span><br>
+        </li>
+        </ul>
+    </div>
+    <hr>
 
     <div class="container">
-        <%- include('partials/mqttViewer') %>
+        <h5>Recent Comments</h5>
+        <div class="row">
+        <div class="col m2 text-center">
+            <img class="circle" src="/img/avatar3.png" style="width:96px;height:96px">
+        </div>
+        <div class="col m10 container">
+            <h4>John <span class="opacity medium">Sep 29, 2014, 9:12 PM</span></h4>
+            <p>Keep up the GREAT work! I am cheering for you!!</p><br>
+        </div>
+        </div>
+
+        <div class="row">
+        <div class="col m2 text-center">
+            <img class="circle" src="/img/avatar1.png" style="width:96px;height:96px">
+        </div>
+        <div class="col m10 container">
+            <h4>Bo <span class="opacity medium">Sep 28, 2014, 10:15 PM</span></h4>
+            <p>Sed do eiusmod tempo.</p><br>
+        </div>
+        </div>
     </div>
-  
+    <br>
+    <div class="container dark-grey padding-32">
+        <div class="row">
+        <div class="container third">
+            <h5 class="bottombar border-green">Demographic</h5>
+            <p>Language</p>
+            <p>Country</p>
+            <p>City</p>
+        </div>
+        <div class="container third">
+            <h5 class="bottombar border-red">System</h5>
+            <p>Browser</p>
+            <p>OS</p>
+            <p>More</p>
+        </div>
+        <div class="container third">
+            <h5 class="bottombar border-orange">Target</h5>
+            <p>Users</p>
+            <p>Active</p>
+            <p>Geo</p>
+            <p>Interests</p>
+        </div>
+        </div>
+    </div>
 <%- include('partials/miniFooter') %>
 </div>
-
-
 <script src="/js/tools.js"></script>
 <script src="/js/dashboard.js"></script>
-
-
 
 
 </body>

@@ -4,6 +4,8 @@
 // The current database to use.
 use('SBQC');
 
+db.getCollectionInfos();
+
 // Search for documents in the current collection.
 db.getCollection('boot')
   .find(

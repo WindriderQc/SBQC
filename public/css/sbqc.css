@@ -167,6 +167,7 @@ hr{border:0;border-top:1px solid #eee;margin:20px 0}
 .padding-top-48{padding-top:48px!important}
 .padding-top-32{padding-top:32px!important}
 .padding-top-24{padding-top:24px!important}
+.padding-top-12{padding-top:12px!important}
 
 .left{float:left!important}.right{float:right!important}
 
@@ -357,4 +358,42 @@ hr{border:0;border-top:1px solid #eee;margin:20px 0}
 .nav-link-text {
     padding-left: 4px;
     padding-right: 16px;
+}
+
+
+/* Ensure the label is displayed as a block element */
+label {
+    display: block;
+    margin: 5px; 
+}
+
+/*  take the full width of its parent */
+.full-width {
+    width: 100%;
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+textarea {
+    padding: 10px;
+   
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: inherit; /* Use the same font as the parent element */
+    font-size: 16px; /* Adjust the font size as needed */
+}
+
+/* Style for form inputs with a prominent border */
+form .form-input {
+    border: 3px solid #4CAF50; /* Green border */
+    border-radius: 8px; /* Rounded corners */
+    padding: 10px; /* Padding inside the input */
+    font-size: 16px; /* Font size */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    transition: border-color 0.3s ease; /* Smooth transition for border color */
+}
+
+/* Change border color on focus */
+form .form-input:focus {
+    border-color: #45a049; /* Darker green on focus */
+    outline: none; /* Remove default outline */
 }

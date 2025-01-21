@@ -1,0 +1,97 @@
+<div class="col-sm-<%=smWidth%> px-1 py-1">
+    <div class="card text-center shadow"> 
+        <canvas id="<%- label %>_timelineChart" height="<%- height %>"></canvas>   
+    </div>
+</div>
+
+
+<script>
+//  depends on variable latestData being updated by parent
+
+$(()=>{
+   
+    const chartCanvas = document.getElementById("<%- label %>_timelineChart").getContext('2d');  
+    
+    const config = {
+        type: 'line',
+        data: {
+            datasets: [
+                {
+                label:  "<%- label %>",   // 0
+                data:  0,//dbData.map(item => { return (item.data) }),
+                spanGaps: false,
+                showLines: true,
+                fill: false,
+                radius: 0.1,
+                backgroundColor: 'rgba(225, 125, 10, 0.5)', 
+                borderColor: 'rgba(225, 125, 10, 1)',
+                borderWidth: 1,
+              //  yAxisID: "y-axis",
+                }
+
+            ]
+        },
+        options: { 
+            responsive: true, 
+            title:      {
+                display: true,
+                text:  "<%- titleText %>" //"Soil humidity"
+            },
+            scales: { 
+                y: {
+                    suggestedMin: <%- ymin %>,
+                    suggestedMax: <%- ymin %>,
+                    scaleLabel: {
+                            display: true,
+                            labelString: "<%- units %>" 
+                    }
+                }
+                 
+            },
+                                            
+            legend: {
+                display: false,
+                labels: {
+                    fontColor: 'rgb(255, 99, 132)'
+                }
+            }
+
+        }
+    }
+
+    let chart = new Chart(chartCanvas, config);
+    
+    let lasttime = moment().format("<%- time_format %>")
+    
+    let lastDevice = ""
+
+    setInterval(() =>{ 
+
+            if(!(lastDevice.indexOf(latestData.sender) >= 0))   // resets data if sender is different from previous msg
+            {
+                lastDevice = latestData.sender
+               // console.log(lastDevice)
+                chart.data.labels = []
+                chart.data.datasets[0].data = []
+
+                chart.update() 
+            } 
+            else if(!moment(lasttime).isSame(latestData.time))
+            {
+                lasttime = latestData.time
+                let t = moment(latestData.time).format("<%- time_format %>")
+                chart.data.labels.push(t)     
+                chart.data.datasets[0].data.push(latestData["<%- label %>"])
+
+                if(chart.data.datasets[0].data.length > ("<%- max_length %>"))
+                    graphRemoveLast(chart)
+                
+                chart.update()  
+            }
+
+        }
+        ,  "<%- refreshDelay %>")
+
+})
+
+</script>

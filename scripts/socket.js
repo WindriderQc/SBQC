@@ -11,23 +11,25 @@ function init(server)
     console.log('Launching socket server...')
     const io  = socket(server, { cors: { origin: '*' } })
        
+
+
     io.on('connection', (socket) => {
-        console.log('New Connection: ', socket.id )
-    
-        socket_ = socket
         
-        /*socket.on('mouse', (data) => { // example used to share mouse movement between client - DrawTogether project
-            socket.broadcast.emit('mouse', data) // io.sockets.emit()  will emit back to sender as well.  could be used if data is modified by server
-        })*/
+        console.log('New SocketIO Connection: ', socket.id )
+       
+        
+        socket_ = socket  //  TODO   Devrait etre un [] sinon on a tjrs juste le dernier socket connecté.....  :S
 
         socket.on('chat message', (msg) => {
-            io.emit('chat message', msg);
+            socket.broadcast.emit('chat message', msg);  // Sending to every client
         });
     
-        socket.on('mouse', (msg) => {
-            socket.broadcast.emit('mouse', msg); // This will send to all clients except the source
+        socket.on('mouse', (data) => {
+            // io.sockets.emit()  will emit back to sender as well.  could be used if data is modified by server
+            socket.broadcast.emit('mouse', data); // This will send to all clients except the source
         });
-    
+
+            
         socket.on('disconnect', () => {
             console.log('user disconnected');
         });
@@ -37,7 +39,7 @@ function init(server)
   
 
     io_ = io
-    return {io_ }
+    return io_ 
 }
 
 

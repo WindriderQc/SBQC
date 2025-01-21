@@ -63,10 +63,7 @@ const createMew = async (req, res, next) => {
         const mewsdb =  req.app.locals.collections.mews;
     try{
         const createdMew = await mewsdb.insertOne(mew)
-        console.log(
-        `${createdMew.insertedCount} documents were inserted with the _id: ${createdMew.insertedId}`,
-        )
-        // console.log(createdMew.ops)
+        console.log( `Mew document was inserted with the _id: ${createdMew.insertedId}` )
         res.json(createdMew)
     }
     catch(err) {console.log(err); next() }

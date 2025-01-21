@@ -1,0 +1,142 @@
+<div class="card  padding ">
+    <label for="streamTextArea">Streaming from Esp32(s)</label>
+    <textarea class="full-width" id="streamTextArea" rows="32"></textarea>
+</div>
+
+
+
+<div class="card padding margin-top blue">
+    <form>
+        <input type='text' id='topic' value='esp32/boot' class="border">
+        <input type='text' id='msg' value='ESP_35030'>
+        <button type='button' onclick=mqttPost() class="btn orange">MQTT Publish</button>   
+    </form>
+</div>
+ 
+
+
+
+</br>
+Esp32 are listening to :</br>
+- esp32</br>
+- esp32/DEVICE_NAME</br>
+</br>
+esp32/DEVICE_NAME/io/on        msg: GPIO</br>
+esp32/DEVICE_NAME/io/off       msg: GPIO</br>
+esp32/DEVICE_NAME/io/sunrise      msg:  GPIO:HH:MM:SS    </br>
+esp32/DEVICE_NAME/io/nightfall    msg:  GPIO:HH:MM:SS    </br>
+esp32/DEVICE_NAME/reboot</br>
+esp32/DEVICE_NAME/config       msg: Stringify->config = [ { io: 2,  mode: "IN", lbl: "A0",  isA: 0, pre: "none" },{ io: 4,  mode: "IN", lbl: "A1",  isA: 0, pre: "none" }]</br>
+</br>
+</br>
+</br>
+
+</br>       
+
+
+<script>
+  
+let streamTextArray = []
+let latestData
+
+
+  console.log('attempting mqtt connect...')
+ // Connect to the MQTT broker via WebSocket
+ const mqClient = mqtt.connect('ws://specialblend.ca:9001');
+
+ mqClient.on('connect', () => {
+    console.log('Connected to MQTT broker');
+    mqClient.subscribe('presence', (err) => {
+        if (!err) {
+            mqClient.publish('presence', 'Hello mqtt');
+        }
+    });
+});
+
+mqClient.on('message', (topic, message) => {
+    // message is Buffer
+    console.log(message.toString());
+});
+
+function mqttPost() {
+    const topic = document.getElementById('topic').value;
+    const message = document.getElementById('message').value;
+    mqClient.publish(topic, message, (err) => {
+        if (err) {
+            console.error('Failed to publish message:', err);
+        } else {
+            console.log('Message published successfully');
+        }
+    });
+}
+
+
+//const mqClient = mqtt.connect(mqttlogin.url, { rejectUnauthorized: false, username: mqttlogin.user, password: mqttlogin.pass })   //TODO  hardcoded IP + check...  using ws to connect not ssl secure //  TODO : NOT SAFE!!  Option User/Pass  visible dans la console....   utiliser le header pour ca?  ou mettre en SSL
+console.log('mqtt client:', mqClient)
+
+mqClient.publish('esp32', 'Browser Client subscribing...')
+mqClient.subscribe("esp32/#")
+
+mqClient.on('error', (err) =>{   console.log(err)    })
+mqClient.on('message', (topic, payload) => {
+
+    streamTextArray.push(topic + " : " + payload.toString()) 
+    const area = document.getElementById('streamTextArea')
+
+    if(area.scrollTop + area.clientHeight == area.scrollHeight) {  // User has scrolled to the bottom of the element
+        area.value = streamTextArray.join("\n");
+        area.scrollTop = area.scrollHeight
+    }
+    else  area.value = streamTextArray.join("\n"); 
+
+    //console.log('message:', topic)
+    if((topic.indexOf("alive") >=0) || (topic.indexOf("data") >=0)) {
+
+
+        try {
+            let data = JSON.parse(payload)
+            const sender = data.sender
+            const timestamp = data.time
+            const espSelected = $("#devices_select>option:selected").text() // console.log(moment(timestamp).format('YYYY-MM-DD HH:mm:ss'))
+            latestData = data
+
+
+
+/*
+            if (typeof data.wifi != 'undefined') {
+                document.getElementById(sender+'rss_id_value_id').innerHTML =  data.wifi
+                document.getElementById(sender+'temp_id_value_id').innerHTML =  data.CPUtemp
+            }
+            if(typeof data.battery != 'undefined') {
+                document.getElementById(sender+'batt_id_value_id').innerHTML =  data.battery
+                document.getElementById(sender+'humid_id_value_id').innerHTML =  data.airHumid
+            }else{
+                console.log(latestData); 
+            }
+*/
+            
+
+        }
+        catch(err) {   console.log(payload.toString());  console.log(err)      } 
+    }
+
+    if(topic.indexOf("disconnected") >=0) {
+
+        console.log('disconnected device!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', payload)
+        try {
+            let data = JSON.parse(payload)
+            const sender = data.id
+                     
+            //document.getElementById(sender+'rss_id_value_id').innerHTML =  -100
+            //document.getElementById(sender+'temp_id_value_id').innerHTML =  'xx'  
+
+        }
+        catch(err) {   console.log(payload.toString());  console.log(err)      } 
+
+    }
+})
+
+
+
+
+</script>

@@ -1,24 +1,27 @@
 require('dotenv/config')
 const express = require('express'),
-  session = require('express-session'),
-  MongoDBStore = require('connect-mongodb-session')(session),
-  serveIndex = require('serve-index'),
-  path = require('path')//,
-  //mongoose = require('mongoose'),
- // nodeTools = require('nodeTools')
+    session = require('express-session'),
+    MongoDBStore = require('connect-mongodb-session')(session),
+    serveIndex = require('serve-index'),
+    path = require('path'),
+    nodeTools = require('nodetools'),
+    cors = require('cors')
+    //rateLimit = require('express-rate-limit'),
+    //mongoose = require('mongoose'),
+    
 
-//rateLimit = require('express-rate-limit'),
-const cors = require('cors')
+let liveDatas = require('./scripts/liveData')
+const socketio = require('./scripts/socket')
 
+//const mqtt = require('mqtt');
+const mqtt = require('./scripts/mqttServer')
+const esp32 = require('./scripts/esp32')
+esp32.setConnectedValidation(1000) //  check every X seconds if devices are still connected
 
 const PORT = process.env.PORT  || 3001
 const IN_PROD = process.env.NODE_ENV === 'production'  // for https channel...  IN_PROD will be true if in production environment    If true while on http connection, session cookie will not work
-console.dir('Node Env: ', process.env.NODE_ENV)
-console.log('env prod:', IN_PROD)
-
-
-
-
+const node_env = process.env.NODE_ENV
+console.dir('Node Env: ' + node_env)
 
 
 
@@ -31,8 +34,7 @@ const mongoStore = new MongoDBStore({
     collection: 'mySessions', 
     connectionOptions: {
         useNewUrlParser: true,
-        useUnifiedTopology: true,
-        // serverSelectionTimeoutMS: 10000
+        useUnifiedTopology: true
     }
 }, (err) => { if(err) console.log( 'MongoStore connect error: ', err) } );
 
@@ -74,13 +76,10 @@ const options = {
 // mongoose with local DB
 //require('./scripts/mongooseDB')
 
-
-
 //Mongodb Client setup  with CloudDB  // TODO: used for posts book but should be uniformized to one DB.  the use of collection in app.locals seem different
 const mongo = require('./scripts/mongoClientDB')
 
 mongo.connectDb( process.env.MONGO_CLOUD, 'SBQC', async (db) =>{    // dbServ, test, admin, local 
-    
     
     app.locals.collections = [] 
     const list = await mongo.getCollectionsList()
@@ -90,7 +89,6 @@ mongo.connectDb( process.env.MONGO_CLOUD, 'SBQC', async (db) =>{    // dbServ, t
         console.log(coll.name)
         app.locals.collections[coll.name] =  mongo.getDb(coll.name)
     }
-    
     //db.createCollection('boot')     TODO:  faire un test conditionnel et creer si non exist    Boot may not exist
    
     if(IN_PROD) {
@@ -105,7 +103,6 @@ mongo.connectDb( process.env.MONGO_CLOUD, 'SBQC', async (db) =>{    // dbServ, t
                 created: Date.now() 
             }) 
     }
-  
 
     // Fetch collection names and document counts
     app.locals.collectionInfo = {}
@@ -113,8 +110,8 @@ mongo.connectDb( process.env.MONGO_CLOUD, 'SBQC', async (db) =>{    // dbServ, t
         const count = await app.locals.collections[coll.name].countDocuments()
         app.locals.collectionInfo[coll.name] = count
     }
-
     console.log("Collection Info:", app.locals.collectionInfo)
+    console.log('\n__________________________________________________\n\n')
 })
 
 
@@ -140,9 +137,6 @@ app
 
 
 
-app.get('/kart', (req, res) => {  res.render('./public/Projects/Kart/index.html') })
-
-
 
 const server = app.listen(PORT, () =>{  
     console.log('\n__________________________________________________\n\n')
@@ -154,20 +148,19 @@ const server = app.listen(PORT, () =>{
   })
 
 
-const socketio = require('./scripts/socket')
-socketio.init(server)
+
 
  
 
+//   LIVEDATA & SOCKETIO for Live Actualisation
+const io = socketio.init(server)     //  TODO  required?  or just use io from socketio.js   
 
-
-
-let liveDatas = require('./scripts/liveData.js')
 const intervals = { quakes:1000*60*60*24*7, iss: 1000*5 }
 liveDatas.init()
 liveDatas.setAutoUpdate(intervals, false)
 console.log("Setting live data  :  v" + liveDatas.datas.version)
 console.log("Intervals: ", intervals)
+
 
 
 
@@ -178,24 +171,40 @@ console.log("Intervals: ", intervals)
 
 
 
+//  MQTT API to communication with ESP32 and other devices
+mqtt.initMqtt('mqtt://specialblend.ca', esp32.msgHandler)
+
+
 /*
-const { Server } = require("socket.io");
-const io = new Server(server);
 
-io.on('connection', (socket) => {
-    console.log('a user connected');
+let mqttClient = null;
+// Connect to MQTT broker
+mqttClient = mqtt.connect('mqtt://specialblend.ca'); 
 
-    socket.on('chat message', (msg) => {
-        io.emit('chat message', msg);
+//mqttClient = mqtt.connect('ws://localhost:9001', { rejectUnauthorized: false, username: 'yb',    password: 'zigzag'});
+
+mqttClient.on('connect', () => {
+    console.log('Connected to MQTT broker');
+    mqttClient.subscribe('esp32', (err) => {
+        if (!err) {
+            console.log('Subscribed to topic esp32');
+        }
+
+        mqttClient.subscribe('esp32/#');
+        //...
     });
+});
 
-    socket.on('mouse', (msg) => {
-        socket.broadcast.emit('mouse', msg); // This will send to all clients except the source
-    });
+mqttClient.on('message', (topic, message) => {
+    //console.log(`Received MQTT message: ${message.toString()} on topic: ${topic}`);
+    io.emit('mqtt_message', { topic, message: message.toString() });
+});
 
-    socket.on('disconnect', () => {
-      console.log('user disconnected');
-    });
-  });
+mqttClient.on('error', (err) => {
+    console.error('Connection error:', err);
+});
 
- */
+mqttClient.on('close', () => {
+    console.log('Disconnected from MQTT broker');
+});*/
+

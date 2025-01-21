@@ -11,6 +11,7 @@ const mongo = {
             
         
             client.db().admin().listDatabases().then(dbs => {
+                console.log('\n\n__________________________________________________\n')
                 console.log('\nMongoDB client connected to db: ' + url + '\nDatabases:')  
                 console.log(dbs.databases)
                 console.log()

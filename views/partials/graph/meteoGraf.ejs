@@ -1,0 +1,184 @@
+<div id='meteoDiv'>
+    <canvas id="meteoChart"></canvas>   
+</div>
+
+
+<script>
+// depends on moment.js and Chart.js
+const height = <%- JSON.stringify(height) %>;
+
+
+let meteoChart
+
+async function createMeteoChart(dbData) 
+{ 
+
+    if(meteoChart) meteoChart.destroy()
+
+    const options = { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            title:      {
+                display: true,
+                text:    "Meteorological Conditions"
+            },
+            scales: { 
+                yaxistemp: {
+                    suggestedMax: 60,
+                    ticks: {
+                            
+                            beginAtZero: true,
+                            //callback: function(value, index, values) {   //  adds units to all axis tick
+                            //    return value + '\°C';
+                            //    }
+                    },
+                    scaleLabel: {
+                            display: false,
+                            labelString: 'Celcius'
+                    }
+                },
+                ypressure: {
+                    id: "ypressure", 
+                    suggestedMin: 980,
+                    suggestedMax: 1050,
+                    position: 'right',
+                    ticks: {
+                        position: 'right'
+                    },
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'hPa'
+                    }
+                }                                
+            }
+        }
+
+        const chartCanvas = document.getElementById('meteoChart').getContext('2d');
+        
+        
+        let gradientRed = chartCanvas.createLinearGradient(0, 0, 0, 200);
+        gradientRed.addColorStop(0, 'rgba(250, 0, 0, 0.6)');   
+        gradientRed.addColorStop(1, 'rgba(250, 25, 25, 0)'); 
+
+        let gradientOrange = chartCanvas.createLinearGradient(0, 0, 0, 235);
+        gradientOrange.addColorStop(0, 'rgba(225, 125, 10, 1)');   
+        gradientOrange.addColorStop(1, 'rgba(225, 125, 10, 0)');           
+                
+        let gradientGray = chartCanvas.createLinearGradient(0, 0, 0, 250);
+        gradientGray.addColorStop(0, 'rgba(25,25,25,0.9)');   
+        gradientGray.addColorStop(1, 'rgba(25,25,25,0.1)');
+
+        const data =  {
+                labels: dbData.map(item => { return moment(item.time).format('MM-DD    HH:mm') }),  // dat.tstamp,
+                datasets: [
+                    {
+                    label: 'tempBM_280',   
+                    data: dbData.map(item => { return (item.tempBM_280) }),
+                    spanGaps: false,
+                    showLines: true,
+                    fill: false,
+                    radius: 0.1,
+                    backgroundColor: 'rgba(225, 125, 10, 0.5)', 
+                    borderColor: 'rgba(225, 125, 10, 1)',
+                    borderWidth: 1,
+                    yAxisID: "yaxistemp",
+                    },
+                    {
+                    label: 'CPUtemp',  
+                    data:  dbData.map(item => { return (item.CPUtemp) }),
+                    spanGaps: false,
+                    showLines: true,
+                    radius: 0,
+                    type: 'line',
+                    fill: false,
+                    backgroundColor: 'rgba(225, 125, 10, 0.5)', 
+                    borderColor: 'rgba(225, 125, 10, 1)',
+                    borderWidth: 1,
+                    yAxisID: "yaxistemp"
+                    } ,
+                    {
+                    label: 'pressure',  
+                    data:  dbData.map(item => { return (item.pressure) }),
+                    spanGaps: false,
+                    showLines: true,
+                    radius: 0,
+                    type: 'line',
+                    fill: true,
+                    backgroundColor: gradientGray,
+                    borderColor: 'rgba(25,25,25,0.9)',
+                    borderWidth: 2,
+                    yAxisID: "ypressure"
+                    } ,
+                    {
+                    label: 'Humidity',   // 3
+                    data:  dbData.map(item => { return (item.airHumid) }),
+                    spanGaps: false,
+                    showLines: true,
+                    radius: 0,
+                    type: 'line',
+                    fill: true,
+                    backgroundColor: 'rgba(0, 125, 255, 0.2)',
+                    borderColor: 'rgba(0, 125, 255, 1)',
+                    borderWidth: 2,
+                    yAxisID: "yaxistemp"
+                    },
+                    {
+                    label: 'Temp DHT',   // 3
+                    data:  dbData.map(item => { return (item.tempDht) }),
+                    spanGaps: false,
+                    showLines: true,
+                    radius: 0,
+                    type: 'line',
+                    fill: false,
+                    backgroundColor: 'rgba(0, 125, 255, 0.2)',
+                    borderColor: 'rgba(240, 125, 255, 1)',
+                    borderWidth: 2,
+                    yAxisID: "yaxistemp"
+                    } 
+
+                ]
+        }
+        
+        const cnf =  { type: 'line', data, options }
+        console.log('Graph config: ', cnf)
+        const d =  document.getElementById('meteoChart')
+        d.height = height
+        meteoChart = new Chart(chartCanvas, cnf)
+     
+      
+      /*  if(tempChart) {    //  if chart was already created, simply actualize data
+            
+            tempChart.data.labels = data.map(item => { return moment(item.time).format('MM-DD    HH:mm') })
+            tempChart.data.datasets[0].data = data.map(item => { return (item.tempBM_280) })
+            tempChart.data.datasets[1].data = data.map(item => { return (item.CPUtemp) })
+            tempChart.data.datasets[2].data = data.map(item => { return (item.pressure) })
+            tempChart.data.datasets[3].data = data.map(item => { return (item.airHumid) })
+            tempChart.data.datasets[4].data = data.map(item => { return (item.tempDht) })
+            // console.log(data[0]["CPUtemp"])     this method could be used to set any number of data field, or specific using ejs variables
+            tempChart.update() 
+        }
+        else {            // otherwise, create Graph
+        } */
+}
+
+
+function newTempData(data) 
+{
+    if(meteoChart)   //  in case we receive new mqtt data before the graph is create
+    {
+        meteoChart.data.labels.push(data.time)   
+            
+        let datas = [ data.tempBM_280, data.pressure, data.airHumid, data.tempDht ]
+    
+        for(let i=0; i<datas.length; i++ )  {
+            meteoChart.data.datasets[i].data.push(datas[i])
+        }
+
+        if(meteoChart.data.datasets[0].data.length > 200)  graphRemoveLast(meteoChart)  //  TODO : const de config laid!!!
+               
+        meteoChart.update()  
+    }       
+}
+</script>
+
+   
