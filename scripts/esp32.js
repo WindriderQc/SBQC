@@ -6,7 +6,7 @@ let fetch;
 
 
 const IN_PROD = process.env.NODE_ENV === 'production' 
-const dataAPIUrl = "https://" + (IN_PROD ? "localhost" : "sbqc.specialblend.ca")
+const dataAPIUrl = (IN_PROD ? "http://localhost:"+process.env.DATA_API_PORT : "https://sbqc.specialblend.ca")
 
 console.log('Data API URL: ', dataAPIUrl)
 
@@ -78,6 +78,8 @@ const esp32 = {
 
     register: async (device) =>
     {     
+
+
         try {
             
             const rawResponse = await fetch(dataAPIUrl + '/device/' + device.id,  { method: 'PATCH', headers: { "Content-type": "application/json" }, body: JSON.stringify( { 'id': device.id, 'lastBoot': device.lastBoot , 'profileName': device.profileName, 'type': device.type, 'zone': device.zone })    }); 
@@ -101,6 +103,7 @@ const esp32 = {
             console.log("Get registered profile:\n", profile.data)*/
 
             registered = await esp32.getRegistered()  //  actualize registered global variable
+            console.log('Registered', registered)
         }
         catch (err) { console.log('Register Error', err) }
     },
@@ -108,8 +111,10 @@ const esp32 = {
 
     getRegistered: async () =>
     {    
+
+        let dAPIUrl = "https://sbqc.specialblend.ca"
         try {  
-            const rawResponse = await fetch(dataAPIUrl + '/devices'); 
+            const rawResponse = await fetch(dAPIUrl + '/devices'); 
             const r = await rawResponse.json() // const r = await rawResponse.text()
            
             if(r.status === 'success')  {} //console.log('Registered list: ', r.data.map((dev)=>{ const id = dev.id; const zone = dev.zone; const ret = {id,zone}; return ( ret ) }))  
