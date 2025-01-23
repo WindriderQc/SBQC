@@ -42,7 +42,7 @@ let latestData
 
   console.log('attempting mqtt connect...')
  // Connect to the MQTT broker via WebSocket
- const mqClient = mqtt.connect('ws://specialblend.ca:9001');
+ const mqClient = mqtt.connect('wss://mqtt.specialblend.ca');
 
  mqClient.on('connect', () => {
     console.log('Connected to MQTT broker');
