@@ -88,13 +88,16 @@ function setWorlGraph(data) {
                     outline: countries,
                     backgroundColor: (context) => {
                         const dataItem = context.dataset.data[context.dataIndex];
-                       
-                        if (!dataItem || !dataItem.value) {
-                            return 'rgba(200, 200, 200, 0.15)'; // Default color for undefined values
-                        }
                         const value = dataItem.value;
-                        //return `rgba( ${value}, 100, ${value*50 }, 1.0 )`;
-                        return `rgba(0, 200, 100, ${(value*10)/100})`;
+
+                        if (!dataItem || !value) {
+                            return 'rgba(200, 200, 200, 0.25)'; // Default color for undefined values
+                        }
+                       
+                        if (value < 40) {
+                             return `rgba(0, 200, 100, ${(value*5)/200   + 0.15 })`;
+                        }
+                        return `rgba(0, 100, 200, ${(value*3)/100  + 0.1 })`;
                     },
                 }]
             };
