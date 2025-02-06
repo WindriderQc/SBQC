@@ -50,8 +50,10 @@ function speak(text, callback=null)
 
     mouth.speak(text);
     mouth.onEnd = () => {
-        isSpeaking = false;
-        if(callback) callback();
+        setTimeout(() => {
+            isSpeaking = false;
+            if(callback) callback();
+        }, 1500); // Adjust the timeout duration as needed
     };
 }
 
