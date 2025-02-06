@@ -25,9 +25,9 @@
                     <br>
                     <br>
                     <br>
-                    <a href="/index">
-                        <button type="button" class="btn btn-outline-success" data-mdb-ripple-init data-mdb-ripple-color="dark">Engage interactive eXperience</button>
-                    </a>
+                    <button type="button" class="btn btn-outline-success" data-mdb-ripple-init data-mdb-ripple-color="dark" onclick="engageInteractiveExperience()">Engage interactive eXperience</button>
+     
+                    
                 </div> 
             </div>  
        
@@ -192,7 +192,7 @@ function setup()
     walker2 = new Walker() 
     walker3 = new Walker() 
 
-    setupNestor()
+   
 }
  
 
@@ -441,6 +441,16 @@ async function getUserInfo()
 
 } 
 
+
+function engageInteractiveExperience() {
+
+    const welcomeSections = document.querySelectorAll('.welcome-section');
+    welcomeSections.forEach(section => section.style.display = 'none');
+
+    setupNestor()
+    
+    //window.location.href = "/index";
+}
 
 
 ////
