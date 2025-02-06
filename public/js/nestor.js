@@ -5,7 +5,7 @@ let isSpeaking = false
 
 function gotSpeech() 
 {
-    if (isSpeaking) {console.log('Hey Im talkin'); return;} // Prevent recording while speaking
+    if (isSpeaking) { return;} // Prevent recording while speaking
 
     //console.log('gotSpeech: ', speechRec)
     if(speechRec.resultValue){
@@ -53,7 +53,7 @@ function speak(text, callback=null)
         setTimeout(() => {
             isSpeaking = false;
             if(callback) callback();
-        }, 1500); // Adjust the timeout duration as needed
+        }, 1000); // Adjust the timeout duration as needed
     };
 }
 
