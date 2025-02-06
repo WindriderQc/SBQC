@@ -14,7 +14,7 @@ function gotSpeech()
         let d = document.getElementById('speech')
         //d.innerHTML = p
         p.parent(d)
-        console.log("SpeechRec: ",  p)
+        //console.log("SpeechRec: ",  p)
         //p.parent(document.getElementById('speech'))
         //createP(speechRec.resultString);
 
@@ -22,6 +22,10 @@ function gotSpeech()
             speak('Yo! How are you?');
         }
 
+        if (speechRec.resultString.includes('dashboard')) {
+            speak('Lets go to the dashboard!', ()=>{ window.location.href = "/dashboard" });
+
+        }
 
     }
     else {
@@ -40,13 +44,14 @@ function setMouth(voice=1, rate=1, pitch=1, volume=1)
 }
 
 
-function speak(text) 
+function speak(text, callback=null) 
 {
     isSpeaking = true;
 
     mouth.speak(text);
     mouth.onEnd = () => {
         isSpeaking = false;
+        if(callback) callback();
     };
 }
 
