@@ -1,5 +1,6 @@
 let speechRec = null
 let mouth = null
+let isSpeaking = false
 
 
 function gotSpeech() 
@@ -28,6 +29,19 @@ function gotSpeech()
     }
 }
 
+function speak(text) {
+    isSpeaking = true;
+
+    mouth.setVoice(1)
+    mouth.setRate(1)
+    mouth.setPitch(1)
+    mouth.setVolume(1)
+
+    mouth.speak(text);
+    mouth.onEnd = () => {
+        isSpeaking = false;
+    };
+}
 
 
 
@@ -36,11 +50,9 @@ function voiceReady()
 {
    console.log('Speech recognition supported 😊')
    console.log('Voices: ', mouth.voices) 
-   mouth.setVoice(1)
-   mouth.setRate(1)
-   mouth.setPitch(1)
+ 
 
-   mouth.speak('How you doinnn?'); // say something
+   speak('How you doinnn?'); // say something
 
   // mouth.setVoice(6)
 // mouth.speak('Caâlisss de tabârnack... Quessé tu fais la encore?'); // say something
