@@ -81,12 +81,12 @@ router.get("/", async (req, res) => {
 
 
     //res.render('index', { menuId: 'home', hitCount: count, localUrl: req.protocol + '://' + req.get('host') })
-    res.render('index', { menuId: 'home', hitCount: count, requestLog: log })
+    res.render('index', { menuId: 'home', hitCount: count, requestLog: log, isWelcomePage: true  })
 })
 
 router.get('/index', async (req, res) => {
     const log = requestLog(req)
-    res.render('index', { menuId: 'home', hitCount: await counter.getCount(), requestLog: log })
+    res.render('index', { menuId: 'home', hitCount: await counter.getCount(), requestLog: log, isWelcomePage: false  })
 })
 
 router.get('/dashboard', async (req, res) => {
