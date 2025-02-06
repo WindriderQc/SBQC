@@ -4,7 +4,7 @@ let mouth = null
 
 function gotSpeech() 
 {
-    console.log('gotSpeech: ', speechRec.resultString)
+    console.log('gotSpeech: ', speechRec)
     if(speechRec.resultValue){
     
         let p = createP(speechRec.resultString);
