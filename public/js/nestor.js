@@ -5,7 +5,7 @@ let isSpeaking = false
 
 function gotSpeech() 
 {
-    if (isSpeaking) return; // Prevent recording while speaking
+    if (isSpeaking) {console.log('Hey Im talkin'); return;} // Prevent recording while speaking
 
     //console.log('gotSpeech: ', speechRec)
     if(speechRec.resultValue){
