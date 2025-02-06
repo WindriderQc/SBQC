@@ -5,7 +5,9 @@ let isSpeaking = false
 
 function gotSpeech() 
 {
-    console.log('gotSpeech: ', speechRec)
+    if (isSpeaking) return; // Prevent recording while speaking
+
+    //console.log('gotSpeech: ', speechRec)
     if(speechRec.resultValue){
     
         let p = createP(speechRec.resultString);
@@ -29,16 +31,18 @@ function gotSpeech()
     }
 }
 
+function setMouth(voice=1, rate=1, pitch=1, volume=1) 
+{
+    mouth.setVoice(voice)
+    mouth.setRate(rate)
+    mouth.setPitch(pitch)
+    mouth.setVolume(volume)
+}
 
-function speak(text, change=false, voice=1, rate=1, pitch=1, volume=1) {
+
+function speak(text) 
+{
     isSpeaking = true;
-
-    if(change) {
-        mouth.setVoice(voice)
-        mouth.setRate(rate)
-        mouth.setPitch(pitch)
-        mouth.setVolume(volume)
-    }
 
     mouth.speak(text);
     mouth.onEnd = () => {
