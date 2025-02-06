@@ -1,4 +1,6 @@
-let mouth;
+let speechRec = null
+let mouth = null
+
 
 function gotSpeech() 
 {
@@ -40,14 +42,14 @@ function voiceReady()
 
 
 function setupNestor() {
-       // NESTOR
     //let lang = navigator.language || 'fr-FR'   //  'en-US'
     let lang = 'en-US'
     console.log('language: ' + lang)
     let speechRec = new p5.SpeechRec(lang, gotSpeech)
     let continuous = true
+    speechRec.onResult = gotSpeech
     speechRec.start(continuous, false)
-    //speechRec.start()
+
 
     mouth = new p5.Speech(); // speech synthesis object   
     mouth.onLoad = voiceReady;
