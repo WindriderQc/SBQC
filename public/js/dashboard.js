@@ -81,23 +81,21 @@ function setWorlGraph(data) {
                 labels: countries.map(d => d.properties.name),
                 datasets: [{
                     label: 'Countries',
-                  data: countries.map(country => ({
+                    data: countries.map(country => ({
                         feature: country,
                         value: countryCounts[country.properties.name] || 0
                     })),
                     outline: countries,
                     backgroundColor: (context) => {
-                        const dataItem = context.dataset.data[context.dataIndex];
+                        const dataItem = context.dataset.data[context.index];
+                        if (!dataItem || !dataItem.value) {
+                            return 'rgba(200, 200, 200, 0.25)'; // Default grey for missing values
+                        }
+                    
                         const value = dataItem.value;
-
-                        if (!dataItem || !value) {
-                            return 'rgba(200, 200, 200, 0.25)'; // Default color for undefined values
-                        }
-                       
-                        if (value < 40) {
-                             return `rgba(0, 200, 100, ${(value*5)/200   + 0.15 })`;
-                        }
-                        return `rgba(0, 100, 200, ${(value*3)/100  + 0.1 })`;
+            
+                        if (value < 40) return `rgba(0, 200, 100, ${(value * 5) / 200 + 0.15})`;
+                        return `rgba(0, 100, 200, ${(value * 3) / 100 + 0.1})`;
                     },
                 }]
             };
