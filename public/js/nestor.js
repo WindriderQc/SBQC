@@ -56,7 +56,8 @@ function voiceReady()
    console.log('Speech recognition supported 😊')
    console.log('Voices: ', mouth.voices) 
 
-   speak('How you doinnn?', true, 6); 
+   setMouth()
+   speak('How you doinnn?'); 
 
   // mouth.setVoice(6)
 // mouth.speak('Caâlisss de tabârnack... Quessé tu fais la encore?'); 
