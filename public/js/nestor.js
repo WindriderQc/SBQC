@@ -17,7 +17,7 @@ function gotSpeech()
         //createP(speechRec.resultString);
 
         if (speechRec.resultString.includes('hello')) {
-            mouth.speak('Yo! How are you?');
+            speak('Yo! How are you?');
         }
 
 
@@ -29,13 +29,16 @@ function gotSpeech()
     }
 }
 
-function speak(text) {
+
+function speak(text, change=false, voice=1, rate=1, pitch=1, volume=1) {
     isSpeaking = true;
 
-    mouth.setVoice(1)
-    mouth.setRate(1)
-    mouth.setPitch(1)
-    mouth.setVolume(1)
+    if(change) {
+        mouth.setVoice(voice)
+        mouth.setRate(rate)
+        mouth.setPitch(pitch)
+        mouth.setVolume(volume)
+    }
 
     mouth.speak(text);
     mouth.onEnd = () => {
@@ -43,19 +46,16 @@ function speak(text) {
     };
 }
 
-
-
  
 function voiceReady() 
 {
    console.log('Speech recognition supported 😊')
    console.log('Voices: ', mouth.voices) 
- 
 
-   speak('How you doinnn?'); // say something
+   speak('How you doinnn?', true, 6); 
 
   // mouth.setVoice(6)
-// mouth.speak('Caâlisss de tabârnack... Quessé tu fais la encore?'); // say something
+// mouth.speak('Caâlisss de tabârnack... Quessé tu fais la encore?'); 
 }
 
 
