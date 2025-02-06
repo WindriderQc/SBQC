@@ -46,7 +46,7 @@ function setupNestor() {
     //let lang = navigator.language || 'fr-FR'   //  'en-US'
     let lang = 'en-US'
     console.log('language: ' + lang)
-    let speechRec = new p5.SpeechRec(lang, gotSpeech)
+    speechRec = new p5.SpeechRec(lang, gotSpeech)
     let continuous = true
     speechRec.onResult = gotSpeech
     speechRec.start(continuous, false)
