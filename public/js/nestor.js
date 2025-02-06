@@ -9,15 +9,22 @@ function gotSpeech()
     
         let p = createP(speechRec.resultString);
         let d = document.getElementById('speech')
-        d.innerHTML = p
+        //d.innerHTML = p
+        p.parent(d)
         console.log("SpeechRec: ",  p)
         //p.parent(document.getElementById('speech'))
         //createP(speechRec.resultString);
+
+        if (speechRec.resultString.includes('hello')) {
+            mouth.speak('Hello! How are you?');
+        }
+
+
     }
     else {
-    let p = createP(speechRec)
-    p.parent(document.getElementById('speech'))
-    console.log("SpeechRec: ",  speechRec)
+    //let p = createP(speechRec)
+    //p.parent(document.getElementById('speech'))
+    console.log("SpeechRec No ResultValue: ",  speechRec)
     }
 }
 
