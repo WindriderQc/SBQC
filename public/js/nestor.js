@@ -16,7 +16,7 @@ function gotSpeech()
         //createP(speechRec.resultString);
 
         if (speechRec.resultString.includes('hello')) {
-            mouth.speak('Hello! How are you?');
+            mouth.speak('Yo! How are you?');
         }
 
 
