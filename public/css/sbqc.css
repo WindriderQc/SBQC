@@ -397,3 +397,20 @@ form .form-input:focus {
     border-color: #45a049; /* Darker green on focus */
     outline: none; /* Remove default outline */
 }
+
+
+
+
+
+.footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-top: 4px solid black; /* Thick line */
+    padding: 20px;
+    background-color: #f0f0f0;
+}
+.footer .column {
+    flex: 1;
+    text-align: center;
+}
