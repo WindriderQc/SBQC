@@ -187,7 +187,6 @@ router.get('/weather/:latlon', async (req, res) => {
         if (Array.isArray(sensor)) {
             sensor.sort((a, b) => new Date(b.datetimeLast) - new Date(a.datetimeLast));
         }
-        console.log('Sensor:', sensor[0].id)
 
         const sensorAQ = sensor[0]
         console.log('Sensor:', sensorAQ.id)
@@ -198,7 +197,7 @@ router.get('/weather/:latlon', async (req, res) => {
                 'X-API-Key': process.env.OPENAQ_API_KEY
             }
         });
-        console.log(`Sensor:/${sensor[0].sensor.id}`, sensor_response)
+        console.log(`Sensor:/${sensorAQ.id}`, sensor_response)
 
         const data = {
             weather: weather,
