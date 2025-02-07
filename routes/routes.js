@@ -187,7 +187,7 @@ router.get('/weather/:latlon', async (req, res) => {
         if (Array.isArray(sensor)) {
             sensor.sort((a, b) => new Date(b.datetimeLast) - new Date(a.datetimeLast));
         }
-        console.log('Sensor:', sensor)
+        console.log('Sensor:', sensor[0])
 
 
         const data = {
