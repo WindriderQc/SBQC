@@ -183,6 +183,13 @@ router.get('/weather/:latlon', async (req, res) => {
         const aq_data = await aq_response.json();
         //console.log(aq_data);
 
+        const sensor =  aq_data.results
+        if (Array.isArray(sensor)) {
+            sensor.sort((a, b) => new Date(b.datetimeLast) - new Date(a.datetimeLast));
+        }
+        console.log('Sensor:', sensor)
+
+
         const data = {
             weather: weather,
             air_quality: aq_data
