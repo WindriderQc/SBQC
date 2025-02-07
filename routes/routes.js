@@ -197,11 +197,12 @@ router.get('/weather/:latlon', async (req, res) => {
                 'X-API-Key': process.env.OPENAQ_API_KEY
             }
         });
-        console.log(`Sensor:/${sensorAQ.id}`, sensor_response)
+        const sensor_data = await sensor_response.json();
+        console.log('Sensor data:', sensor_data)
 
         const data = {
             weather: weather,
-            air_quality: sensor_response
+            air_quality: sensor_data
         };
         res.json(data);
     } catch (error) {
