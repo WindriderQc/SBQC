@@ -157,12 +157,10 @@ router.get('/weather/:latlon', async (req, res) => {
 
     const PROTOCOL = process.env.NODE_ENV === 'production' ? 'https://' : 'http://' 
 
-    const latlon = req.params.latlon.split(',');
-    const lat = latlon[0];
-    const lon = latlon[1];
+    const [lat, lon] = req.params.latlon.split(',');
     const weatherURL = PROTOCOL + `api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&&units=metric&APPID=${process.env.WEATHER_API}`
     const aq_url = PROTOCOL + `api.openaq.org/v2/latest?has_geo=true&coordinates=${lat},${lon}&radius=5000&order_by=lastUpdated`   //  TODO: last updated change tjrs la structure des data car pas les meme sensors par site...  mais ca garantie des données actualisée....
-    // console.log(lat, lon);
+    console.log(lat, lon);
        
     const weather_response = await fetch(weatherURL);
     const weather = await weather_response.json()

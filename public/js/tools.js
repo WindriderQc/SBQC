@@ -130,7 +130,7 @@ const Tools = {
 
     isGeoLocAvailable: () => {
             const yesno = ('geolocation' in navigator)
-            console.log( yesno ? 'geolocation available:\n' : 'geolocation not available  :(')
+            console.log( yesno ? 'geolocation available :)\n' : 'geolocation not available  :(')
             return yesno
         },
     

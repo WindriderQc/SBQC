@@ -130,8 +130,9 @@ function setMap()
 async function updateGeoData()
 {
         try {
-                const {coords} = await Tools.geoLocate(), url =`weather/${coords.latitude},${coords.longitude}`; 
-                
+                const {coords} = await Tools.geoLocate()
+                const url =`weather/${coords.latitude},${coords.longitude}`; //  using the server to get the weather data.  TODO:  use the client side weather api call...  or not!  lol
+
                 let lat, lon, alt, accuracy, weather, air  
                 lat = coords.latitude
                 lon = coords.longitude
