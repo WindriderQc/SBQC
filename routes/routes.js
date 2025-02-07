@@ -154,38 +154,43 @@ router.get('/serverspec', (req,res) => {
 //  API extra   --   TODO:  doit surement etre dans des routes séparées
 
 router.get('/weather/:latlon', async (req, res) => {
-
-    const PROTOCOL = process.env.NODE_ENV === 'production' ? 'https://' : 'http://' 
+    const PROTOCOL = process.env.NODE_ENV === 'production' ? 'https://' : 'http://';
 
     const [lat, lon] = req.params.latlon.split(',');
-    const weatherURL = PROTOCOL + `api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&&units=metric&APPID=${process.env.WEATHER_API}`
-    const aq_url = PROTOCOL + `api.openaq.org/v3/latest?has_geo=true&coordinates=${lat},${lon}&radius=5000&order_by=lastUpdated`   //  TODO: last updated change tjrs la structure des data car pas les meme sensors par site...  mais ca garantie des données actualisée....
+    const weatherURL = `${PROTOCOL}api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&APPID=${process.env.WEATHER_API}`;
+    const aq_url = `https://api.openaq.org/v3/locations?coordinates=${lat},${lon}&radius=5000&order_by=lastUpdated`;
+
     console.log(lat, lon);
-       
-    const weather_response = await fetch(weatherURL);
-    const weather = await weather_response.json()
-  
-    weather ? console.log(weather + "\n") : console.log("Get Weather error")
 
-    const aq_response = await fetch(aq_url);
-    const aq_data = await aq_response.json();
-    console.log("\n\n" + aq_data)
+    try {
+        const weather_response = await fetch(weatherURL);
+        if (!weather_response.ok) {
+            throw new Error('Failed to fetch weather data');
+        }
+        const weather = await weather_response.json();
+        console.log(weather);
 
+        const aq_response = await fetch(aq_url, {
+            headers: {
+                'X-API-Key': process.env.OPENAQ_API_KEY
+            }
+        });
+        if (!aq_response.ok) {
+            throw new Error('Failed to fetch air quality data');
+        }
+        const aq_data = await aq_response.json();
+        console.log(aq_data);
 
-    if(aq_data) {
-        if(aq_data.results)  console.log(aq_data.results[aq_data.results.length -1])
-        else                 console.log("AirQuality API error :", aq_data)  
-    } 
-    else console.log("Get AirQuality error")   
-
-    const data = {
-        weather: weather,
-        air_quality: aq_data
-    };
-    res.json(data);
-
-
-})
+        const data = {
+            weather: weather,
+            air_quality: aq_data
+        };
+        res.json(data);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to fetch weather or air quality data' });
+    }
+});
 
 
 router.post('/alert', async (req, res) => {
