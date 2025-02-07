@@ -164,7 +164,7 @@ router.get('/weather/:latlon', async (req, res) => {
 
     try {
         const weather_response = await fetch(weatherURL);
-        console.log(weather_response)
+       // console.log(weather_response)
         if (!weather_response.ok) {
             throw new Error(`Failed to fetch weather data: ${weather_response.statusText}`);
         }
