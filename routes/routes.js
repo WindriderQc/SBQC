@@ -154,10 +154,9 @@ router.get('/serverspec', (req,res) => {
 //  API extra   --   TODO:  doit surement etre dans des routes séparées
 
 router.get('/weather/:latlon', async (req, res) => {
-    const PROTOCOL = process.env.NODE_ENV === 'production' ? 'https://' : 'http://';
 
     const [lat, lon] = req.params.latlon.split(',');
-    const weatherURL = `${PROTOCOL}api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&APPID=${process.env.WEATHER_API}`;
+    const weatherURL = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&APPID=${process.env.WEATHER_API}`;
     const aq_url = `https://api.openaq.org/v3/locations?coordinates=${lat},${lon}&radius=5000&order_by=lastUpdated`;
 
     console.log(lat, lon);
@@ -165,7 +164,7 @@ router.get('/weather/:latlon', async (req, res) => {
     try {
         const weather_response = await fetch(weatherURL);
         if (!weather_response.ok) {
-            throw new Error('Failed to fetch weather data');
+            throw new Error('Failed to fetch weather data', weather_response);
         }
         const weather = await weather_response.json();
         console.log(weather);
