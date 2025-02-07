@@ -5,18 +5,64 @@
         <%- include('partials/head') %> 
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"    integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="    crossorigin=""/>
         <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"    integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="    crossorigin=""></script>
-
-<style>
-.arrow {
-    width: 0;
-    height: 0;
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-    border-bottom: 20px solid black;
-    transform-origin: center;
-    margin: 20px auto;
-}
-</style>
+        <style>
+            .arrow {
+                width: 0;
+                height: 0;
+                border-left: 10px solid transparent;
+                border-right: 10px solid transparent;
+                border-bottom: 20px solid black;
+                transform-origin: center;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+            
+            .wind-container {
+                position: relative;
+                width: 100px;
+                height: 100px;
+                margin: 0 auto;
+            }
+            
+            .cardinal-points {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                pointer-events: none;
+            }
+            
+            .cardinal-points .north {
+                position: absolute;
+                top: 0;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+            
+            .cardinal-points .east {
+                position: absolute;
+                top: 50%;
+                right: 0;
+                transform: translateY(-50%);
+            }
+            
+            .cardinal-points .south {
+                position: absolute;
+                bottom: 0;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+            
+            .cardinal-points .west {
+                position: absolute;
+                top: 50%;
+                left: 0;
+                transform: translateY(-50%);
+            }
+            </style>
 
     </head>
 
@@ -29,19 +75,27 @@
 <div class="container-fluid bg-3 text-center">  
 <!-- Begin Container  -->      
         
-        <div class="card mb-3">
-           
-                <div class="row">
-                    <div class="col-6">
-                        <div id="wind-arrow" class="arrow"></div>
-                    </div>
-                    <div class="col-6">
-                        <div>Speed: <span id="wind-speed"></span> m/s</div>
-                        <div>Gust: <span id="wind-gust"></span> m/s</div>
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-6">
+                <div class="wind-container">
+                    <div id="wind-arrow" class="arrow"></div>
+                    <div class="cardinal-points">
+                        <div class="north">N</div>
+                        <div class="east">E</div>
+                        <div class="south">S</div>
+                        <div class="west">W</div>
                     </div>
                 </div>
-           
+            </div>
+            <div class="col-6">
+                <div>Speed: <span id="wind-speed"></span> m/s</div>
+                <div>Gust: <span id="wind-gust"></span> m/s</div>
+            </div>
         </div>
+    </div>
+</div>
 
         <p>
             At location: <span id="summary"></span> with a temperature of <span id="temp"></span>&deg; C. <br>
