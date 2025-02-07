@@ -156,8 +156,8 @@ router.get('/serverspec', (req,res) => {
 router.get('/weather/:latlon', async (req, res) => {
 
     const [lat, lon] = req.params.latlon.split(',');
-   // const weatherURL = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&APPID=${process.env.WEATHER_API}`;
-    const weatherURL = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&APPID=9329cd2c6b3c46f1ef67ce400015e3e0`;
+   const weatherURL = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&APPID=${process.env.WEATHER_API}`;
+
     const aq_url = `https://api.openaq.org/v3/locations?coordinates=${lat},${lon}&radius=5000&order_by=lastUpdated`;
 
     console.log(lat, lon);
