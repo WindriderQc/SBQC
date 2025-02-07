@@ -1,4 +1,4 @@
-/// <reference path="../p5.global-mode.d.ts" />
+/// <reference types="p5/global" />
 
 // TODO:  add disclaimer about localhost socket.io is required or implement secure on cloud server
 let socket;
