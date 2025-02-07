@@ -70,7 +70,7 @@ router.get("/", async (req, res) => {
     let count = await counter.increaseCount()
 
     const log = requestLog(req)
-        
+      
     const logsdb =  req.app.locals.collections.server;
         
     try{

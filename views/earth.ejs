@@ -5,7 +5,20 @@
         <%- include('partials/head') %> 
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"    integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="    crossorigin=""/>
         <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"    integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="    crossorigin=""></script>
-</head>
+
+<style>
+.arrow {
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 20px solid black;
+    transform-origin: center;
+    margin: 20px auto;
+}
+</style>
+
+    </head>
 
 
 <body class="fixed-nav sticky-footer bg-light sidenav-toggled" id="page-top">
@@ -16,6 +29,19 @@
 <div class="container-fluid bg-3 text-center">  
 <!-- Begin Container  -->      
         
+        <div class="card mb-3">
+           
+                <div class="row">
+                    <div class="col-6">
+                        <div id="wind-arrow" class="arrow"></div>
+                    </div>
+                    <div class="col-6">
+                        <div>Speed: <span id="wind-speed"></span> m/s</div>
+                        <div>Gust: <span id="wind-gust"></span> m/s</div>
+                    </div>
+                </div>
+           
+        </div>
 
         <p>
             At location: <span id="summary"></span> with a temperature of <span id="temp"></span>&deg; C. <br>
@@ -131,7 +157,10 @@ async function updateGeoData()
 {
         try {
                 const {coords} = await Tools.geoLocate()
+                //const url =`weather/${coords.latitude},${coords.longitude}`; //  using the server to get the weather data.  TODO:  use the client side weather api call...  or not!  lol
                 const url =`weather/${coords.latitude},${coords.longitude}`; //  using the server to get the weather data.  TODO:  use the client side weather api call...  or not!  lol
+
+
 
                 let lat, lon, alt, accuracy, weather, air  
                 lat = coords.latitude
@@ -155,16 +184,7 @@ async function updateGeoData()
                         
                                 console.log(data) 
                                 weather = data.weather.currently
-                                
-                                /*if(data.air_quality.results["INO"]) {
-                                        for(measure of data.air_quality.results["INO"].measurements) {
-                                        if(measure["parameter"] == "um010") 
-                                                air = measure 
-                                }
-                                        for(measure of data.air_quality.results[0].measurements) {
-                                        if(measure["parameter"] == "um010") 
-                                        air = measure    
-                                }*/
+                            
 
                                 air = data.air_quality.results[0]
                                 document.getElementById('summary').textContent = data.weather.weather[0].description   //   weather.summary 
@@ -174,11 +194,19 @@ async function updateGeoData()
                                 document.getElementById('aq_units').textContent = air.parameter.units
                                 document.getElementById('aq_date').textContent = air.latest.datetime.local
 
+                                // Update wind information
+                                const wind = data.weather.wind;
+                                document.getElementById('wind-speed').textContent = wind.speed;
+                                document.getElementById('wind-gust').textContent = wind.gust;
+                                document.getElementById('wind-arrow').style.transform = `rotate(${wind.deg}deg)`;
+
+
+
                         })
                         .catch(e => {
-                        Tools.cliError(e);
-                        air = { value: -1 };
-                        document.getElementById('aq_value').textContent = 'NO READING'    //  TODO: la mise a jour des document devrait etre ailleur que dans la fonction générique Tools.
+                            Tools.cliError(e);
+                            air = { value: -1 };
+                            document.getElementById('aq_value').textContent = 'NO READING'   
                         })
 
         } catch(e) { alert('Error: '+e.message) }
@@ -397,8 +425,6 @@ function draw()
 getUserInfo()
 
 
-
-// TODO:  faire des ejs  partial Head séparé par type de fonction.  genre baseHead, socketHead, grafP5Head, etc...
 </script>
 
 </body>
