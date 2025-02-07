@@ -166,10 +166,10 @@ router.get('/weather/:latlon', async (req, res) => {
         const weather_response = await fetch(weatherURL);
         console.log(weather_response)
         if (!weather_response.ok) {
-            throw new Error('Failed to fetch weather data', weather_response);
+            throw new Error(`Failed to fetch weather data: ${weather_response.statusText}`);
         }
         const weather = await weather_response.json();
-        console.log(weather);
+        console.log('Weather data:', weather);
 
         const aq_response = await fetch(aq_url, {
             headers: {
@@ -177,7 +177,7 @@ router.get('/weather/:latlon', async (req, res) => {
             }
         });
         if (!aq_response.ok) {
-            throw new Error('Failed to fetch air quality data');
+            throw new Error(`Failed to fetch air quality data: ${aq_response.statusText}`);
         }
         const aq_data = await aq_response.json();
         console.log(aq_data);
