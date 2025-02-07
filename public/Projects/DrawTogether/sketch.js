@@ -19,6 +19,7 @@ function setup()
 
     messages = document.getElementById('messages');
     formChat = document.getElementById('formChat');
+    username = document.getElementById('username');
     input = document.getElementById('input');
 
     socket = io();
@@ -26,15 +27,21 @@ function setup()
 
     formChat.addEventListener('submit', function(e) {
         e.preventDefault();
-        if (input.value) {
-          socket.emit('chat message', input.value);
-          input.value = '';
+        if (input.value && username.value) {
+            const message = {
+                name: username.value,
+                text: input.value
+            };
+            socket.emit('chat message', message);
+            input.value = '';
         }
     });
       
+   
     socket.on('chat message', function(msg) {
+        console.log('message: ', msg);
         let item = document.createElement('li');
-        item.textContent = msg;
+        item.textContent = `${msg.name}: ${msg.text}`;
         messages.appendChild(item);
         window.scrollTo(0, document.body.scrollHeight);
     });
@@ -43,7 +50,7 @@ function setup()
 
     socket.on('mouse', alienDrawing)
 
-    socket.on('iss', (data) => { console.log('ISS location:', data) })
+   // socket.on('iss', (data) => { console.log('ISS location:', data) })
 } 
 
 function draw() 

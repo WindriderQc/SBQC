@@ -21,7 +21,7 @@ function init(server)
         socket_ = socket  //  TODO   Devrait etre un [] sinon on a tjrs juste le dernier socket connecté.....  :S
 
         socket.on('chat message', (msg) => {
-            socket.broadcast.emit('chat message', msg);  // Sending to every client
+            io.sockets.emit('chat message', msg);  // Sending to every client
         });
     
         socket.on('mouse', (data) => {
