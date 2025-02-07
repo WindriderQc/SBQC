@@ -167,13 +167,12 @@ async function updateGeoData()
                                 }*/
 
                                 air = data.air_quality.results[0]
-                                let sensor = data.air_quality.results[0].sensors[0]
                                 document.getElementById('summary').textContent = data.weather.weather[0].description   //   weather.summary 
                                 document.getElementById('temp').textContent =  data.weather.main.feels_like  // weather.temperature
-                                document.getElementById('aq_parameter').textContent = sensor.parameter.displayName
+                                document.getElementById('aq_parameter').textContent = air.parameter.displayName
                                 document.getElementById('aq_value').textContent = air.latest.value
-                                document.getElementById('aq_units').textContent = sensor.parameter.units
-                                document.getElementById('aq_date').textContent = sensor.latest.datetime.local
+                                document.getElementById('aq_units').textContent = air.parameter.units
+                                document.getElementById('aq_date').textContent = air.latest.datetime.local
 
                         })
                         .catch(e => {
