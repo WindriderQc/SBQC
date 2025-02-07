@@ -60,29 +60,27 @@
 let iss   // International Space Station location     
 
 
-/*
-const mqttUrl = <%- JSON.stringify(mqttUrl) %>;
-const mqttOptions = {
-    username: 'yourUsername',
-    password: 'yourPassword'
-};
+let socket = io();  //  connect to the server that sent this page
 
-let socket = io.connect(mqttUrl);
+socket.on('connect', () => {
+    console.log('Connected to server');
+});
 
 socket.on('iss', (data) => {
     iss = data;
-    updateIssOnMap(iss.latitude, iss.longitude);
+   // updateIssOnMap(iss.latitude, iss.longitude);
 });
-*/
 
+
+/*// can be used if socket.io does not work...   client-side only.  using socket.io with server livedata to minimize api call
 
 async function getISS_location()
 {
-    iss = await Tools.data.iss_location();  //  uses https source
-    //let url = 'http://api.open-notify.org/iss-now.json'; loadJSON(url, (data) => iss = data )    //  this method requires P5 and  getISS_location  must be launch with setup
+    iss = await Tools.data.iss_location();  //  uses https source     
+    
 }
-getISS_location(); setInterval(getISS_location, 1000)
-
+getISS_location(); setInterval(getISS_location, 10000)
+*/
 
 
 
@@ -130,8 +128,7 @@ function setMap()
 async function updateGeoData()
 {
         try {
-                const {coords} = await Tools.geoLocate(),
-                url =`weather/${coords.latitude},${coords.longitude}`; 
+                const {coords} = await Tools.geoLocate(), url =`weather/${coords.latitude},${coords.longitude}`; 
                 
                 let lat, lon, alt, accuracy, weather, air  
                 lat = coords.latitude

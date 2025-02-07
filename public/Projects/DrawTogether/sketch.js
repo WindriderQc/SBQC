@@ -24,7 +24,6 @@ function setup()
 
     socket = io();
 
-
     formChat.addEventListener('submit', function(e) {
         e.preventDefault();
         if (input.value && username.value) {
@@ -46,11 +45,8 @@ function setup()
         window.scrollTo(0, document.body.scrollHeight);
     });
 
-    //socket = io.connect('localhost:3001')   // TODO:  convert to ejs..  pour recevoir l'api en param
-
     socket.on('mouse', alienDrawing)
-
-   // socket.on('iss', (data) => { console.log('ISS location:', data) })
+    //socket.on('iss', (data) => { console.log('ISS location:', data) })
 } 
 
 function draw() 
@@ -60,7 +56,6 @@ function draw()
 
 function mouseDragged() 
 {
-
     let data = {
         x: mouseX, 
         y: mouseY
