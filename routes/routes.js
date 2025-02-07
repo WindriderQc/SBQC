@@ -159,7 +159,7 @@ router.get('/weather/:latlon', async (req, res) => {
 
     const [lat, lon] = req.params.latlon.split(',');
     const weatherURL = PROTOCOL + `api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&&units=metric&APPID=${process.env.WEATHER_API}`
-    const aq_url = PROTOCOL + `api.openaq.org/v2/latest?has_geo=true&coordinates=${lat},${lon}&radius=5000&order_by=lastUpdated`   //  TODO: last updated change tjrs la structure des data car pas les meme sensors par site...  mais ca garantie des données actualisée....
+    const aq_url = PROTOCOL + `api.openaq.org/v3/latest?has_geo=true&coordinates=${lat},${lon}&radius=5000&order_by=lastUpdated`   //  TODO: last updated change tjrs la structure des data car pas les meme sensors par site...  mais ca garantie des données actualisée....
     console.log(lat, lon);
        
     const weather_response = await fetch(weatherURL);
@@ -173,8 +173,9 @@ router.get('/weather/:latlon', async (req, res) => {
 
 
     if(aq_data) {
-        console.log('DEBUG', aq_data);
-        console.log(aq_data.results[aq_data.results.length -1])}
+        if(aq_data.results)  console.log(aq_data.results[aq_data.results.length -1])
+        else                 console.log("AirQuality API error :", aq_data)  
+    } 
     else console.log("Get AirQuality error")   
 
     const data = {
