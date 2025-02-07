@@ -181,7 +181,7 @@ router.get('/weather/:latlon', async (req, res) => {
             throw new Error(`Failed to fetch air quality data: ${aq_response.statusText} - ${errorText}`);
         }
         const aq_data = await aq_response.json();
-        console.log(aq_data);
+        //console.log(aq_data);
 
         const data = {
             weather: weather,
