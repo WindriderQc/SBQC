@@ -189,10 +189,17 @@ router.get('/weather/:latlon', async (req, res) => {
         }
         console.log('Sensor:', sensor[0])
 
+        const sensor_url = `https://api.openaq.org/v3/sensors/${sensor[0].sensor.id}`;
+        const sensor_response = await fetch(sensor_url, {
+            headers: {
+                'X-API-Key': process.env.OPENAQ_API_KEY
+            }
+        });
+        console.log(`Sensor:/${sensor[0].sensor.id}`, sensor_response)
 
         const data = {
             weather: weather,
-            air_quality: aq_data
+            air_quality: sensor_response
         };
         res.json(data);
     } catch (error) {
