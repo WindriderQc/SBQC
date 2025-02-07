@@ -172,8 +172,9 @@ router.get('/weather/:latlon', async (req, res) => {
     console.log("\n\n" + aq_data)
 
 
-    if(aq_data) 
-        console.log(aq_data.results[aq_data.results.length -1])
+    if(aq_data) {
+        console.log('DEBUG', aq_data);
+        console.log(aq_data.results[aq_data.results.length -1])}
     else console.log("Get AirQuality error")   
 
     const data = {
