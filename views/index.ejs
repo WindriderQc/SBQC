@@ -419,7 +419,7 @@ async function getUserInfo()
     info.cookies = log.cookies
 
    
-    document.getElementById('ip_id').innerHTML =  "<pre>"+JSON.stringify(info,null, '\t') +"</pre>"
+    //document.getElementById('ip_id').innerHTML =  "<pre>"+JSON.stringify(info,null, '\t') +"</pre>"
     const url =   '/v2/logs' 
     
     fetch(url, {
