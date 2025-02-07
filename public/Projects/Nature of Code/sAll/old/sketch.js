@@ -2,7 +2,7 @@
   Nature of Code  and more...
   YB 
 */
-/// <reference path="../p5.global-mode.d.ts" />
+/// <reference types="p5/global" />
 
 
 // A path object (series of connected points)

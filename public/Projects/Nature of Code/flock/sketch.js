@@ -2,7 +2,7 @@
   Nature of Code  - Flocking
   YB 
 */
-/// <reference path="../p5.global-mode.d.ts" />
+/// <reference types="p5/global" />
 
 
 let birdFlock

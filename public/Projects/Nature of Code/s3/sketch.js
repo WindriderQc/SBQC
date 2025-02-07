@@ -1,4 +1,4 @@
-/// <reference path="../p5.global-mode.d.ts" />
+/// <reference types="p5/global" />
 /*
 
   Nature of Code : Session 3 - Steering and Flocking
