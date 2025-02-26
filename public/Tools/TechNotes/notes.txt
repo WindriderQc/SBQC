@@ -441,10 +441,25 @@ dtparam=act_led_trigger=none
 dtparam=act_led_activelow=off
 
 
+#how to install MHS35 TFT touchscreen display
+cd ~
+git clone https://github.com/goodtft/LCD-show.git
+chmod -R 755 LCD-show
+cd LCD-show/
+sudo ./MHS35-show
 
 
-
-
+/boot/config.txt
+#dtoverlay=vc4-fkms-v3d
+hdmi_force_hotplug=1
+dtparam=i2c_arm=on
+dtparam=spi=on
+enable_uart=1
+dtoverlay=mhs35:rotate=90
+hdmi_group=2
+hdmi_mode=87
+hdmi_cvt=480 320 60 6 0 0 0
+hdmi_drive=2
 
 
 JAVASCRIPT:
