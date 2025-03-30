@@ -3,10 +3,9 @@ const router = require('express').Router()
 
 // Dynamic import for node-fetch
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-
 //const fetch = require('node-fetch')
 
-const liveData = require('../scripts/liveData')
+
 
 router.get('/', async (req, res) => {
 

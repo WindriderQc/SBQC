@@ -1,3 +1,19 @@
+<div class="row padding-16">
+              
+    <% regDevices.forEach(sender =>{ %>   
+       <div class="row mt-2 col-12 row-padding">
+
+          <%- include('graph/valueCard', {name: "ID ",                defaultValue: sender.id, units: "",     smWidth: 2, domID: sender.id+"id_id"      }); %>  
+          <%- include('graph/rssGauge',  { name: "Wifi",        defaultValue: -100,   units: " dBm", smWidth: 3, domID: sender.id+"rss_id",  divHeight: "120px" }); %>
+          <%- include('graph/valueCard', { name: "CPU temperature ",  defaultValue: 0,      units: "°C",   smWidth: 2, domID: sender.id+"temp_id"    }); %>    
+          <%- include('graph/valueCard', { name: "Battery",           defaultValue: 0,      units: "v",    smWidth: 2, domID: sender.id+"batt_id"    }); %>  
+          <%- include('graph/valueCard', { name: "Humidity",          defaultValue: 0,      units: "%",    smWidth: 2, domID: sender.id+"humid_id"   }); %>  
+
+       </div>      
+    <% }) %>
+ </div>
+
+
 <div class="card  padding ">
     <label for="streamTextArea">Streaming from Esp32(s)</label>
     <textarea class="full-width" id="streamTextArea" rows="32"></textarea>
@@ -53,10 +69,10 @@ let latestData
     });
 });
 
-mqClient.on('message', (topic, message) => {
+/*mqClient.on('message', (topic, message) => {
     // message is Buffer
     console.log(message.toString());
-});
+});*/
 
 function mqttPost() {
     const topic = document.getElementById('topic').value;
@@ -102,7 +118,7 @@ mqClient.on('message', (topic, payload) => {
 
 
 
-/*
+
             if (typeof data.wifi != 'undefined') {
                 document.getElementById(sender+'rss_id_value_id').innerHTML =  data.wifi
                 document.getElementById(sender+'temp_id_value_id').innerHTML =  data.CPUtemp
@@ -113,7 +129,7 @@ mqClient.on('message', (topic, payload) => {
             }else{
                 console.log(latestData); 
             }
-*/
+
             
 
         }

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <%- include('partials/head') %> 
+    <%- include('partials/p5') %> 
+    <link rel="stylesheet" type="text/javascript" href="css/YBs.css">
+</head>
+
+
+
+<body class="fixed-nav sticky-footer bg-light sidenav-toggled" id="page-top">
+  
+<%- include('partials/nav') %>  
+
+<div class="content-wrapper">
+    <div class="container-fluid bg-3">  
+     
+      <div class="row">
+
+              
+         <% regDevices.forEach(sender =>{ %>   
+            <div class="row mt-2 col-sm-12">
+
+               <%- include('partials/valueCard', {name: "ID ",                defaultValue: sender.id, units: "",     smWidth: 2, domID: sender.id+"id_id"      }); %>  
+               <%- include('partials/graph/rssGauge',  { name: "Wifi",        defaultValue: -100,   units: " dBm", smWidth: 3, domID: sender.id+"rss_id",  divHeight: "120px" }); %>
+               <%- include('partials/valueCard', { name: "CPU temperature ",  defaultValue: 0,      units: "°C",   smWidth: 2, domID: sender.id+"temp_id"    }); %>    
+               <%- include('partials/valueCard', { name: "Battery",           defaultValue: 0,      units: "v",    smWidth: 2, domID: sender.id+"batt_id"    }); %>  
+               <%- include('partials/valueCard', { name: "Humidity",          defaultValue: 0,      units: "%",    smWidth: 2, domID: sender.id+"humid_id"   }); %>  
+   
+            </div>      
+         <% }) %>
+      </div>
+
+      <div class="row  mt-2">
+
+         <div class='col-sm-12'>
+            <div class="card">
+               <div class='card-body'>
+                  <div class="row">
+                    
+                     <div class='col-sm-4'><small><div id='devicesList'></div></small></div>
+                     <div class='col-sm-3'><small><div id='statusList'></div></small></div>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+
+
+    
+        <div class="form-group green-border mt-2">
+            <label for="streamTextArea">Streaming from Esp32(s)</label>
+            <textarea class="form-control" id="streamTextArea" rows="32"></textarea>
+        </div>
+    
+
+      <div class="row mt-2">
+         
+         <div class="col-sm-12">
+            <div class="card ">
+               <form>
+                  <input type='text' id='topic' value='esp32/boot'>
+                  <input type='text' id='msg' value='ESP_35030'>
+                  <button type='button' onclick=mqttPost()>MQTT Publish</button>   
+               </form>
+            </div>
+         </div>
+      
+      </div>
+      
+   </br>
+Esp32 are listening to :</br>
+- esp32</br>
+- esp32/DEVICE_NAME</br>
+</br>
+      esp32/DEVICE_NAME/io/on        msg: GPIO</br>
+      esp32/DEVICE_NAME/io/off       msg: GPIO</br>
+      esp32/DEVICE_NAME/io/sunrise      msg:  GPIO:HH:MM:SS    </br>
+      esp32/DEVICE_NAME/io/nightfall    msg:  GPIO:HH:MM:SS    </br>
+      esp32/DEVICE_NAME/reboot</br>
+      esp32/DEVICE_NAME/config       msg: Stringify->config = [ { io: 2,  mode: "IN", lbl: "A0",  isA: 0, pre: "none" },{ io: 4,  mode: "IN", lbl: "A1",  isA: 0, pre: "none" }]</br>
+      </br>
+      </br>
+      </br>
+
+   </br>
+
+      <div class="row mt-2">
+         <div class="col-sm-12">
+             <div class="card">
+                <div class='card-body'>
+                   <select id="devices_select" selected>ESP_35030</select>
+                   
+ 
+                   <form class='form-inline' >    
+       
+                      <div class="form-group form-inline">  
+                            <div class='form-text mb-2 mr-2'> <span id="name_label"> </span></div>  
+                      </div>
+          
+                      <select id="io_select" selected>
+                         <option value="13">13-Lamp_1</option>
+                         <option value="21">21-Lamp_2</option>
+                         <option value="5">5-Fan_1</option>
+                         <option value="4">4-Heat_1</option>
+                         <option value="18">18-Pump_1</option>
+                         <option value="19">19-Pump_2</option>
+                      </select>
+          
+                      <div class="form-group form-inline">  
+                            <select class="form-control form-inline mb-2 mr-2" id="io_state" name="io_state">
+                               <option>ON</option>
+                               <option selected>OFF</option>
+                            </select>
+                      </div>
+                      <div class="form-group form-inline">  
+                            <button type="button" onClick="sendSetIO()" class="btn btn-primary  mb-2 mr-2">Set IO</button>  
+                      </div>
+                   
+             
+                      <input type="hidden" id="sender_id" name="sender" value="">
+                      <input type="hidden" id="io_id" name="io_id" value="">
+                   </form>
+                
+                   </div>
+             </div>
+         </div>
+       </div>
+   
+        
+<script>
+   
+const registered = <%- JSON.stringify(regDevices) %>
+
+const mqttlogin = JSON.parse('<%- mqttinfo %>')
+let streamTextArray = []
+let latestData
+
+let selectedDevice = ""
+let selectDom = ""
+let changeCallback = null
+     
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    console.log('Document ready  - JS  (without JQUERY)')
+    console.log('Server is at: ' + Tools.getHostIP())
+    console.log('RegDevices from ejs: ', registered)  
+
+    setDevicesListOnList("devicesList", "statusList")
+    setDevicesListOnSelect('devices_select')
+
+ })
+/*
+$(()=>{
+   console.log('Document ready  - JQUERY')
+})
+*/
+
+
+function mqttPost() {    mqClient.publish(document.getElementById('topic').value, document.getElementById('msg').value)     }
+
+
+async function setDevicesListOnSelect(html_dom, selectedOption = 0, onChangeCallback = null )
+{
+    selectDom = html_dom
+    if(onChangeCallback) changeCallback = onChangeCallback 
+
+
+    if(registered.length != 0) {
+        let select = document.getElementById(selectDom)
+
+        for(let index in registered) {
+            select.options[select.options.length] = new Option(registered[index].id, index)
+        }
+
+        select.options[selectedOption].selected = "true"
+        
+        selectedDevice = select.options[selectedOption].text
+        if(onChangeCallback) { changeCallback = onChangeCallback; changeCallback(); } 
+    }  
+    else  console.log('no ESP found in DB')   
+}
+
+
+function updateSelected()
+{ 
+    selectedDevice = $("#" + selectDom + ">option:selected").text()
+    console.log("Selecting: " + selectedDevice)
+
+    if(changeCallback) changeCallback()  
+}
+
+
+function setSelected(espID)
+{ 
+    let select = document.getElementById(selectDom)
+    let s = registered.indexOf(espID)
+    
+    select.options[s].selected = "true"
+    
+    selectedDevice = $("#" + selectDom + ">option:selected").text()
+    console.log("Setting selected: " + selectedDevice)
+}
+
+
+
+async function setDevicesListOnList(dom_list, dom_status, _callback = null)
+{
+    domList = dom_list
+            
+    let items = registered
+    let sender_ul = document.createElement('ul')
+    let status_ul = document.createElement('ul')
+    
+    document.getElementById(dom_list).appendChild(sender_ul)
+    document.getElementById(dom_status).appendChild(status_ul)
+    
+    
+    items.forEach( async (esp) =>{
+
+        const latest =  await fetch('/deviceLatest/' + esp.id)
+        const lastpost = await latest.json()
+        console.log("lastpost:", lastpost)
+            
+
+        let li = document.createElement('li')
+        li.id = esp.id + '_li'
+        sender_ul.appendChild(li)
+        li.innerHTML += esp.id
+    
+        let li2 = document.createElement('li')
+        li2.id = esp.id + '_li2'
+        status_ul.appendChild(li2)
+        try {
+            li2.innerHTML = lastpost.data.time
+        }catch(err) {
+            li2.innerHTML = "No post in database"
+        }
+    })      
+}
+
+
+function sendSetIO() 
+{
+   const esp = $("#devices_select>option:selected").text()
+   const io_id = $("#io_select>option:selected").val()
+   const io_state = $("#io_state>option:selected").text()
+
+   let topic = 'esp32/' + esp + '/io/' + (io_state === 'ON' ? 'on' : 'off')
+   const msg = io_id
+   console.log('Setting IO: ' + msg)
+    
+   mqClient.publish(topic, msg)
+}
+ 
+
+
+
+
+
+
+
+
+
+
+console.log('attempting mqtt connect...')
+const mqClient = mqtt.connect(mqttlogin.url, { rejectUnauthorized: false, username: mqttlogin.user, password: mqttlogin.pass })   //TODO  hardcoded IP + check...  using ws to connect not ssl secure //  TODO : NOT SAFE!!  Option User/Pass  visible dans la console....   utiliser le header pour ca?  ou mettre en SSL
+console.log('mqtt client:', mqClient)
+
+mqClient.publish('esp32', 'Browser Client subscribing...')
+mqClient.subscribe("esp32/#")
+
+mqClient.on('error', (err) =>{   console.log(err)    })
+mqClient.on('message', (topic, payload) => {
+
+    streamTextArray.push(topic + " : " + payload.toString()) 
+    const area = document.getElementById('streamTextArea')
+
+    if(area.scrollTop + area.clientHeight == area.scrollHeight) {  // User has scrolled to the bottom of the element
+        area.value = streamTextArray.join("\n");
+        area.scrollTop = area.scrollHeight
+    }
+    else  area.value = streamTextArray.join("\n"); 
+
+    //console.log('message:', topic)
+    if((topic.indexOf("alive") >=0) || (topic.indexOf("data") >=0)) {
+
+
+        try {
+            let data = JSON.parse(payload)
+            const sender = data.sender
+            const timestamp = data.time
+            const espSelected = $("#devices_select>option:selected").text() // console.log(moment(timestamp).format('YYYY-MM-DD HH:mm:ss'))
+            latestData = data
+
+
+
+
+            if (typeof data.wifi != 'undefined') {
+                document.getElementById(sender+'rss_id_value_id').innerHTML =  data.wifi
+                document.getElementById(sender+'temp_id_value_id').innerHTML =  data.CPUtemp
+            }
+            if(typeof data.battery != 'undefined') {
+                document.getElementById(sender+'batt_id_value_id').innerHTML =  data.battery
+                document.getElementById(sender+'humid_id_value_id').innerHTML =  data.airHumid
+            }else{
+                console.log(latestData); 
+            }
+
+            
+
+        }
+        catch(err) {   console.log(payload.toString());  console.log(err)      } 
+    }
+
+    if(topic.indexOf("disconnected") >=0) {
+
+        console.log('disconnected device!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', payload)
+        try {
+            let data = JSON.parse(payload)
+            const sender = data.id
+                     
+            document.getElementById(sender+'rss_id_value_id').innerHTML =  -100
+            document.getElementById(sender+'temp_id_value_id').innerHTML =  'xx'  
+
+        }
+        catch(err) {   console.log(payload.toString());  console.log(err)      } 
+
+    }
+})
+
+
+
+
+  
+
+</script>
+
+
+
+
+ <!-- End Container  -->
+</div>
+</div>
+
+<%- include('partials/footer') %>
+
+<script type="text/javascript" src="js/p5.speech.js"></script>
+<script type="text/javascript" src="js/nestor.js"></script>
+
+</body>
+</html>

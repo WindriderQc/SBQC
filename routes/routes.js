@@ -1,26 +1,15 @@
 const router = require('express').Router()
 
-// Dynamic import for node-fetch
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
-//const fetch = require('node-fetch')
+
+const esp32 = require('../scripts/esp32')
+
 const mailman = require('../public/js/mailman')
 let counter = require('../scripts/visitorCount')
-
 const sysmon = new (require('../scripts/systemMonitor'))()
 console.log("SysInfo: ", sysmon.getinfo().data)
 console.log("CPU: ", sysmon.getinfo().cpus.length)
-
-//const apiUrl = process.env.DATA_API_IP
-const apiUrl = "https://" + (process.env.NODE_ENV === 'production' ? "localhost" : "sbqc.specialblend.ca")
-console.log('API url: ' + apiUrl)
-
-
-
-
-let liveDatas = require('../scripts/liveData.js')
-
-
 
 
 function requestLog(req) {
@@ -90,8 +79,16 @@ router.get('/index', async (req, res) => {
 })
 
 router.get('/dashboard', async (req, res) => {
-   
-    res.render('dashboard', { menuId: 'home', hitCount: await counter.getCount(), collectionInfo: req.app.locals.collectionInfo/*, mqttUrl: mqttUrl*/ })
+    console.log('Getting registered Esp32')
+    const registered = await esp32.getRegistered()
+    if(registered == null) { 
+        console.log('Could not fetch devices list. Is DataAPI online?') 
+        res.render('index',    { name: req.session.email }) 
+    } else {
+        console.log(registered.map((dev) => id = dev.id ))
+        res.render('dashboard', { title: "Dashboard", menuId: 'home', hitCount: await counter.getCount(), collectionInfo: req.app.locals.collectionInfo, regDevices: registered, /*mqttinfo: mqttinfo*/ })
+    } 
+    
 })
 
 router.get("/iGrow", (req, res) => {
@@ -100,7 +97,7 @@ router.get("/iGrow", (req, res) => {
 
 //const liveData = require('liveData')
 router.get('/earth', (req, res) => {
-    res.render('earth', { liveData: liveDatas.datas, mqttUrl: process.env.DATA_API_IP })  //  TODO pkoi ca prends pas le meme url que mqttviewer?
+    res.render('earth', { liveData: liveDatas.datas, mqttUrl: process.env.DATA_API_URL })  //  TODO pkoi ca prends pas le meme url que mqttviewer?
 })
 
 router.get('/natureCode', (req, res) => {
@@ -112,7 +109,7 @@ router.get('/tools', (req, res) => {
 })
 
 router.get('/legacy', (req, res) => {
-    res.render('legacy', { weatherAPI: process.env.WEATHER_API_KEY, apiUrl: apiUrl })
+    res.render('legacy', { weatherAPI: process.env.WEATHER_API_KEY })
 })
 
 router.get('/live', (req, res) => {

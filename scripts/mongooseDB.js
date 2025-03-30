@@ -14,7 +14,7 @@ if(typeof process.env.MONGO_URL === 'undefined')  // TODO  beau bordel avec la l
 let _collections 
 let isReady = false
 // mongoose with local DB      'mongodb://user:pass@localhost:port/database'  //  to use other than local host, bindIP must be changed to 0.0.0.0 in mongod.conf
-mongoose.connect( url,  { family: 4, useNewUrlParser: true, useUnifiedTopology: true }, (err)=> { // family: 4    skip  default IPV6 connection  and accelerate connection.
+mongoose.connect( url,  { family: 4 }, (err)=> { // family: 4    skip  default IPV6 connection  and accelerate connection.
         if (err) console.log(err)
       
       

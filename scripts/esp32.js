@@ -1,34 +1,46 @@
-//const { now } = require('mongoose')
 const moment = require('moment-timezone')
+const tools = require('nodetools')
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
-let fetch; 
-(async () => {    fetch = (await import('node-fetch')).default;   })();
+
+const dataAPIUrl =process.env.DATA_API_URL + (process.env.DATA_API_PORT ? ":" + process.env.DATA_API_PORT : "") //let dAPIUrl = "https://data.specialblend.ca"
+
+// Check if Data API is online
+tools.checkApi("Data API", dataAPIUrl).then(() => {
+    console.log('Check complete\n');
+}).catch((error) => {
+    console.error('Error checking API:', error);
+});
 
 
-const IN_PROD = process.env.NODE_ENV === 'production' 
-const dataAPIUrl = (IN_PROD ? "http://localhost:"+process.env.DATA_API_PORT : "https://sbqc.specialblend.ca")
-
-console.log('Data API URL: ', dataAPIUrl)
 
 
   // arrays ["sender"] holding devices information
 let lastComm = []
+let lastSaveTime = []; // Initialize a variable to track the last save time
 let connectedDevices = []
 let registered = []
 const DB_SAVE_RATIO = 60
 const BUFF_MAXSIZE = 125
 const DISCONNECT_TIMOUT = 3
 
+let mqttclient_ = null
+
 
 
 const esp32 = {
 
 
-    timeSince: (timeStamp, units="seconds") => 
+    timeSince: (timeStamp, print=false, units="seconds") => 
     {   
         const last = moment(timeStamp)
         const now = moment().tz('America/Toronto').format('YYYY-MM-DD HH:mm:ss');  // align format and timeZone wth timeStamp so .diff can work
-        return moment(now).diff(last, units)  //  difference between now and last timeStamp returned in the selected units  default=seconds
+        
+        const seconds = moment(now).diff(last, units)  //  difference between now and last timeStamp returned in the selected units  default=seconds
+
+        if(print) console.log(now + " - " + last + " = " + seconds + " sec")  
+
+        return seconds
     },
     
 
@@ -67,10 +79,11 @@ const esp32 = {
         try {
             console.log('Saving post: ', data, "path:", dataAPIUrl + '/heartbeats')
             const rawResponse = await fetch(dataAPIUrl + '/heartbeats', option);  
-             const r = await rawResponse.text()
-            //const r = await rawResponse.json()
-            console.log('savePostResponse', r)
-            if(r.status === 'success')  {/* // console.log(r.data.sender) */ } else console.log("error", r.status, r.message ) 
+             //const r = await rawResponse.text()
+            const r = await rawResponse.json()
+            //console.log('savePostResponse', r)
+            //console.log('status', r.status)
+            if(r.status === 'success')  {  console.log('Success Post received from :', r.data.sender)  } else console.log("error", r.status, r.message ) 
         }
         catch (err) { console.log(err) }
     },
@@ -78,32 +91,25 @@ const esp32 = {
 
     register: async (device) =>
     {     
-
-
         try {
             
             const rawResponse = await fetch(dataAPIUrl + '/device/' + device.id,  { method: 'PATCH', headers: { "Content-type": "application/json" }, body: JSON.stringify( { 'id': device.id, 'lastBoot': device.lastBoot , 'profileName': device.profileName, 'type': device.type, 'zone': device.zone })    }); 
             
-            if (!rawResponse.ok) {
-                throw new Error(`HTTP error! status: ${rawResponse.status}`);
-            }
+            if (!rawResponse.ok) { throw new Error(`HTTP error! status: ${rawResponse.status}`);    }
 
-            const r = await rawResponse.json() 
-           //const r = await rawResponse.text()
-
-           console.log('Registering: ', r)
+            const r = await rawResponse.json() //const r = await rawResponse.text()
+           
             if(r.status === 'success')  console.log('Welcome : ', r.data.id)  
-            else                        console.log("error", r.status, r.message )
-              
-
+            else                        console.log("error registering", r.status, r.message )
           
-
-           /* const devProfile = await fetch(dataAPIUrl + '/profile/:' + device.id); 
+            const devProfile = await fetch(dataAPIUrl + '/profile/:' + device.id); 
             const profile = await devProfile.json()
-            console.log("Get registered profile:\n", profile.data)*/
+            console.log("Get registered profile:\n", profile.data)
 
             registered = await esp32.getRegistered()  //  actualize registered global variable
-            console.log('Registered', registered)
+            console.log('Registered', registered, '\n')
+
+           
         }
         catch (err) { console.log('Register Error', err) }
     },
@@ -112,19 +118,18 @@ const esp32 = {
     getRegistered: async () =>
     {    
 
-        let dAPIUrl = "https://sbqc.specialblend.ca"
         try {  
-            const rawResponse = await fetch(dAPIUrl + '/devices'); 
+            const rawResponse = await fetch(dataAPIUrl + '/devices'); 
             const r = await rawResponse.json() // const r = await rawResponse.text()
            
-            if(r.status === 'success')  {} //console.log('Registered list: ', r.data.map((dev)=>{ const id = dev.id; const zone = dev.zone; const ret = {id,zone}; return ( ret ) }))  
+            if(r.status === 'success')  {} 
             else                        console.log("error", r.status, r.message) 
             
             registered = r.data
 
             return registered
         }
-        catch (err) { console.log('Error fetching registered. Is Data API online?', err); }
+        catch (err) { console.log('Error fetching registered esp32. Is Data API online?', err); }
     },
 
 
@@ -138,14 +143,13 @@ const esp32 = {
             console.log('\n' + data.sender + ' connected  :)' )
             connectedDevices[data.sender] = true 
             lastComm[data.sender] = data
+            lastSaveTime[data.sender] = 0
         }
     },
 
 
     validConnected: async () => 
     {
-        // if(registered == null) {console.log('correcting registered'); registered = [];}   //  TODO : comment ca pourrait etre null...  c'est init a []
-       
         await esp32.getRegistered() 
 
         registered.forEach((device) => {
@@ -153,14 +157,12 @@ const esp32 = {
                 
                 const last = moment(lastComm[device.id].time).format('YYYY-MM-DD HH:mm:ss');
                 const seconds = esp32.timeSince(last);
-        
-                //const now = moment().tz('America/Toronto').format('YYYY-MM-DD HH:mm:ss');        
-                //console.log(now + " - " + last + " = " + seconds + " sec")  
 
                 if(seconds >= DISCONNECT_TIMOUT) {   //  device in commBuff but not posted since timeout delay
-                    if (connectedDevices[device.id] === true) console.log('\n' + device.id + ' disconnected!!  :(')  
+                    if (connectedDevices[device.id] === true) console.log('\n' + device.id + ' disconnected!!  :(\n')  
                     connectedDevices[device.id] = false  
                     lastComm[device.id] = null 
+                    mqttclient_.publish('esp32/disconnected' , '{"sender":"'+device.id+'", "delay":"'+ seconds +'"}' )
                 } 
                 else connectedDevices[device.id] = true //  device in commBuff posted lately
             }
@@ -169,7 +171,11 @@ const esp32 = {
     },
 
 
-    setConnectedValidation: (interval) => {     setInterval(esp32.validConnected, interval)    },
+    setConnectedValidation: (interval, mqtt_client) => 
+    {     
+        mqttclient_ = mqtt_client
+        setInterval(esp32.validConnected, interval)    
+    },
 
 
 
@@ -179,19 +185,15 @@ const esp32 = {
      *  MQTT Message handling
      * 
      *****************************/
-
     msgHandler: async (topic, message, mqttclient) =>
-    {
-        /*    {  status: , message: 'Welcome to SBQC Data API  💻 🖱️ 🦾 ', id: 'ESP_XXXX ',  data: {  }   }  */
-        
+    {/*    {  status: , message: 'Welcome to SBQC Data API  💻 🖱️ 🦾 ', id: 'ESP_XXXX ',  data: {  }   }  */
+         
         if (topic == 'esp32/register') //  message is an arrayBuffer and contains ESP_ID
         {
               // Convert ArrayBuffer to string
             const decoder = new TextDecoder('utf-8');
             const messageStr = decoder.decode(message);
-
-            //const parsedMsg =  JSON.parse(message);
-            console.log("Topic: ", topic, "  msg: ", messageStr )
+            console.log('Topic:', topic, "  msg: ", messageStr )
             let device = { id: messageStr, lastBoot: moment().tz('America/Toronto').format('YYYY-MM-DD HH:mm:ss'), profileName: 'default', type: 'ESP32', zone: 'default' }
             await esp32.register(device)
             return true
@@ -218,7 +220,7 @@ const esp32 = {
         else if (topic.indexOf('esp32/alive/') >= 0) 
         { 
             let heartbeat = JSON.parse(message)//  console.log("Message: ", heartbeat)
-            //esp32.saveEspPost(heartbeat)
+            
             await esp32.receiveMessage(heartbeat)
             return true
         }
@@ -226,9 +228,16 @@ const esp32 = {
         { 
             let heartbeat = JSON.parse(message)
             //console.log("Message: ", heartbeat)
-            //esp32.saveEspPost(heartbeat)
+          
             esp32.receiveMessage(heartbeat)
-            await esp32.saveEspPost(heartbeat)
+            const currentTime = Date.now(); // Get the current timestamp in milliseconds
+            console.log('Data received from: ', heartbeat.sender, '  -  ', heartbeat, currentTime - lastSaveTime[heartbeat.sender] )
+          
+            if (currentTime - lastSaveTime[heartbeat.sender] >= 20000) { // Check if 20 seconds have passed
+                await esp32.saveEspPost(heartbeat);
+                lastSaveTime[heartbeat.sender] = currentTime; // Update the last save time
+            }
+
             return true
         }
         else { return false }  // did not handle the message

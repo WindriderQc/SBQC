@@ -1,14 +1,12 @@
 //  Mongoose has more functionality but requires rigid data model, while native mongodb driver does not restrict data model
-
 const mongoClient = require("mongodb").MongoClient
 
 
 const mongo = {
     connectDb: (url, dbName, callback) => 
     {            
-        mongoClient.connect(url,  { useNewUrlParser: true, useUnifiedTopology: true })//  TODO  passer l'URL en param pour enlever dépendance a dotenv
+        mongoClient.connect(url)
         .then(client =>{
-            
         
             client.db().admin().listDatabases().then(dbs => {
                 console.log('\n\n__________________________________________________\n')
@@ -22,7 +20,6 @@ const mongo = {
             callback(this.db)
         })
 
-      
     },
     
     getCollectionsList:  async () => 
@@ -32,7 +29,6 @@ const mongo = {
             return collInfos
         } 
         catch(e) { console.log(e) }
-       
     },
     
     getDb: (collectionToGet) => 

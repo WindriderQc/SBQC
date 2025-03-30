@@ -10,7 +10,7 @@ db.getCollectionInfos();
 db.getCollection('boot')
   .find(
     {
-      host: "Developpement Mode"
+      host: "Developement Mode"
     },
     {
       _id: 0, // exclude _id
