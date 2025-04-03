@@ -17,7 +17,7 @@ tools.checkApi("Data API", dataAPIUrl).then(() => {
 
   // arrays ["sender"] holding devices information
 let lastComm = []
-let lastSaveTime = []; // Initialize a variable to track the last save time
+let lastSaveTime = []; 
 let connectedDevices = []
 let registered = []
 const DB_SAVE_RATIO = 60

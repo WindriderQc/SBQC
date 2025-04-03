@@ -86,7 +86,7 @@ router.get('/dashboard', async (req, res) => {
         res.render('index',    { name: req.session.email }) 
     } else {
         console.log(registered.map((dev) => id = dev.id ))
-        res.render('dashboard', { title: "Dashboard", menuId: 'home', hitCount: await counter.getCount(), collectionInfo: req.app.locals.collectionInfo, regDevices: registered, /*mqttinfo: mqttinfo*/ })
+        res.render('dashboard', { title: "Dashboard", menuId: 'home', hitCount: await counter.getCount(), collectionInfo: req.app.locals.collectionInfo, regDevices: registered })
     } 
     
 })
@@ -135,7 +135,6 @@ router.get('/technotes', (req,res) => {
 router.get('/serverspec', (req,res) => {
     res.render('serverspec')
 })
-
 
 
 
