@@ -20,7 +20,8 @@ const IN_PROD = process.env.NODE_ENV === 'production'  // for https channel...  
 //  MQTT API to communication with ESP32 and other devices
 const mqtt = require('./scripts/mqttServer')
 const esp32 = require('./scripts/esp32')
-mqtt.initMqtt('mqtt://specialblend.ca', esp32.msgHandler)
+
+mqtt.initMqtt('mqtt://specialblend.ca', esp32.msgHandler, ['esp32', 'esp32/#']);
 esp32.setConnectedValidation(1000, mqtt.getClient()) //  check every X seconds if devices are still connected
 
 

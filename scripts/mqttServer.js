@@ -18,7 +18,7 @@ const mqttOptions = {
   }
 
 
-function initMqtt(url, msgHandler) 
+function initMqtt(url, msgHandler,  channels = [])  
 {
     if (mqtt_) {   console.warn("Already initialized and Trying to init MQTT again!");   return mqtt_    }
 
@@ -32,8 +32,24 @@ function initMqtt(url, msgHandler)
 
     mqttclient.on('connect', () => {  
         console.log('MQTT connected\n')
-        mqttclient.subscribe('esp32')
-        mqttclient.subscribe('esp32/#') //  listening to all esp32 post
+
+         // Subscribe to the provided list of channels
+         if (channels.length > 0) {
+            channels.forEach(channel => {
+                mqttclient.subscribe(channel, (err) => {
+                    if (err) {
+                        console.error(`Failed to subscribe to channel: ${channel}`, err);
+                    } else {
+                        console.log(`Subscribed to channel: ${channel}`);
+                    }
+                });
+            });
+        } else {
+            console.warn('No channels provided for subscription.');
+        }
+
+        //mqttclient.subscribe('esp32')
+        //mqttclient.subscribe('esp32/#') //  listening to all esp32 post
     })
     
     mqttclient.on('message', async (topic, message) => {
