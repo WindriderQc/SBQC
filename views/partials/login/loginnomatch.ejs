@@ -1,0 +1,84 @@
+<!DOCTYPE html><!--LOGIN NO MATCH PAGE-->
+<html lang="en">
+
+<head>
+    <%- include('../head') %> 
+    <link rel="stylesheet" href="/css/login.css">
+</head>
+
+
+<script>
+
+$(document).ready(function() {
+  validate();
+  $('input').on('keyup', validate);
+});
+
+function validate() {
+  var inputsWithValues = 0;
+
+  // get all input fields except for type='submit'
+  var myInputs = $("input:not([type='submit'])");
+
+  myInputs.each(function(e) {
+    // if it has a value, increment the counter
+    if ($(this).val()) {
+      inputsWithValues += 1;
+    }
+  });
+
+  if (inputsWithValues == myInputs.length) {
+    $("input[type=submit]").prop("disabled", false);
+  } else {
+    $("input[type=submit]").prop("disabled", true);
+  }
+}
+
+</script>
+
+<body class="bg-dark">
+<div class="container">
+
+  <div class="row">
+    <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
+      <div class="card card-signin my-5">
+        <div class="card-body">
+          <h5 class="card-title text-center">Sign In</h5>
+          <form class="form-signin" action =/login method="post" >
+            <div class="form-label-group">
+              <input type="email" id="inputemail" name="inputemail" class="form-control" placeholder="Email address" required autofocus>
+              <label for="inputemail">Email address</label>
+            </div>
+
+            <div class="form-label-group">
+              <input type="password" id="inputpassword" name="inputpassword" class="form-control" placeholder="Password" required>
+              <label for="inputpassword">Password</label>
+              <div class="alert alert-danger" role ="alert"><div class="form-control-feedback"><%= alertMsg %></div> </div>
+            </div>
+
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="customCheck1">
+              <label class="custom-control-label" for="customCheck1">Remember password</label>
+            </div>
+            <button class="btn btn-lg btn-warning btn-block text-uppercase" type="submit" value="Login">Sign in</button>
+            <hr class="my-4">
+            <button class="btn btn-lg btn-google btn-block text-uppercase" type="submit"><i class="fab fa-google mr-2"></i> Sign in with Google</button>
+            <button class="btn btn-lg btn-facebook btn-block text-uppercase" type="submit"><i class="fab fa-facebook-f mr-2"></i> Sign in with Facebook</button>
+          </form>
+
+          <div class="text-center">
+            <a class="d-block small mt-3" href="/login/register">Register an Account</a>
+            <a class="d-block small" href="forgot-password.html">Forgot Password?</a>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+
+</body>
+
+</html>

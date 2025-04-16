@@ -2,12 +2,16 @@ const moment = require('moment-timezone')
 const tools = require('nodetools')
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
-
+//  TODO:     l<apiURL et le check devrait etre plus generic....
 const dataAPIUrl =process.env.DATA_API_URL + (process.env.DATA_API_PORT ? ":" + process.env.DATA_API_PORT : "") //let dAPIUrl = "https://data.specialblend.ca"
 
+let dataApiStatus = false
 // Check if Data API is online
-tools.checkApi("Data API", dataAPIUrl).then(() => {
-    console.log('Check complete\n');
+
+
+tools.checkApi("Data API", dataAPIUrl).then((status) => {
+    dataApiStatus = status
+    console.log('Status', status, 'Check complete\n' );
 }).catch((error) => {
     console.error('Error checking API:', error);
 });
@@ -30,6 +34,7 @@ let mqttclient_ = null
 
 const esp32 = {
 
+    dataApiStatus: dataApiStatus,
 
     timeSince: (timeStamp, print=false, units="seconds") => 
     {   
@@ -77,7 +82,7 @@ const esp32 = {
         const option = { method: 'POST', headers: { "Content-type": "application/json" }, body: JSON.stringify(data)    }
     
         try {
-            console.log('Saving post: ', data, "path:", dataAPIUrl + '/heartbeats')
+           // console.log('Saving post: ', data, "path:", dataAPIUrl + '/heartbeats')
             const rawResponse = await fetch(dataAPIUrl + '/heartbeats', option);  
              //const r = await rawResponse.text()
             const r = await rawResponse.json()
@@ -93,7 +98,7 @@ const esp32 = {
     {     
         try {
             
-            const rawResponse = await fetch(dataAPIUrl + '/device/' + device.id,  { method: 'PATCH', headers: { "Content-type": "application/json" }, body: JSON.stringify( { 'id': device.id, 'lastBoot': device.lastBoot , 'profileName': device.profileName, 'type': device.type, 'zone': device.zone })    }); 
+            const rawResponse = await fetch(  dataAPIUrl + '/device/' + device.id, { method: 'PATCH', headers: { "Content-type": "application/json" }, body: JSON.stringify( device)    }) // body: JSON.stringify( { 'id': device.id, 'lastBoot': device.lastBoot , 'profileName': device.profileName, 'type': device.type, 'zone': device.zone })    })
             
             if (!rawResponse.ok) { throw new Error(`HTTP error! status: ${rawResponse.status}`);    }
 
@@ -231,7 +236,7 @@ const esp32 = {
           
             esp32.receiveMessage(heartbeat)
             const currentTime = Date.now(); // Get the current timestamp in milliseconds
-            console.log('Data received from: ', heartbeat.sender, '  -  ', heartbeat, currentTime - lastSaveTime[heartbeat.sender] )
+            //console.log('Data received from: ', heartbeat.sender, '  -  ', heartbeat, currentTime - lastSaveTime[heartbeat.sender] )
           
             if (currentTime - lastSaveTime[heartbeat.sender] >= 20000) { // Check if 20 seconds have passed
                 await esp32.saveEspPost(heartbeat);

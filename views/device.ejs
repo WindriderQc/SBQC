@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <%- include('partials/head2') %> 
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.1/js/tempusdominus-bootstrap-4.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.1/css/tempusdominus-bootstrap-4.min.css" />
+  
+</head>
+
+<style>
+    #espConfigList {
+      font-family: Arial, Helvetica, sans-serif;
+      border-collapse: collapse;
+      width: 100%;
+    }
+    
+    #espConfigList td, #espConfigList th {
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+    
+    #espConfigList tr:nth-child(even){background-color: #f2f2f2;}
+    
+    #espConfigList tr:hover {background-color: #ddd;}
+    
+    #espConfigList th {
+      padding-top: 12px;
+      padding-bottom: 12px;
+      text-align: left;
+      background-color: #04AA6D;
+      color: white;
+    }
+    </style>
+
+
+
+
+<body class="fixed-nav sticky-footer bg-light sidenav-toggled" id="page-top">
+
+<%- include('partials/sideTopNav') %> 
+
+<div class="content-wrapper">
+<div class="container-fluid bg-3">
+    <div class="row pl-1 mb-2">
+        <div class="col-sm-12 px-1">
+            <div class='card shadow'>
+                <select class="mx-2 my-2 form-control" id="devices_select" onchange=onSelectChange()  style="width:auto;"></select>
+            </div>
+        </div>
+    </div>
+
+    <div class="row pl-1 mb-2">  
+
+        <div class="col-sm-5 px-1">
+            <div class='card shadow'> 
+                <a href="#collapseOutput" class="d-block card-header py-3 text-center" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="collapseOutput">
+                    <p class="m-0 font-weight-bold text-secondary">Outputs</p>
+                </a>
+                <div class="collapse show" id="collapseOutput">
+                    <form>
+                        <% device.config.forEach(io =>{ %>   
+
+                                <div class='row px-4 py-2'>
+                                    <div class='col-sm-2'>                   
+                                        <div class='form-inline form-text mb-2 mr-2'>
+                                            <small><i class="fa fa-tags"></i><span id="io_span"> <%=io.io %></span></small>
+                                        </div>   
+                                    </div>
+
+                                    <div class='col-sm-3'>
+                                        <span class='form-inline form-text mb-2 mr-2' id="name_span"><%= io.name %></span>
+                                    </div>
+
+                                    <% if(io.mode == "OUT") { %>
+                                        <div class='col-sm-7 form-inline'>
+                                            <button type='button' class="btn btn-success" value='<%= io.io %>' onclick="sendSetIO({io:this.value, state:'on'})">ON</button>
+                                            <button type='button' class="btn btn-warning" value='<%= io.io %>' onclick="sendSetIO({io:this.value, state:'off'})">OFF</button>
+                                        </div>
+                                    <% } else { %>
+                                        <div class='col-sm-7 form-inline'>
+                                            <span id="io_span"> <%=io.lbl %></span>
+                                        </div>
+                                    <% } %>
+                                </div>
+
+                            <% }) %>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-3 px-1">                </div>
+
+    </div>
+
+
+            <div class="row pl-1 mb-2">
+
+                <div class="col-sm-4 px-1">
+                    <div class='card shadow'>
+                        <a href="#collapseTimerz" class="d-block card-header py-3 text-center" data-toggle="collapse"
+                            role="button" aria-expanded="true" aria-controls="collapseTimerz">
+                            <p class="m-0 font-weight-bold text-secondary">Timerz</p>
+                        </a>
+
+                        <div class="collapse show" id="collapseTimerz">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">
+                                    <form class='form-inline' action="/alarms/setAlarm" method="post" enctype="application/json">
+                                        <input type="hidden" id="tStart" name="tStart" value="">
+                                        <input type="hidden" id="tStop" name="tStop" value="">
+                                        <input type="hidden" id="device_id" name="device_id" value="">
+
+                                        <div class='row mx-4 mb-3'>
+
+                                            <select class="form-control ml-2" id="io_id" name="io_id">
+                                                <option selected="selected">13</option>
+                                                <option>21</option>
+                                                <option>32</option>
+                                                <option>4</option>
+                                                <option>5</option>
+                                                <option>6</option>
+                                            </select>
+                                        </div>
+
+                                        <div class='row mx-1'>
+                                            <div class="form-group mx-1">
+                                                <div class="input-group date" id="datetimepickerStart"
+                                                    data-target-input="nearest">
+                                                    <input type="text" class="form-control datetimepicker-input  "
+                                                        data-target="#datetimepickerStart" />
+                                                    <div class="input-group-append" data-target="#datetimepickerStart"
+                                                        data-toggle="datetimepicker">
+                                                        <div class="input-group-text "><i class="fa fa-clock-o"></i>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group mx-1">
+                                                <div class="input-group date" id="datetimepickerStop" data-target-input="nearest">
+                                                    <input type="text" class="form-control datetimepicker-input " data-target="#datetimepickerStop" />
+                                                    <div class="input-group-append" data-target="#datetimepickerStop" data-toggle="datetimepicker">
+                                                        <div class="input-group-text"><i class="fa fa-clock-o"></i></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group mx-1">
+                                                <button type="submit" class="btn btn-success " onclick="getStartStopValue()">Set</button>
+                                            </div>
+                                        </div>
+                                    </form>
+
+                                    <div class='row mx-1'>
+                                        <div class='card-body'>
+                                            <h5 class="card-title text-center">Alarm List</h5>
+                                            <small>
+
+                                                <table class="table  table-sm" id='alarmTable'>
+                                                    <thead class="thead-light text-center">
+                                                        <tr>
+                                                            <th scope="col">Esp32</th>
+                                                            <th scope="col" style="width:50px">#IO</th>
+                                                            <th scope="col">Start</th>
+                                                            <th scope="col">Stop</th>
+                                                        </tr>
+                                                    </thead>
+                                                </table>
+                                            </small>
+                                        </div>
+                                    </div>
+
+
+                                </li>
+
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <div class="col-sm-8 px-1">
+                    <div class="card shadow">
+                        <a href="#collapseStats" class="d-block card-header py-3 text-center" data-toggle="collapse"
+                            role="button" aria-expanded="true" aria-controls="collapseStats">
+                            <p class="m-0 font-weight-bold text-secondary">Stats</p>
+                        </a>
+
+                        <div class="collapse show" id="collapseStats">
+                            <div class="card-body">
+                                <div class='form-text'>Config</div>
+                            </div>
+                            <div class="card-body">
+                                <pre><div class='form-text' id='configText'>io : io</div></pre>
+                                
+                                <div id="espConfigList"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                   
+</div>
+</div>
+
+<div class='row'>
+        <p id='latestData'>data</p>
+</div>
+
+
+
+<script>
+
+
+function json2table(data, divId) {
+
+        //console.table(data)
+
+        let table = document.createElement('TABLE'), row, cellA, cellB, cellC, cellD, cellE
+        document.getElementById(divId).appendChild(table)
+
+        // Header row.
+        const head = ['io', 'mode', 'lbl', 'isA', 'name']
+        row = table.insertRow();
+        for (let i = 0; i < head.length; i++) {
+            let headerCell = document.createElement('th');
+            headerCell.innerHTML = head[i];
+            row.appendChild(headerCell);
+        }
+        // Data
+        for (let key in data) {
+            row = table.insertRow()
+            cellA = row.insertCell()
+            cellB = row.insertCell()
+            cellC = row.insertCell()
+            cellD = row.insertCell()
+            cellE = row.insertCell()
+        
+            cellA.innerHTML = data[key].io
+            cellB.innerHTML = data[key].mode
+            cellC.innerHTML = data[key].lbl
+            cellD.innerHTML = data[key].isA
+            cellE.innerHTML = data[key].name
+        }
+
+}
+    
+
+ 
+
+const mqttlogin = JSON.parse('<%- mqttinfo %>')  // TODO:  valider si ca doit etre uniformisé..  parse vs stringify, ou comment why 
+const devicesList =  <%- JSON.stringify(devices) %>
+const device = <%- JSON.stringify(device) %>  // selected device object
+let selectedDevice = device.id              // selected device name
+const alarmList =  <%- JSON.stringify(alarmList) %>
+const apiUrl =  <%- JSON.stringify(apiUrl) %>
+const iGrowUrl =  <%- JSON.stringify(iGrowUrl) %>
+
+console.log('Selected Device ', device)
+
+json2table(device.config, 'espConfigList', 'configTable')
+
+let selectDom = document.getElementById('devices_select')
+let changeCallback = null
+
+
+let options = {
+        rejectUnauthorized: false, 
+        username: mqttlogin.user,        //  TODO : NOT SAFE!!   visible dans la console....   utiliser le header pour ca?  ou mettre en SSL
+        password: mqttlogin.pass
+    }
+
+
+console.log('DeviceList', devicesList)
+console.log('\nattempting mqtt connect mqtt client:')
+
+const mqClient = mqtt.connect(mqttlogin.url, options)   //TODO  hardcoded IP + check...  using ws to connect not ssl secure
+console.log(mqClient)
+
+mqClient.on('error', (err) =>{   console.log(err)    })
+
+
+
+const str = JSON.stringify([device.id, device.zone], null, '\t') //  the null, '\t' is to prettyfy the string
+document.getElementById('configText').innerHTML = str
+
+
+console.log(alarmList)
+
+// Find a <table> element with id="myTable":
+let table = document.getElementById('alarmTable')
+let i = 1
+for (als in alarmList) {
+    let row = table.insertRow(i)   // Create an empty <tr> element and add it to the 1st position of the table:
+    i++
+    // Insert new cells (<td> elements) at the "new" <tr> element:
+    let cell1 = row.insertCell(0)
+    let cell2 = row.insertCell(1)
+    let cell3 = row.insertCell(2)
+    let cell4 = row.insertCell(3)
+    // Add some text to the new cells:
+    cell1.innerHTML = alarmList[als].espID
+    cell2.innerHTML = alarmList[als].io
+    cell3.innerHTML = moment(alarmList[als].tStart).format('HH:mm:ss')
+    cell4.innerHTML = moment(alarmList[als].tStop).format('HH:mm:ss')    
+}
+
+
+
+
+
+
+
+$(() => {
+
+    $('#datetimepickerStart').datetimepicker({
+        defaultDate: moment()/*,{ hour: 08, minute: 30, seconds: 00 })*/,
+        format: 'HH:mm:ss'
+    })
+    $('#datetimepickerStop').datetimepicker({
+        defaultDate: moment()/*,//{ hour: 22, minute: 30, seconds: 30 })*/,
+        format: 'HH:mm:ss'
+    })
+
+    mqClient.subscribe("esp32/alive/#")
+    mqClient.subscribe("esp32/alarmList")
+    
+    Tools.setDevicesListOnSelect(document.getElementById('devices_select'), devicesList, selectedDevice)
+    document.getElementById('device_id').value = selectedDevice
+
+    console.log(devicesList.length)
+
+    console.log("Setting selected: " + selectedDevice)
+
+    mqClient.on("message", (topic, payload) => {
+        if(topic == 'esp32/alive/' + selectedDevice) 
+        { 
+            let data = JSON.parse(payload)        
+            document.getElementById('latestData').innerHTML = JSON.stringify(data, null, '\t') 
+        }
+    })  
+})
+
+
+function getStartStopValue() 
+{
+    let tStart = moment($('#datetimepickerStart').datetimepicker('viewDate')).format('YYYY-MM-DD HH:mm:ss')
+    console.log(tStart)
+    document.getElementById("tStart").value = tStart;
+    let tStop = moment($('#datetimepickerStop').datetimepicker('viewDate')).format('YYYY-MM-DD HH:mm:ss')
+    console.log(tStop)
+    document.getElementById("tStop").value = tStop;
+}
+/*
+function updateSelected()
+{ 
+    selectedDevice = selectDom.options[selectDom.selectedIndex].text
+    console.log("Changing selected: " + selectedDevice)
+
+    console.log(document.cookie)
+  
+    document.cookie.selectedDevice = selectedDevice
+  
+
+    if(changeCallback) changeCallback()  
+}
+*/
+function onSelectChange() {
+
+    selectedDevice = selectDom.options[selectDom.selectedIndex].text
+    console.log("Changing selected: " + selectedDevice)
+    window.location.replace(iGrowUrl + "/device?deviceID="+ selectedDevice);
+}
+
+function sendSetIO(item) 
+{
+    const topic = 'esp32/' + selectedDevice + '/io/' + item.state;      // ESP_35030
+    console.log('Setting IO: ' + topic + ' : ' +  item.io )
+    //client.publish(msg, moment().format('YYYY-MM-DD HH:mm:ss'))
+    mqClient.publish(topic, item.io  )
+}
+
+</script>
+
+
+ <!-- End Container  -->
+</div>
+</div>
+
+<%- include('partials/footer') %>
+</body>
+</html>

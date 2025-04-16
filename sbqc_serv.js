@@ -8,21 +8,21 @@ const express = require('express'),
     //rateLimit = require('express-rate-limit'),
     //mongoose = require('mongoose'),
 
+const app = express()
+app.set('view engine', 'ejs')
+    
+    
 const PORT = process.env.PORT  || 3001
 const IN_PROD = process.env.NODE_ENV === 'production'  // for https channel...  IN_PROD will be true if in production environment    If true while on http connection, session cookie will not work
    
-const socketio = require('./scripts/socket')
 
-const mqtt = require('./scripts/mqttServer')
-const esp32 = require('./scripts/esp32')
 
 //  MQTT API to communication with ESP32 and other devices
+const mqtt = require('./scripts/mqttServer')
+const esp32 = require('./scripts/esp32')
 mqtt.initMqtt('mqtt://specialblend.ca', esp32.msgHandler)
-
 esp32.setConnectedValidation(1000, mqtt.getClient()) //  check every X seconds if devices are still connected
 
-const app = express()
-app.set('view engine', 'ejs')
 
 
 const mongoStore = new MongoDBStore({ uri: process.env.MONGO_CLOUD, collection: 'mySessions'}, (err) => { if(err) console.log( 'MongoStore connect error: ', err) } );
@@ -34,10 +34,7 @@ const sessionOptions = {
   saveUninitialized: true,
   secret: process.env.SESS_SECRET,
   store: mongoStore,
-  cookie: {
-      secure: IN_PROD, // Please note that secure: true is a recommended option. However, it requires an https-enabled website, i.e., HTTPS is necessary for secure cookies. If secure is set, and you access your site over HTTP, the cookie will not be set.
-      sameSite: true
-  }
+  cookie: {      secure: IN_PROD,     sameSite: true  }// Please note that secure: true is a recommended option. However, it requires an https-enabled website, i.e., HTTPS is necessary for secure cookies. If secure is set, and you access your site over HTTP, the cookie will not be set.
 }
 /*
 if(IN_PROD)  //  Required only when not served by nginx...  DEV Purpose
@@ -112,8 +109,8 @@ app
   .use('/checkins', require('./routes/checkins.routes'))
   .use('/data',     require('./routes/data.routes'))
   .use('/meows',    require("./routes/meows.routes"))
-  //.use('/Tools',    serveIndex(path.resolve(__dirname, 'public/Tools'), {  'icons': true,  'stylesheet': 'public/css/indexStyles.css' } )) // use serve index to nav folder  (Attention si utiliser sur le public folder, la racine (/) du site sera index au lieu de html
-  .use('/Projects', serveIndex(path.resolve(__dirname, 'public/Projects'), {  'icons': true,  'stylesheet': 'public/css/indexStyles.css' }))
+  .use('/login',    require('./routes/login.routes'))
+  .use('/Projects', serveIndex(path.resolve(__dirname, 'public/Projects'), {  'icons': true,  'stylesheet': 'public/css/indexStyles.css' }))// use serve index to nav folder  (Attention si utiliser sur le public folder, la racine (/) du site sera index au lieu de html
 
 
 
@@ -126,18 +123,8 @@ const server = app.listen(PORT, () =>{
   })
 
  
-
-
-
-//   LIVEDATA & SOCKETIO for Live Actualisation    TODO: liveData is run in data api...   need to reach this, not duplicate
-const io = socketio.init(server)     //  TODO  required?  or just use io from socketio.js   
-
-//const intervals = { quakes:1000*60*60*24*7, iss: 1000*5 }
-//liveDatas.init()
-//liveDatas.setAutoUpdate(intervals, false)
-//console.log("Setting live data  :  v" + liveDatas.datas.version)
-//console.log("Intervals: ", intervals)
-
+const socketio = require('./scripts/socket')
+const io = socketio.init(server)     //  TODO  required?  or just use io from socketio.js 
 
 
 

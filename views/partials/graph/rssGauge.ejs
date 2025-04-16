@@ -4,11 +4,11 @@
 <script src="//www.amcharts.com/lib/4/themes/animated.js"></script>
 
 
-<div class="col col-<%=smWidth%>">
-  <div class="card-4 center">
+<div class="col-sm-<%=smWidth%>">
+  <div class="card text-center">
      
-        <div id='<%= domID%>_graf_id' style='height:<%= divHeight ? divHeight : "120px" %>;'></div>
-        <span hidden id='<%= domID %>_value_id' ><%= defaultValue %><%= units %> </span>
+        <div id="<%= domID%>_graf_id" style="height:<%= divHeight%>;"></div>
+        <p class="card-text"><span id='<%= domID %>_value_id' ><%= defaultValue %> </span><%= units %></p>
     
    </div>
 </div>
@@ -85,15 +85,16 @@ am4core.ready(() => {
     hand.innerRadius = am4core.percent(20);
     hand.radius = am4core.percent(90);
     hand.startWidth = 5;
-    
     setInterval(() =>{ 
-        let val = document.getElementById( '<%= domID %>_value_id').innerHTML
-        console.log('rssiValue:', val)
-        hand.showValue(Number(val), 1500, am4core.ease.cubicOut)
-    }, 1000)
-
+     
+      let val = document.getElementById( '<%= domID %>_value_id').innerHTML
+      hand.showValue(Number(val), 1500, am4core.ease.cubicOut)
+      }, 1000)
 })
-
+/*
+function updateHand(value) {
+    hand.showValue(Number(value), 200, am4core.ease.cubicOut)
+   }*/
 </script>
 
 

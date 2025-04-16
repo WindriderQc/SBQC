@@ -65,12 +65,19 @@ $(()=>{
     
     let lastDevice = ""
 
+    const refreshDelay = <%- refreshDelay %> // 1000
+
     setInterval(() =>{ 
 
             if(!(lastDevice.indexOf(latestData.sender) >= 0))   // resets data if sender is different from previous msg
             {
+                if(!latestData.sender) 
+                {
+                    //console.log("No sender in latestData", latestData)
+                    return
+                }
                 lastDevice = latestData.sender
-               // console.log(lastDevice)
+                //console.log(latestData)
                 chart.data.labels = []
                 chart.data.datasets[0].data = []
 
@@ -83,14 +90,18 @@ $(()=>{
                 chart.data.labels.push(t)     
                 chart.data.datasets[0].data.push(latestData["<%- label %>"])
 
-                if(chart.data.datasets[0].data.length > ("<%- max_length %>"))
-                    graphRemoveLast(chart)
-                
-                chart.update()  
+                if(chart.data.datasets[0].data.length > ("<%- max_length %>"))   graphRemoveLast(chart)
+
+                chart.update() 
+            }
+            else {
+                // do nothing, skip graph update            
             }
 
+           
+
         }
-        ,  "<%- refreshDelay %>")
+        ,  refreshDelay)
 
 })
 

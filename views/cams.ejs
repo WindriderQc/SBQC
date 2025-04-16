@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <%- include('partials/head') %> 
+ <!-- <link rel="stylesheet" href="css/style.css"> -->
+</head>
+
+
+<body class="fixed-nav sticky-footer bg-light sidenav-toggled" id="page-top">
+    
+<%- include('partials/nav') %>
+
+<div class="content-wrapper">
+    <div class="container-fluid bg-3 text-center">  
+<!-- Begin Container  -->   
+
+           <div class="row">    <!--    TODO :  passer l'IP par variable du serveur -->
+                
+
+                <%- include('partials/camera', {link: "http://192.168.1.122:8081", cam: "http://192.168.1.122:8081", smWidth: 4 }); %>
+
+                <%- include('partials/camera', {link: "http://192.168.1.110:8080/?action=stream", cam: "http://192.168.1.110:8080/?action=stream", smWidth: 4 }); %>     
+                
+            </div>
+
+            <div class="row">
+                
+                <%- include('partials/camera', {link: "http://192.168.1.33", cam: "http://192.168.1.33/keeper", smWidth: 4 }); %>     
+                          
+                <%- include('partials/camera', {link: "http://192.168.1.33", cam: "http://192.168.1.33/blackpi", smWidth: 4 }); %>     
+
+            </div>
+    
+ <!-- End Container  -->
+    </div>
+</div>
+
+<%- include('partials/footer') %>
+</body>
+</html>
