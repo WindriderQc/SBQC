@@ -48,7 +48,7 @@ const esp32 = {
         return seconds
     },
     
-
+// seeks the config in the DB and send it to the esp32
     setConfig: async (espID, mqttclient) => 
     {
         const found = registered.find(element => element.id == espID);
@@ -61,7 +61,7 @@ const esp32 = {
         const c1 =  JSON.stringify(config)
         //console.log('Sending config to esp: ', espID, 'config: ', c1)
 
-        const t = 'esp32/' + espID + '/config'
+        const t = 'esp32/' + espID + '/configIOs'
         mqttclient.publish(t, c1 )
     },
 
