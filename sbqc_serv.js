@@ -4,17 +4,21 @@ const express = require('express'),
     MongoDBStore = require('connect-mongodb-session')(session),
     serveIndex = require('serve-index'),
     path = require('path'),
-    cors = require('cors')
+    cors = require('cors'),
+    helmet = require('helmet'), // Added helmet require
+    morgan = require('morgan'); // Added morgan require
     //rateLimit = require('express-rate-limit'),
     //mongoose = require('mongoose'),
 
 const app = express()
 app.set('view engine', 'ejs')
-    
-    
+app.use(helmet()); // Added helmet middleware
+app.use(morgan('dev')); // Added morgan middleware
+
+
 const PORT = process.env.PORT  || 3001
 const IN_PROD = process.env.NODE_ENV === 'production'  // for https channel...  IN_PROD will be true if in production environment    If true while on http connection, session cookie will not work
-   
+
 
 
 //  MQTT API to communication with ESP32 and other devices
@@ -39,7 +43,7 @@ const sessionOptions = {
 }
 /*
 if(IN_PROD)  //  Required only when not served by nginx...  DEV Purpose
-{ 
+{
 const https = require('https');
 const fs = require('fs');
 
@@ -47,7 +51,7 @@ const options = {
     key: fs.readFileSync('./selfsigned.key'),
     cert: fs.readFileSync('./selfsigned.crt')
   };
-  
+
   https.createServer(options, app).listen(443, () => {
     console.log('Server is running on https://ugnode.local');
   });
@@ -62,9 +66,9 @@ const options = {
 //Mongodb Client setup  with CloudDB  // TODO: used for posts book but should be uniformized to one DB.  the use of collection in app.locals seem different
 const mongo = require('./scripts/mongoClientDB')
 
-mongo.connectDb( process.env.MONGO_CLOUD, 'SBQC', async (db) =>{    // dbServ, test, admin, local 
-    
-    app.locals.collections = [] 
+mongo.connectDb( process.env.MONGO_CLOUD, 'SBQC', async (db) =>{    // dbServ, test, admin, local
+
+    app.locals.collections = {}; // Changed initialization from [] to {}
     const list = await mongo.getCollectionsList()
 
     console.log("Assigning Collections to app.locals :")
@@ -72,9 +76,9 @@ mongo.connectDb( process.env.MONGO_CLOUD, 'SBQC', async (db) =>{    // dbServ, t
         console.log(coll.name)
         app.locals.collections[coll.name] =  mongo.getDb(coll.name)
     }
-    
+
     //db.createCollection('boot')     TODO:  faire un test conditionnel et creer si non exist    Boot may not exist
-    app.locals.collections.boot.insertOne({ 
+    app.locals.collections.boot.insertOne({
             logType: 'boot',
             client: 'server',
             content: 'dbServer boot',
@@ -82,8 +86,8 @@ mongo.connectDb( process.env.MONGO_CLOUD, 'SBQC', async (db) =>{    // dbServ, t
             host: IN_PROD ? "Production Mode" : "Developpement Mode",
             ip: 'localhost',
             hitCount: 'N/A',
-            created: Date.now() 
-        }) 
+            created: Date.now()
+        })
 
     // Fetch collection names and document counts
     app.locals.collectionInfo = {}
@@ -100,7 +104,7 @@ mongo.connectDb( process.env.MONGO_CLOUD, 'SBQC', async (db) =>{    // dbServ, t
 
 //Middlewares  & routes
 app
-  .use(cors({ origin: '*', optionsSuccessStatus: 200 }))
+  .use(cors({ origin: 'https://your-frontend.com' })) // Modified CORS configuration
   .use(express.urlencoded({ extended: true, limit: '10mb' }))  //  Must be before  'app.use(express.json)'    , 10Mb to allow image to be sent
   .use(express.json({ limit:'10mb' })) // To parse the incoming requests with JSON payloads
   //.use(rateLimit({ windowMs: 2 * 1000, max: 1 }))  // useful for api to prevent too many requests...
@@ -113,22 +117,35 @@ app
   .use('/login',    require('./routes/login.routes'))
   .use('/Projects', serveIndex(path.resolve(__dirname, 'public/Projects'), {  'icons': true,  'stylesheet': 'public/css/indexStyles.css' }))// use serve index to nav folder  (Attention si utiliser sur le public folder, la racine (/) du site sera index au lieu de html
 
+// Centralized error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err.stack || err.message || err);
+
+  // Avoid sending detailed errors to client in production
+  if (process.env.NODE_ENV === 'production') {
+    res.status(500).json({ message: 'An unexpected error occurred. Please try again later.' });
+  } else {
+    // Development: send more detailed error
+    res.status(500).json({
+      message: err.message || 'An unexpected error occurred.',
+      error: err.stack // Or just err for simpler output
+    });
+  }
+});
 
 
-
-const server = app.listen(PORT, () =>{  
+const server = app.listen(PORT, () =>{
     console.log('\n__________________________________________________\n\n')
     console.log(`\n\nServer running in ${IN_PROD ? "Production" : "Developement"} mode at port ${PORT}`)
     console.log('Press Ctrl + C to exit\n\n__________________________________________________\n\n')
     //nodeTools.readFile("greetings.txt")
   })
 
- 
+
 const socketio = require('./scripts/socket')
-const io = socketio.init(server)     //  TODO  required?  or just use io from socketio.js 
+const io = socketio.init(server)     //  TODO  required?  or just use io from socketio.js
 
 
 
 //console.log('Launching automation scripts')
 //require('./scripts/serverScripts.js')  // generate infos/index.html
-
