@@ -466,6 +466,38 @@ router.get('/deviceLatest/:esp',  async (req, res) =>
     }
 })
 
+router.post('/saveProfile', async (req, res) => {
+    const { profileName, config } = req.body;
+
+    const profileData = {
+        profileName,
+        config
+    };
+
+    const option = {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'auth-token': req.session.userToken // Assuming you have a session-based auth token
+        },
+        body: JSON.stringify(profileData)
+    };
+
+    try {
+        const response = await fetch(apiUrl + "/profile/" + profileData.profileName, option);
+        const result = await response.json();
+
+        if (response.ok) {
+            res.send('Profile saved successfully!');
+        } else {
+            console.error('Error saving profile:', result);
+            res.status(response.status).send('Error saving profile: ' + result.message);
+        }
+    } catch (err) {
+        console.error('Error connecting to Data API:', err);
+        res.status(500).send('Error connecting to Data API: ' + err.message);
+    }
+});
 
 
 router.get('/data/:options',  async (req, res) => 

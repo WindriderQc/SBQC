@@ -345,6 +345,115 @@ mqClient.on('message', (topic, payload) => {
 
 
 
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        .form-container {
+            max-width: 800px;
+            margin: auto;
+        }
+        .add-row-btn {
+            margin-top: 10px;
+        }
+    </style>
+
+    <div class="form-container">
+        <h1>Create Config Profile</h1>
+        <form id="configForm" action="/saveProfile" method="POST">
+            <!-- Profile Name -->
+            <label for="profileName">Profile Name:</label>
+            <input type="text" id="profileName" name="profileName" required placeholder="Enter profile name">
+            <br><br>
+
+            <!-- Config Table -->
+            <h3>Configuration</h3>
+            <table id="configTable">
+                <thead>
+                    <tr>
+                        <th>IO</th>
+                        <th>Mode</th>
+                        <th>Label</th>
+                        <th>isA</th>
+                        <th>Name</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Example row -->
+                    <tr>
+                        <td><input type="text" name="config[0][io]" value="13" required></td>
+                        <td>
+                            <select name="config[0][mode]" required>
+                                <option value="IN" >IN</option>
+                                <option value="OUT" selected>OUT</option>
+                            </select>
+                        </td>
+                        <td><input type="text" name="config[0][lbl]" value="A12"></td>
+                        <td>
+                            <select name="config[0][isA]" required>
+                                <option value="1" >1</option>
+                                <option value="0" selected>0</option>
+                            </select>
+                        </td>
+                        <td><input type="text" name="config[0][name]" value="BUILTIN LED"></td>
+                        <td><button type="button" class="remove-row-btn">Remove</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button type="button" class="add-row-btn">Add Row</button>
+            <br><br>
+
+            <!-- Submit Button -->
+            <button type="submit">Save Profile</button>
+        </form>
+    </div>
+
+    <script>
+        const configTable = document.getElementById('configTable').querySelector('tbody');
+        const addRowBtn = document.querySelector('.add-row-btn');
+
+        // Add a new row to the table
+        addRowBtn.addEventListener('click', () => {
+            const rowCount = configTable.rows.length;
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td><input type="text" name="config[${rowCount}][io]" required></td>
+                <td>
+                    <select name="config[${rowCount}][mode]" required>
+                        <option value="IN">IN</option>
+                        <option value="OUT">OUT</option>
+                    </select>
+                </td>
+                <td><input type="text" name="config[${rowCount}][lbl]"></td>
+                <td>
+                    <select name="config[${rowCount}][isA]" required>
+                        <option value="1">1</option>
+                        <option value="0">0</option>
+                    </select>
+                </td>
+                <td><input type="text" name="config[${rowCount}][name]"></td>
+                <td><button type="button" class="remove-row-btn">Remove</button></td>
+            `;
+            configTable.appendChild(newRow);
+        });
+
+        // Remove a row from the table
+        configTable.addEventListener('click', (event) => {
+            if (event.target.classList.contains('remove-row-btn')) {
+                event.target.closest('tr').remove();
+            }
+        });
+    </script>
+
 
  <!-- End Container  -->
 </div>

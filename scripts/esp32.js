@@ -97,7 +97,7 @@ const esp32 = {
     register: async (device) =>
     {     
         try {
-            
+            console.log("Registering:", device)
             const rawResponse = await fetch(  dataAPIUrl + '/device/' + device.id, { method: 'PATCH', headers: { "Content-type": "application/json" }, body: JSON.stringify( device)    }) // body: JSON.stringify( { 'id': device.id, 'lastBoot': device.lastBoot , 'profileName': device.profileName, 'type': device.type, 'zone': device.zone })    })
             
             if (!rawResponse.ok) { throw new Error(`HTTP error! status: ${rawResponse.status}`);    }
@@ -107,12 +107,15 @@ const esp32 = {
             if(r.status === 'success')  console.log('Welcome : ', r.data.id)  
             else                        console.log("error registering", r.status, r.message )
           
-            const devProfile = await fetch(dataAPIUrl + '/profile/:' + device.id); 
-            const profile = await devProfile.json()
-            console.log("Get registered profile:\n", profile.data)
+
+
+
+            //const devProfile = r.data; 
+            //const profile = await devProfile.json()
+            console.log("Get registered profile:\n", r.data)
 
             registered = await esp32.getRegistered()  //  actualize registered global variable
-            console.log('Registered', registered, '\n')
+            //console.log('Registered', registered, '\n')
 
            
         }
@@ -136,6 +139,27 @@ const esp32 = {
         }
         catch (err) { console.log('Error fetching registered esp32. Is Data API online?', err); }
     },
+
+
+    getDevice: async (id) =>
+        {    
+    
+            try {  
+                const rawResponse = await fetch(dataAPIUrl + '/device/' + id);
+                if (!rawResponse.ok) { throw new Error(`HTTP error! status: ${rawResponse.status}`);    }
+                console.log('Get device response', rawResponse) 
+                const r = await rawResponse.json() // const r = await rawResponse.text()
+               
+                if(r.status === 'success')  {} 
+                else                        console.log("error", r.status, r.message) 
+                
+                registered = r.data
+    
+                return registered
+            }
+            catch (err) { console.log('Error fetching registered esp32. Is Data API online?', err); }
+        },
+    
 
 
     receiveMessage: async (data) =>
@@ -199,7 +223,11 @@ const esp32 = {
             const decoder = new TextDecoder('utf-8');
             const messageStr = decoder.decode(message);
             console.log('Topic:', topic, "  msg: ", messageStr )
-            let device = { id: messageStr, lastBoot: moment().tz('America/Toronto').format('YYYY-MM-DD HH:mm:ss'), profileName: 'default', type: 'ESP32', zone: 'default' }
+
+
+
+            
+            let device = { id: messageStr, lastBoot: moment().tz('America/Toronto').format('YYYY-MM-DD HH:mm:ss'),  type: 'ESP32' }
             await esp32.register(device)
             return true
         }
