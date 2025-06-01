@@ -1,6 +1,7 @@
 const moment = require('moment-timezone')
 const tools = require('nodetools')
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const { get_io } = require('./socket');
 
 //  TODO:     l<apiURL et le check devrait etre plus generic....
 const dataAPIUrl =process.env.DATA_API_URL + (process.env.DATA_API_PORT ? ":" + process.env.DATA_API_PORT : "") //let dAPIUrl = "https://data.specialblend.ca"
@@ -272,6 +273,22 @@ const esp32 = {
             }
 
             return true
+        }
+        else if (topic === 'sbqc/iss') {
+            try {
+                const issData = JSON.parse(message.toString());
+                console.log('Received ISS data from MQTT topic sbqc/iss:', issData);
+                const mainServerIo = get_io();
+                if (mainServerIo) {
+                    mainServerIo.sockets.emit('iss', issData); // 'iss' is the event earth.ejs listens for
+                    console.log('Relayed ISS data to local Socket.IO clients.');
+                } else {
+                    console.warn('Main server IO not available to relay ISS data from MQTT.');
+                }
+            } catch (e) {
+                console.error('Error processing ISS data from MQTT sbqc/iss:', e);
+            }
+            return true; // Indicate that the message was handled
         }
         else { return false }  // did not handle the message
     }
