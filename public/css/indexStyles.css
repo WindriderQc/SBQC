@@ -1,0 +1,73 @@
+body {
+    padding: 80px 100px;
+    font-family: 'Segoe UI', sans-serif;
+    background: #ECE9E9 -webkit-gradient(linear, 0% 0%, 0% 100%, from(#fff), to(#ECE9E9));
+    background: #ECE9E9 -moz-linear-gradient(top, #fff, #ECE9E9);
+    background-repeat: no-repeat;
+    color: #555;
+    -webkit-font-smoothing: antialiased;
+  }
+  #search {
+    display: block;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 90px;
+    -webkit-transition: width ease 0.2s, opacity ease 0.4s;
+    -moz-transition: width ease 0.2s, opacity ease 0.4s;
+    -webkit-border-radius: 32px;
+    -moz-border-radius: 32px;
+    -webkit-box-shadow: inset 0px 0px 3px rgba(0, 0, 0, 0.25), inset 0px 1px 3px rgba(0, 0, 0, 0.7), 0px 1px 0px rgba(255, 255, 255, 0.03);
+    -moz-box-shadow: inset 0px 0px 3px rgba(0, 0, 0, 0.25), inset 0px 1px 3px rgba(0, 0, 0, 0.7), 0px 1px 0px rgba(255, 255, 255, 0.03);
+    -webkit-font-smoothing: antialiased;
+    text-align: left;
+    font: 13px "Helvetica Neue", Arial, sans-serif;
+    padding: 4px 10px;
+    border: none;
+    background: transparent;
+    margin-bottom: 0;
+    outline: none;
+    opacity: 0.7;
+    color: #888;
+  }
+  ul#files {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  ul#files li {
+    float: left;
+    width: 30%;
+    line-height: 25px;
+    margin: 1px;
+    list-style-type: none;
+  }
+  ul#files li a {
+    display: block;
+    height: 25px;
+    border: 1px solid transparent;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  #files .icon-image .name {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBT…Tib0ZdV+QtE41I42geXt1Ze3dlMNZFdw6Ut6CIvKBhkjiM79Pyq1YUmtkKAAAAAElFTkSuQmCC);
+  }
+  #files .icon .name {
+    text-indent: 28px;
+  }
+  #files .name {
+    background-repeat: no-repeat;
+  }
+  #files span {
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-indent: 10px;
+  }
+  .view-tiles .name {
+    width: 100%;
+    background-position: 8px 5px;
+  }
