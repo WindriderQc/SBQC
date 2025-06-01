@@ -271,6 +271,7 @@ console.log('mqtt client:', mqClient)
 
 mqClient.publish('esp32', 'Browser Client subscribing...')
 mqClient.subscribe("esp32/#")
+mqClient.subscribe("sbqc/#")
 
 mqClient.on('error', (err) =>{   console.log(err)    })
 mqClient.on('message', (topic, payload) => {
