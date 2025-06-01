@@ -73,7 +73,8 @@ mongo.connectDb( process.env.MONGO_CLOUD, 'SBQC', async (db) =>{    // dbServ, t
         app.locals.collections[coll.name] =  mongo.getDb(coll.name)
     }
     
-    //db.createCollection('boot')     TODO:  faire un test conditionnel et creer si non exist    Boot may not exist
+    // The 'boot' collection will be created automatically by MongoDB if it doesn't exist upon the first insertOne operation.
+    // No explicit conditional creation is needed unless specific collection options are required at creation time.
     app.locals.collections.boot.insertOne({ 
             logType: 'boot',
             client: 'server',
@@ -106,6 +107,7 @@ app
   //.use(rateLimit({ windowMs: 2 * 1000, max: 1 }))  // useful for api to prevent too many requests...
   .use(session(sessionOptions))
   .use(express.static(path.resolve(__dirname, 'public') , { maxAge: 1000*60*60 })) // maxAge allow client to cache data for 1h
+  .use('/api',      require('./routes/api.routes')) // New API routes
   .use('/',         require('./routes/routes'))
   .use('/checkins', require('./routes/checkins.routes'))
   .use('/data',     require('./routes/data.routes'))

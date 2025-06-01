@@ -61,15 +61,22 @@ function validate() {
         <div class="card card-signin my-5">
           <div class="card-body">
             <h5 class="card-title text-center">Register</h5>
+
+            <% if (typeof error !== 'undefined' && error) { %>
+              <div class="alert alert-danger" role="alert">
+                <%= error %>
+              </div>
+            <% } %>
+
             <form class="form-signin" action =/login/register method="post" >
 
               <div class="form-label-group">
-                <input type="text" id="name_id" name="name" class="form-control" placeholder="User name" required autofocus>
+                <input type="text" id="name_id" name="name" class="form-control" placeholder="User name" required autofocus value="<%= typeof name !== 'undefined' ? name : '' %>">
                 <label for="name_id">User name</label>
               </div>
 
               <div class="form-label-group">
-                <input type="email" id="email_id" name="email" class="form-control" placeholder="Email address" required >
+                <input type="email" id="email_id" name="email" class="form-control" placeholder="Email address" required value="<%= typeof email !== 'undefined' ? email : '' %>">
                 <label for="email_id">Email address</label>
               </div>
 
