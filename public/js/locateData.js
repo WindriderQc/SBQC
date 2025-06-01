@@ -17,7 +17,7 @@ async function gotLocation(pos)
     document.getElementById('lon_id').textContent = lon.toFixed(2)
     
     try {
-      const response = await fetch(`weather/${lat},${lon}`)
+      const response = await fetch(`api/weather/${lat},${lon}`)
       const json = await response.json()
       console.log(json)
       weather = json.weather.currently

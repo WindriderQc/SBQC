@@ -211,7 +211,7 @@ async function updateGeoData()
         try {
                 const {coords} = await Tools.geoLocate()
                 //const url =`weather/${coords.latitude},${coords.longitude}`; //  using the server to get the weather data.  TODO:  use the client side weather api call...  or not!  lol
-                const url =`weather/${coords.latitude},${coords.longitude}`; //  using the server to get the weather data.  TODO:  use the client side weather api call...  or not!  lol
+                const url =`api/weather/${coords.latitude},${coords.longitude}`; //  using the server to get the weather data.  TODO:  use the client side weather api call...  or not!  lol
 
 
 
