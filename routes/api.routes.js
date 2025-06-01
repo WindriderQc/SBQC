@@ -8,9 +8,7 @@ const mailman = require('../public/js/mailman'); // For /alert route
 const apiUrl = process.env.DATA_API_URL + (process.env.DATA_API_PORT ? ":" + process.env.DATA_API_PORT : "");
 // Note: WEATHER_API_KEY and OPENAQ_API_KEY are used directly via process.env in the /weather route
 
-// --- Moved API Routes ---
-
-router.get('/weather/:latlon', async (req, res) => {
+router.get('api/weather/:latlon', async (req, res) => {
 
     const [lat, lon] = req.params.latlon.split(',');
    const weatherURL = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&APPID=${process.env.WEATHER_API_KEY}`;
