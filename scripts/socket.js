@@ -1,6 +1,5 @@
 const socket = require('socket.io')
 const assert = require('assert')
-const ioClient = require('socket.io-client');
 
 let io_
 const connectedSockets = new Map();
@@ -47,40 +46,6 @@ function init(server)
 function get_io() { assert.ok(io_, "IO has not been initialized. Please called init first.");   return io_  }
 
 function get_sockets() { return connectedSockets; }
-
-// --- DataAPI Client Logic ---
-const DATA_API_SOCKET_URL = 'https://data.specialblend.ca';
-const dataApiClient = ioClient(DATA_API_SOCKET_URL, { secure: true, transports: ['websocket', 'polling'] });
-
-dataApiClient.on('connect', () => {
-    console.log('Successfully connected to DataAPI socket server at', DATA_API_SOCKET_URL);
-});
-
-dataApiClient.on('disconnect', (reason) => {
-    console.log('Disconnected from DataAPI socket server:', reason);
-});
-
-dataApiClient.on('connect_error', (error) => {
-    console.error('Error connecting to DataAPI socket server:', error);
-});
-
-// Listen for 'iss' events from DataAPI
-dataApiClient.on('iss', (issData) => {
-    console.log('Received ISS data from DataAPI:', issData);
-    try {
-        const mainServerIo = get_io(); // Get our own server's IO instance
-        if (mainServerIo) {
-            mainServerIo.sockets.emit('iss', issData); // Broadcast to our clients
-            console.log('Relayed ISS data to local clients.');
-        } else {
-            console.warn('Main server IO not available to relay ISS data (may not be initialized yet).');
-        }
-    } catch (error) {
-        // This catch block will handle errors from get_io() if io_ is not initialized
-        console.warn('Error relaying ISS data, main server IO likely not initialized yet:', error.message);
-    }
-});
-// --- End DataAPI Client Logic ---
 
 module.exports = {
   get_io,

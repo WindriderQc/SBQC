@@ -10,18 +10,18 @@ const express = require('express'),
 
 const app = express()
 app.set('view engine', 'ejs')
-    
-    
+
+
 const PORT = process.env.PORT  || 3001
 const IN_PROD = process.env.NODE_ENV === 'production'  // for https channel...  IN_PROD will be true if in production environment    If true while on http connection, session cookie will not work
-   
+
 
 
 //  MQTT API to communication with ESP32 and other devices
 const mqtt = require('./scripts/mqttServer')
 const esp32 = require('./scripts/esp32')
 
-mqtt.initMqtt('mqtt://specialblend.ca', esp32.msgHandler, ['esp32', 'esp32/#']);
+mqtt.initMqtt('mqtt://specialblend.ca', esp32.msgHandler, ['esp32', 'esp32/#', 'sbqc/iss']);
 esp32.setConnectedValidation(1000, mqtt.getClient()) //  check every X seconds if devices are still connected
 
 
@@ -39,7 +39,7 @@ const sessionOptions = {
 }
 /*
 if(IN_PROD)  //  Required only when not served by nginx...  DEV Purpose
-{ 
+{
 const https = require('https');
 const fs = require('fs');
 
@@ -47,7 +47,7 @@ const options = {
     key: fs.readFileSync('./selfsigned.key'),
     cert: fs.readFileSync('./selfsigned.crt')
   };
-  
+
   https.createServer(options, app).listen(443, () => {
     console.log('Server is running on https://ugnode.local');
   });
@@ -62,9 +62,9 @@ const options = {
 //Mongodb Client setup  with CloudDB  // TODO: used for posts book but should be uniformized to one DB.  the use of collection in app.locals seem different
 const mongo = require('./scripts/mongoClientDB')
 
-mongo.connectDb( process.env.MONGO_CLOUD, 'SBQC', async (db) =>{    // dbServ, test, admin, local 
-    
-    app.locals.collections = [] 
+mongo.connectDb( process.env.MONGO_CLOUD, 'SBQC', async (db) =>{    // dbServ, test, admin, local
+
+    app.locals.collections = []
     const list = await mongo.getCollectionsList()
 
     console.log("Assigning Collections to app.locals :")
@@ -72,10 +72,10 @@ mongo.connectDb( process.env.MONGO_CLOUD, 'SBQC', async (db) =>{    // dbServ, t
         console.log(coll.name)
         app.locals.collections[coll.name] =  mongo.getDb(coll.name)
     }
-    
+
     // The 'boot' collection will be created automatically by MongoDB if it doesn't exist upon the first insertOne operation.
     // No explicit conditional creation is needed unless specific collection options are required at creation time.
-    app.locals.collections.boot.insertOne({ 
+    app.locals.collections.boot.insertOne({
             logType: 'boot',
             client: 'server',
             content: 'dbServer boot',
@@ -83,8 +83,8 @@ mongo.connectDb( process.env.MONGO_CLOUD, 'SBQC', async (db) =>{    // dbServ, t
             host: IN_PROD ? "Production Mode" : "Developpement Mode",
             ip: 'localhost',
             hitCount: 'N/A',
-            created: Date.now() 
-        }) 
+            created: Date.now()
+        })
 
     // Fetch collection names and document counts
     app.locals.collectionInfo = {}
@@ -118,19 +118,18 @@ app
 
 
 
-const server = app.listen(PORT, () =>{  
+const server = app.listen(PORT, () =>{
     console.log('\n__________________________________________________\n\n')
     console.log(`\n\nServer running in ${IN_PROD ? "Production" : "Developement"} mode at port ${PORT}`)
     console.log('Press Ctrl + C to exit\n\n__________________________________________________\n\n')
     //nodeTools.readFile("greetings.txt")
   })
 
- 
+
 const socketio = require('./scripts/socket')
-const io = socketio.init(server)     //  TODO  required?  or just use io from socketio.js 
+const io = socketio.init(server)     //  TODO  required?  or just use io from socketio.js
 
 
 
 //console.log('Launching automation scripts')
 //require('./scripts/serverScripts.js')  // generate infos/index.html
-
