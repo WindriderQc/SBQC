@@ -1,4 +1,4 @@
-import { PlaneGeometry, MeshPhongMaterial, Mesh, DoubleSide, FlatShading } from 'three'
+import { PlaneGeometry, MeshPhongMaterial, Mesh, DoubleSide } from 'three'
 import * as GraphysX from '../GraphysX/graphysx.js'
 import { World } from './world.js'
 
@@ -12,7 +12,7 @@ export class PlaneZ {
         const width = World.plane.width ? World.plane.width : 10
         const height = World.plane.height ? World.plane.height : 10
         const geoPlane = new PlaneGeometry(width,height,width, height)
-        const matPlane = new MeshPhongMaterial({ color: 0xff0000, side: DoubleSide, flatShading: FlatShading })
+        const matPlane = new MeshPhongMaterial({ color: 0xff0000, side: DoubleSide, flatShading: true })
         this.mesh = new Mesh(geoPlane, matPlane)
         GraphysX.randomVertexZ(this.mesh, width, height)
         scene.add(this.mesh)
