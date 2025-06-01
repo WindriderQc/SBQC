@@ -133,7 +133,11 @@
                         kFps.style.color = "black"
                         kFps.textContent = fps + " FPS"
                     }
-                    kpFps.value = fps
+                    if (isFinite(fps)) {
+                        kpFps.value = fps;
+                    } else {
+                        kpFps.value = 0; // Or some other default value
+                    }
                 }
             )
 
