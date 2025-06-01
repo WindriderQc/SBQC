@@ -49,8 +49,8 @@ function get_io() { assert.ok(io_, "IO has not been initialized. Please called i
 function get_sockets() { return connectedSockets; }
 
 // --- DataAPI Client Logic ---
-const DATA_API_SOCKET_URL = 'http://data.specialblend.ca';
-const dataApiClient = ioClient(DATA_API_SOCKET_URL);
+const DATA_API_SOCKET_URL = 'https://data.specialblend.ca';
+const dataApiClient = ioClient(DATA_API_SOCKET_URL, { secure: true, transports: ['websocket', 'polling'] });
 
 dataApiClient.on('connect', () => {
     console.log('Successfully connected to DataAPI socket server at', DATA_API_SOCKET_URL);
