@@ -160,7 +160,7 @@ router.get('/dashboard', async (req, res) => {
     const registered = await esp32.getRegistered()
     if(registered == null) {
         console.log('Could not fetch devices list. Is DataAPI online?')
-        res.render('index',    { name: req.session.email })
+        res.redirect('/index')
     } else {
         console.log(registered.map((dev) => id = dev.id ))
         res.render('dashboard', { title: "Dashboard", menuId: 'home', hitCount: await counter.getCount(), collectionInfo: req.app.locals.collectionInfo, regDevices: registered })
@@ -175,7 +175,7 @@ router.get('/iot',  async (req, res) =>
     const registered = await esp32.getRegistered()
     if(registered == null) {
         console.log('Could not fetch devices list. Is DataAPI online?')
-        res.render('index',    { name: req.session.email })
+        res.redirect('/index')
     } else {
         console.log(registered.map((dev) => id = dev.id ))
         res.render('iot', { mqttinfo: mqttinfo, regDevices: registered, dataApiStatus: esp32.dataApiStatus  })
