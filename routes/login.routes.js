@@ -7,6 +7,7 @@ const router = require('express').Router(),
  verify = require('./verifyToken'),
  { registerValidation, loginValidation } = require('./validation')
 
+const LOGIN_SUCCESS_REDIRECT_PATH = '../settings';
 
 const apiUrl = "http://" + process.env.DATA_API_IP + ":" + process.env.DATA_API_PORT
 
@@ -29,7 +30,12 @@ router.post("/register", async (req, res) => {
    
     if (error) {
         result.message = error.details[0].message
-        return res.status(400).send(result)
+        // return res.status(400).send(result)
+        return res.status(400).render('partials/login/register', {
+            error: result.message,
+            name: req.body.name, // To repopulate the form
+            email: req.body.email // To repopulate the form
+        });
     }
 
     const response2 = await fetch(apiUrl + "/users/fromEmail/" + req.body.email)
@@ -40,7 +46,12 @@ router.post("/register", async (req, res) => {
     if (emailExist) {
         console.log('user exist: ', emailExist)
         result.message = "Email already exists"
-        return res.status(400).send(result)  //  TODO: replace par un login.ejs ou register.ejs avec alert msg
+        // return res.status(400).send(result)  //  TODO: replace par un login.ejs ou register.ejs avec alert msg
+        return res.status(400).render('partials/login/register', {
+            error: result.message,
+            name: req.body.name, // To repopulate the form
+            email: req.body.email // To repopulate the form
+        });
     }
 
     // Hash password
@@ -152,7 +163,7 @@ router.post('/', async (req, res) => {
             
             try  {
                 await req.session.save();
-                res.header('credentials', 'include').redirect('../settings')    //res.header("auth-token", result.token).render('fundev', { name: req.session.email });      // TODO : /settings hardcoded here...   hmmm   nah! :S
+                res.header('credentials', 'include').redirect(LOGIN_SUCCESS_REDIRECT_PATH)    //res.header("auth-token", result.token).render('fundev', { name: req.session.email });      // TODO : /settings hardcoded here...   hmmm   nah! :S
             } catch (err) {
                 console.log('error saving session' , err); 
                 res.status(500).send('Error saving session');  

@@ -2,9 +2,9 @@ const socket = require('socket.io')
 const assert = require('assert')
 
 let io_
-let socket_
+const connectedSockets = new Map();
 
-function init(server) 
+function init(server)
 {
     if (io_) {   console.warn("Already initialized and Trying to init Socket.io again!");  return io_     }
     
@@ -17,8 +17,7 @@ function init(server)
         
         console.log('New SocketIO Connection: ', socket.id )
        
-        
-        socket_ = socket  //  TODO   Devrait etre un [] sinon on a tjrs juste le dernier socket connecté.....  :S
+        connectedSockets.set(socket.id, socket);
 
         socket.on('chat message', (msg) => {
             io.sockets.emit('chat message', msg);  // Sending to every client
@@ -31,7 +30,8 @@ function init(server)
 
             
         socket.on('disconnect', () => {
-            console.log('user disconnected');
+            console.log('user disconnected: ', socket.id);
+            connectedSockets.delete(socket.id);
         });
 
     })
@@ -45,13 +45,13 @@ function init(server)
 
 function get_io() { assert.ok(io_, "IO has not been initialized. Please called init first.");   return io_  }
 
-function get_socket() { assert.ok(socket_, "Socket has not been initialized. Please called init first."); return socket_  }
+function get_sockets() { return connectedSockets; }
   
 
 
 module.exports = {
   get_io,
-  get_socket,
+  get_sockets, // Renamed from get_socket
   init
 };
 
