@@ -184,7 +184,7 @@ router.get('/iot',  async (req, res) =>
 
 
 router.get('/earth', async (req, res) => {
-    res.render('earth')
+    res.render('earth2')
 })
 
 router.get('/natureCode', (req, res) => {
