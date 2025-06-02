@@ -1,5 +1,7 @@
 const router = require('express').Router();
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+//const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const fetch = require('node-fetch');
+
 const moment = require('moment');
 const getMqtt = require('../scripts/mqttServer').getClient;
 const mailman = require('../public/js/mailman'); // For /alert route
@@ -63,6 +65,23 @@ router.get('/weather/:latlon', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Failed to fetch weather or air quality data' });
+    }
+});
+
+router.get('/proxy-location', async (req, res) => {
+    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    //const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    console.log("Client IP:", clientIp);
+    const response = await fetch('https://api64.ipify.org?format=json');
+    const { ip } = await response.json();
+    console.log("Public IP:", ip);
+    try {
+        const response = await fetch(`http://ip-api.com/json/${ip}`);   //  because this is http, we use a proxy approach to make it work
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: 'Error fetching geolocation', details: error.message });
     }
 });
 
