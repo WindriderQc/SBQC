@@ -150,6 +150,10 @@ const MAX_2D_HISTORY_POINTS = 200;
 let issPathPolyline = null;
 let mymap; // Declare mymap globally
 
+// For Predicted Path
+let predictedIssPathPoints = [];
+let predictedIssPathPolyline = null;
+
 // For pass-by estimation
 let lastPassByCheckTime = 0;
 const PASS_BY_CHECK_INTERVAL = 30000; // 30 seconds
@@ -168,11 +172,12 @@ socket.on('iss', (data) => {
     if (issPathHistory.length > MAX_2D_HISTORY_POINTS) {
         issPathHistory.shift();
     }
-    updateIssOnMap(iss.latitude, iss.longitude);
+    updateIssOnMap(iss.latitude, iss.longitude); // This will also update predicted path display
 
     const now = Date.now();
     if (clientLat !== null && clientLon !== null && now - lastPassByCheckTime > PASS_BY_CHECK_INTERVAL) {
         calculateAndDisplayPassBy();
+        // updateIssOnMap() is called above, which will refresh the predicted path if it changed
         lastPassByCheckTime = now;
     }
 });
@@ -216,7 +221,6 @@ const mapSetUp = setMap();
 function setClientMarker(lat, lon) {
     if (window.clientMarker) {
         window.clientMarker.setLatLng([lat, lon]);
-         // Also center map on client if it's being set
         if (mymap) {
             mymap.setView([lat, lon], 5);
         }
@@ -262,7 +266,7 @@ async function setDefaultLocationAndFetchWeather() {
     document.getElementById('clon').textContent = clientLon.toFixed(2);
     document.getElementById('default-location-msg').style.display = 'block';
 
-    setClientMarker(clientLat, clientLon); // This will also set the map view
+    setClientMarker(clientLat, clientLon);
     await fetchWeatherForCoords(clientLat, clientLon);
 }
 
@@ -275,11 +279,10 @@ async function updateGeoData() {
         console.log("Live geolocation successful:", clientLat, clientLon);
         document.getElementById('default-location-msg').style.display = 'none';
 
-
         document.getElementById('clat').textContent = clientLat.toFixed(2);
         document.getElementById('clon').textContent = clientLon.toFixed(2);
 
-        setClientMarker(clientLat, clientLon); // This will also set the map view
+        setClientMarker(clientLat, clientLon);
         await fetchWeatherForCoords(clientLat, clientLon);
 
     } catch(e) {
@@ -290,10 +293,10 @@ async function updateGeoData() {
 }
 
 if (Tools.isGeoLocAvailable()) {
-    updateGeoData(); // This tries to get live geo and falls back to default in its catch
+    updateGeoData();
 } else {
     console.log("Geolocation not available in this browser, using default location.");
-    setDefaultLocationAndFetchWeather(); // Sets defaults and gets weather
+    setDefaultLocationAndFetchWeather();
 }
 
 let firstTime = true;
@@ -307,7 +310,6 @@ async function updateIssOnMap(lat, lon) {
     }
 
     if (firstTime && mymap) {
-        // Don't center on ISS if we have a client location already set (either live or default)
         if (clientLat === null) {
              mymap.setView([lat, lon], 2);
         }
@@ -317,82 +319,121 @@ async function updateIssOnMap(lat, lon) {
     document.getElementById('isslat').textContent = parseFloat(lat).toFixed(2);
     document.getElementById('isslon').textContent = parseFloat(lon).toFixed(2);
 
+    // Draw historical path
     if (issPathPolyline && mymap) {
         mymap.removeLayer(issPathPolyline);
     }
-
     const latLngs = issPathHistory.map(p => [p.lat, p.lng]);
     if (latLngs.length > 1 && mymap) {
         issPathPolyline = L.polyline(latLngs, { color: 'blue', weight: 5 }).addTo(mymap);
+    }
+
+    // Draw predicted path
+    if (predictedIssPathPolyline && mymap) {
+        mymap.removeLayer(predictedIssPathPolyline);
+        predictedIssPathPolyline = null;
+    }
+    if (predictedIssPathPoints && predictedIssPathPoints.length > 1 && mymap) {
+        const predictedLatLngs = predictedIssPathPoints.map(p => [p.lat, p.lng]);
+        predictedIssPathPolyline = L.polyline(predictedLatLngs, {
+            color: 'green',
+            weight: 3,
+            dashArray: '5, 10'
+        }).addTo(mymap);
     }
 }
 
 function calculateAndDisplayPassBy() {
     const passByStatus = document.getElementById('iss-passby-time');
     console.log('[PassByDebug] calculateAndDisplayPassBy called.');
-    console.log('[PassByDebug] Client Coords:', clientLat, clientLon);
-    console.log('[PassByDebug] ISS History Length:', issPathHistory.length);
-    console.log('[PassByDebug] Tools.haversineDistance available:', typeof Tools.haversineDistance === 'function');
+    // console.log('[PassByDebug] Client Coords:', clientLat, clientLon); // Already logged by caller or initial setup
+    // console.log('[PassByDebug] ISS History Length:', issPathHistory.length);
+    // console.log('[PassByDebug] Tools.haversineDistance available:', typeof Tools.haversineDistance === 'function');
 
     if (!clientLat || !clientLon) {
         passByStatus.textContent = 'Waiting for client location...';
+        predictedIssPathPoints = [];
+        if (window.issMarker && typeof iss !== 'undefined' && iss) updateIssOnMap(iss.latitude, iss.longitude); else if (issPathHistory.length > 0) updateIssOnMap(issPathHistory[issPathHistory.length-1].lat, issPathHistory[issPathHistory.length-1].lng);
         console.log('[PassByDebug] Returning: Client location not available.');
         return;
     }
     if (issPathHistory.length < 2) {
         passByStatus.textContent = 'Insufficient ISS path data...';
+        predictedIssPathPoints = [];
+        if (window.issMarker && typeof iss !== 'undefined' && iss) updateIssOnMap(iss.latitude, iss.longitude); else if (issPathHistory.length > 0) updateIssOnMap(issPathHistory[issPathHistory.length-1].lat, issPathHistory[issPathHistory.length-1].lng);
         console.log('[PassByDebug] Returning: Insufficient ISS path data.');
         return;
     }
     if (typeof Tools.haversineDistance !== 'function') {
         passByStatus.textContent = 'Distance calculation tool not available.';
+        predictedIssPathPoints = [];
+        if (window.issMarker && typeof iss !== 'undefined' && iss) updateIssOnMap(iss.latitude, iss.longitude); else if (issPathHistory.length > 0) updateIssOnMap(issPathHistory[issPathHistory.length-1].lat, issPathHistory[issPathHistory.length-1].lng);
         console.error('[PassByDebug] Returning: Tools.haversineDistance is not a function.');
         return;
     }
 
     passByStatus.textContent = 'Calculating...';
-    console.log('[PassByDebug] Proceeding with calculation...');
+    // console.log('[PassByDebug] Proceeding with calculation...');
 
     const lastPoint = issPathHistory[issPathHistory.length - 1];
     const secondLastPoint = issPathHistory[issPathHistory.length - 2];
-    console.log('[PassByDebug] lastPoint:', lastPoint, 'secondLastPoint:', secondLastPoint);
+    // console.log('[PassByDebug] lastPoint:', lastPoint, 'secondLastPoint:', secondLastPoint);
 
     const timeDiffSeconds = (lastPoint.timestamp - secondLastPoint.timestamp) / 1000;
-    console.log('[PassByDebug] timeDiffSeconds:', timeDiffSeconds);
+    // console.log('[PassByDebug] timeDiffSeconds:', timeDiffSeconds);
 
     if (timeDiffSeconds <= 0) {
         passByStatus.textContent = 'Static or invalid ISS data timestamps.';
+        predictedIssPathPoints = [];
+        if (window.issMarker && typeof iss !== 'undefined' && iss) updateIssOnMap(iss.latitude, iss.longitude); else if (issPathHistory.length > 0) updateIssOnMap(issPathHistory[issPathHistory.length-1].lat, issPathHistory[issPathHistory.length-1].lng);
         console.log('[PassByDebug] Returning: Static or invalid ISS data timestamps.');
         return;
     }
 
     const latSpeed = (lastPoint.lat - secondLastPoint.lat) / timeDiffSeconds;
     const lonSpeed = (lastPoint.lng - secondLastPoint.lng) / timeDiffSeconds;
-    console.log('[PassByDebug] latSpeed:', latSpeed, 'lonSpeed:', lonSpeed);
+    // console.log('[PassByDebug] latSpeed:', latSpeed, 'lonSpeed:', lonSpeed);
 
     let minFutureDist = Infinity;
     let timeOfClosestApproach = null;
+    let tempPredictedPath = [];
+    predictedIssPathPoints = []; // Clear global predicted path at start of this calculation run
 
-    console.log('[PassByDebug] Starting extrapolation loop...');
+    // console.log('[PassByDebug] Starting extrapolation loop for predicted path...');
     for (let t = 0; t < 7200; t += 30) {
         const futureLat = lastPoint.lat + latSpeed * t;
         const futureLon = lastPoint.lng + lonSpeed * t;
         const normalizedFutureLon = (futureLon + 540) % 360 - 180;
+
+        tempPredictedPath.push({lat: futureLat, lng: normalizedFutureLon});
+
         const dist = Tools.haversineDistance(clientLat, clientLon, futureLat, normalizedFutureLon);
         if (dist < minFutureDist) {
             minFutureDist = dist;
             timeOfClosestApproach = t;
+            if (minFutureDist < PASS_BY_THRESHOLD_KM) {
+                 predictedIssPathPoints = tempPredictedPath.slice(0, tempPredictedPath.length);
+            }
         }
     }
-    console.log('[PassByDebug] Extrapolation loop finished. MinFutureDist:', minFutureDist, 'TimeOfClosestApproach:', timeOfClosestApproach);
+
+    if (!(minFutureDist < PASS_BY_THRESHOLD_KM && timeOfClosestApproach !== null)) {
+        predictedIssPathPoints = [];
+    }
+    // console.log('[PassByDebug] Extrapolation loop finished. Stored predicted points:', predictedIssPathPoints.length);
 
     if (minFutureDist < PASS_BY_THRESHOLD_KM && timeOfClosestApproach !== null) {
         const approachDate = new Date(Date.now() + timeOfClosestApproach * 1000);
         passByStatus.textContent = `Approx. pass at ${approachDate.toLocaleTimeString()} (distance ~${minFutureDist.toFixed(0)} km).`;
-        console.log('[PassByDebug] Pass detected:', passByStatus.textContent);
     } else {
         passByStatus.textContent = `No close pass predicted soon (closest ~${minFutureDist.toFixed(0)}km).`;
-        console.log('[PassByDebug] No close pass detected:', passByStatus.textContent);
+    }
+
+    if (iss && typeof iss.latitude !== 'undefined') {
+         updateIssOnMap(iss.latitude, iss.longitude);
+    } else if (issPathHistory.length > 0) {
+        const lastKnownIss = issPathHistory[issPathHistory.length -1];
+        updateIssOnMap(lastKnownIss.lat, lastKnownIss.lng);
     }
 }
 
@@ -406,7 +447,6 @@ setTimeout(() => {
     console.log('[PassByDebug] Initial timeout for calculateAndDisplayPassBy.');
     if (clientLat !== null && clientLon !== null && issPathHistory.length > 1) {
         calculateAndDisplayPassBy();
-        lastPassByCheckTime = Date.now();
     } else {
         console.log('[PassByDebug] Conditions not met for initial pass-by calculation.');
          document.getElementById('iss-passby-time').textContent = 'Waiting for initial data...';
