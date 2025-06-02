@@ -121,6 +121,7 @@
                 <div class="card-body" >
                         <p>ISS location -  lat: <span id="isslat"></span>&deg; lon: <span id="isslon"></span>&deg; </p>
                         <p>Client location -  lat: <span id="clat"></span>&deg; lon: <span id="clon"></span>&deg;</span> </p>
+                        <p id="default-location-msg" style="font-size: 0.8em; color: #777; display: none;">Using default location as live geolocation is unavailable.</p>
                         <div id='issMap' style="height:720px;"></div>
                 </div>
                 <div class="card-footer small text-muted"> <a href="https://eyes.nasa.gov/apps/solar-system/#/home" target="_blank" class="btn btn-outline-primary">Explore with NASA Eyes</a> </div>
@@ -163,14 +164,12 @@ socket.on('connect', () => {
 socket.on('iss', (data) => {
     iss = data; // iss is used by earth3D.js globally
 
-    // Add current ISS location to 2D path history
     issPathHistory.push({lat: iss.latitude, lng: iss.longitude, timestamp: Date.now()});
     if (issPathHistory.length > MAX_2D_HISTORY_POINTS) {
         issPathHistory.shift();
     }
     updateIssOnMap(iss.latitude, iss.longitude);
 
-    // Check for pass-by
     const now = Date.now();
     if (clientLat !== null && clientLon !== null && now - lastPassByCheckTime > PASS_BY_CHECK_INTERVAL) {
         calculateAndDisplayPassBy();
@@ -217,56 +216,84 @@ const mapSetUp = setMap();
 function setClientMarker(lat, lon) {
     if (window.clientMarker) {
         window.clientMarker.setLatLng([lat, lon]);
+         // Also center map on client if it's being set
+        if (mymap) {
+            mymap.setView([lat, lon], 5);
+        }
     }
     clientLat = lat;
     clientLon = lon;
 }
 
+async function fetchWeatherForCoords(lat, lon) {
+    const url =`api/weather/${lat},${lon}`;
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        document.getElementById('summary').textContent = data.weather.weather[0].description;
+        document.getElementById('temp').textContent =  data.weather.main.feels_like;
+        if (data.air_quality && data.air_quality.results && data.air_quality.results[0]) {
+            const air = data.air_quality.results[0];
+            document.getElementById('aq_parameter').textContent = air.parameter.displayName;
+            document.getElementById('aq_value').textContent = air.latest.value;
+            document.getElementById('aq_units').textContent = air.parameter.units;
+            document.getElementById('aq_date').textContent = air.latest.datetime.local;
+        } else {
+             document.getElementById('aq_value').textContent = 'NO READING';
+        }
+        const wind = data.weather.wind;
+        document.getElementById('wind-speed').textContent = wind.speed;
+        document.getElementById('wind-gust').textContent = wind.gust;
+        document.getElementById('wind-arrow').style.transform = `rotate(${wind.deg}deg)`;
+
+    } catch (e) {
+        Tools.cliError(e);
+        document.getElementById('aq_value').textContent = 'NO READING';
+    }
+}
+
+async function setDefaultLocationAndFetchWeather() {
+    console.log("Using default client location.");
+    clientLat = 46.82;
+    clientLon = -71.30;
+
+    document.getElementById('clat').textContent = clientLat.toFixed(2);
+    document.getElementById('clon').textContent = clientLon.toFixed(2);
+    document.getElementById('default-location-msg').style.display = 'block';
+
+    setClientMarker(clientLat, clientLon); // This will also set the map view
+    await fetchWeatherForCoords(clientLat, clientLon);
+}
+
 async function updateGeoData() {
     try {
+        console.log("Attempting to get live geolocation...");
         const {coords} = await Tools.geoLocate();
         clientLat = coords.latitude;
         clientLon = coords.longitude;
+        console.log("Live geolocation successful:", clientLat, clientLon);
+        document.getElementById('default-location-msg').style.display = 'none';
 
-        const url =`api/weather/${clientLat},${clientLon}`;
+
         document.getElementById('clat').textContent = clientLat.toFixed(2);
         document.getElementById('clon').textContent = clientLon.toFixed(2);
 
-        if (window.clientMarker) {
-            window.clientMarker.setLatLng([clientLat, clientLon]);
-            mymap.setView([clientLat, clientLon], 5);
-        } else {
-            console.warn("Client marker not initialized yet for updateGeoData");
-        }
+        setClientMarker(clientLat, clientLon); // This will also set the map view
+        await fetchWeatherForCoords(clientLat, clientLon);
 
-        await fetch(url)
-            .then(resp => resp.json())
-            .then(data => {
-                document.getElementById('summary').textContent = data.weather.weather[0].description;
-                document.getElementById('temp').textContent =  data.weather.main.feels_like;
-                if (data.air_quality && data.air_quality.results && data.air_quality.results[0]) {
-                    const air = data.air_quality.results[0];
-                    document.getElementById('aq_parameter').textContent = air.parameter.displayName;
-                    document.getElementById('aq_value').textContent = air.latest.value;
-                    document.getElementById('aq_units').textContent = air.parameter.units;
-                    document.getElementById('aq_date').textContent = air.latest.datetime.local;
-                } else {
-                     document.getElementById('aq_value').textContent = 'NO READING';
-                }
-                const wind = data.weather.wind;
-                document.getElementById('wind-speed').textContent = wind.speed;
-                document.getElementById('wind-gust').textContent = wind.gust;
-                document.getElementById('wind-arrow').style.transform = `rotate(${wind.deg}deg)`;
-            })
-            .catch(e => {
-                Tools.cliError(e);
-                document.getElementById('aq_value').textContent = 'NO READING';
-            });
-    } catch(e) { alert('Error getting geolocation: '+e.message); }
+    } catch(e) {
+        console.warn('Error getting live geolocation or permission denied:', e.message);
+        alert('Live geolocation failed. Using default location (Quebec City area). Error: '+e.message);
+        await setDefaultLocationAndFetchWeather();
+    }
 }
 
-if(Tools.isGeoLocAvailable()) {
-    updateGeoData();
+if (Tools.isGeoLocAvailable()) {
+    updateGeoData(); // This tries to get live geo and falls back to default in its catch
+} else {
+    console.log("Geolocation not available in this browser, using default location.");
+    setDefaultLocationAndFetchWeather(); // Sets defaults and gets weather
 }
 
 let firstTime = true;
@@ -280,7 +307,10 @@ async function updateIssOnMap(lat, lon) {
     }
 
     if (firstTime && mymap) {
-        mymap.setView([lat, lon], 2);
+        // Don't center on ISS if we have a client location already set (either live or default)
+        if (clientLat === null) {
+             mymap.setView([lat, lon], 2);
+        }
         firstTime = false;
     }
 
@@ -293,7 +323,7 @@ async function updateIssOnMap(lat, lon) {
 
     const latLngs = issPathHistory.map(p => [p.lat, p.lng]);
     if (latLngs.length > 1 && mymap) {
-        issPathPolyline = L.polyline(latLngs, { color: 'blue', weight: 5 }).addTo(mymap); // Increased weight
+        issPathPolyline = L.polyline(latLngs, { color: 'blue', weight: 5 }).addTo(mymap);
     }
 }
 
@@ -303,7 +333,6 @@ function calculateAndDisplayPassBy() {
     console.log('[PassByDebug] Client Coords:', clientLat, clientLon);
     console.log('[PassByDebug] ISS History Length:', issPathHistory.length);
     console.log('[PassByDebug] Tools.haversineDistance available:', typeof Tools.haversineDistance === 'function');
-
 
     if (!clientLat || !clientLon) {
         passByStatus.textContent = 'Waiting for client location...';
@@ -331,29 +360,25 @@ function calculateAndDisplayPassBy() {
     const timeDiffSeconds = (lastPoint.timestamp - secondLastPoint.timestamp) / 1000;
     console.log('[PassByDebug] timeDiffSeconds:', timeDiffSeconds);
 
-    if (timeDiffSeconds <= 0) { // Changed from === 0 to <=0 to catch weird cases
+    if (timeDiffSeconds <= 0) {
         passByStatus.textContent = 'Static or invalid ISS data timestamps.';
         console.log('[PassByDebug] Returning: Static or invalid ISS data timestamps.');
         return;
     }
 
-    const latSpeed = (lastPoint.lat - secondLastPoint.lat) / timeDiffSeconds; // deg/sec
-    const lonSpeed = (lastPoint.lng - secondLastPoint.lng) / timeDiffSeconds; // deg/sec
+    const latSpeed = (lastPoint.lat - secondLastPoint.lat) / timeDiffSeconds;
+    const lonSpeed = (lastPoint.lng - secondLastPoint.lng) / timeDiffSeconds;
     console.log('[PassByDebug] latSpeed:', latSpeed, 'lonSpeed:', lonSpeed);
 
     let minFutureDist = Infinity;
-    let timeOfClosestApproach = null; // In seconds from now
+    let timeOfClosestApproach = null;
 
     console.log('[PassByDebug] Starting extrapolation loop...');
-    for (let t = 0; t < 7200; t += 30) { // Extrapolate for next 2 hours, check every 30 seconds
+    for (let t = 0; t < 7200; t += 30) {
         const futureLat = lastPoint.lat + latSpeed * t;
         const futureLon = lastPoint.lng + lonSpeed * t;
         const normalizedFutureLon = (futureLon + 540) % 360 - 180;
-
         const dist = Tools.haversineDistance(clientLat, clientLon, futureLat, normalizedFutureLon);
-        // console.log(`[PassByDebug] t=${t}s, futureLat=${futureLat.toFixed(2)}, futureLon=${normalizedFutureLon.toFixed(2)}, dist=${dist.toFixed(0)}km`);
-
-
         if (dist < minFutureDist) {
             minFutureDist = dist;
             timeOfClosestApproach = t;
@@ -373,7 +398,7 @@ function calculateAndDisplayPassBy() {
 
 async function getUserInfo() {
     const info = await Tools.ipLookUp();
-    document.getElementById('ip_id').innerHTML =  "<pre>"+JSON.stringify(info,null, '	') +"</pre>";
+    document.getElementById('ip_id').innerHTML =  "<pre>"+JSON.stringify(info,null, '\t') +"</pre>";
 }
 getUserInfo();
 
