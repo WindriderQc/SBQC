@@ -1,5 +1,9 @@
 //   3D Earth section - rendered with P5
 
+let internalIssPathHistory = [];
+const MAX_HISTORY_POINTS = 200;
+const pathPointSphereSize = 2;
+
 let rotationSpeed = (Math.PI * 2) / 60; // One full rotation every 60 seconds
 let angle = 0;
 
@@ -22,7 +26,8 @@ function preload()
         '?access_token=pk.eyJ1Ijoid2luZHJpZGVyIiwiYSI6ImNqczVldmR3bzBmMWU0NHRmbjlta2Y0aDEifQ.FWOdvqw-IBlcJrBKKML7iQ');        */
         cloudyEarth = loadImage('/img/cloudyEarth.jpg') //, 0,0,width,height);
         earthquakes = loadStrings('/data/quakes.csv'); // loadStrings('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.csv');
-        issGif = loadImage('/img/iss.png')
+        issGif = loadImage('/img/iss.png');
+    loadJSON('https://data.specialblend.ca/iss', populateInitialIssHistory);
 }
 
 
@@ -51,6 +56,34 @@ function mouseClicked() {
  //
 }
 
+function populateInitialIssHistory(responseData) { // Parameter name changed
+    if (responseData && responseData.data && responseData.data.length > 0) { // Condition updated
+        console.log('Populating initial ISS history from endpoint. Points in data array:', responseData.data.length); // Log updated
+        let pointsToProcess = responseData.data; // Assignment updated
+        // Optional: If API returns points in chronological order (oldest to newest),
+        // and we want only the most recent MAX_HISTORY_POINTS:
+        if (pointsToProcess.length > MAX_HISTORY_POINTS) {
+            pointsToProcess = pointsToProcess.slice(pointsToProcess.length - MAX_HISTORY_POINTS);
+        }
+
+        for (let i = 0; i < pointsToProcess.length; i++) {
+            const point = pointsToProcess[i];
+            if (typeof point.latitude !== 'undefined' && typeof point.longitude !== 'undefined') {
+                internalIssPathHistory.push({
+                    lat: point.latitude,
+                    lon: point.longitude
+                });
+            }
+        }
+        // Ensure history doesn't exceed MAX_HISTORY_POINTS after preloading
+        while (internalIssPathHistory.length > MAX_HISTORY_POINTS) {
+           internalIssPathHistory.shift();
+        }
+        console.log('Internal ISS history populated. Points stored:', internalIssPathHistory.length);
+    } else {
+        console.log('No historical ISS data array found in response, or it is empty. Full response:', responseData); // Log updated
+    }
+}
 
 function draw()
 {
@@ -96,6 +129,29 @@ function draw()
    rotateY(11);
 
 
+    if (typeof iss !== 'undefined' && iss && typeof iss.latitude !== 'undefined' && typeof iss.longitude !== 'undefined') {
+        // Check if the latest history point is different from current iss coords to avoid too many identical points
+        let addPoint = true;
+        if (internalIssPathHistory.length > 0) {
+            const lastPoint = internalIssPathHistory[internalIssPathHistory.length - 1];
+            if (lastPoint.lat === iss.latitude && lastPoint.lon === iss.longitude) {
+                addPoint = false;
+            }
+        }
+
+        if (addPoint) {
+            internalIssPathHistory.push({
+                lat: iss.latitude,
+                lon: iss.longitude
+                // We'll use earthSize + issDistanceToEarth for altitude when drawing
+            });
+        }
+
+        if (internalIssPathHistory.length > MAX_HISTORY_POINTS) {
+            internalIssPathHistory.shift();
+        }
+    }
+
    if(iss)
    {
      let v =  Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, iss.latitude, iss.longitude)
@@ -111,6 +167,22 @@ function draw()
      //fill(150, 200, 255)
      //sphere(15)
      pop();
+
+    // Draw ISS Path History
+    push(); // Isolate path styles
+    noStroke();
+    fill(255, 165, 0, 150); // Orange, semi-transparent
+
+    for (let i = 0; i < internalIssPathHistory.length; i++) {
+        const histPoint = internalIssPathHistory[i];
+        let vPath = Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, histPoint.lat, histPoint.lon);
+
+        push();
+        translate(vPath.x, vPath.y, vPath.z);
+        sphere(pathPointSphereSize);
+        pop();
+    }
+    pop(); // End path styles
    }
 
    //  Showing Québec on earth  TODO:  show user location
