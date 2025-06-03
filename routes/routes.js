@@ -184,8 +184,10 @@ router.get('/iot',  async (req, res) =>
 
 
 router.get('/earth', async (req, res) => {
-    res.render('earthThreeJS')
+   // res.render('earthThreeJS')
+    res.render('earth')
 })
+
 
 router.get('/natureCode', (req, res) => {
     res.render('natureCode')
@@ -213,8 +215,8 @@ router.get('/specs', (req, res) => {
 })
 
 router.get('/threejs-scene', (req, res) => {
-    res.render('threejs_scene', { menuId: 'threejs-scene' }); // Added menuId for consistency, can be adjusted
-});
+    res.render('threejs_scene', { menuId: 'threejs-scene', title: "threejs scene" }); // Added menuId for consistency, can be adjusted
+})
 
 //Tools
 router.get('/colorfinder', (req,res) => {
