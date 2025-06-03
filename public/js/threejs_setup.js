@@ -15,6 +15,15 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    const brightnessSlider = document.getElementById('slider1');
+    const sphereSizeSlider = document.getElementById('slider2');
+
+    if (!brightnessSlider || !sphereSizeSlider) {
+        console.error('Slider elements not found!');
+        // Optionally, disable further script execution if sliders are critical
+        // return;
+    }
+
     // Scene
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000); // Black background
@@ -41,6 +50,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1); // White directional light
     directionalLight.position.set(5, 3, 5); // Position the light
     scene.add(directionalLight);
+
+    if (brightnessSlider) {
+        brightnessSlider.addEventListener('input', (event) => {
+            const intensityValue = parseFloat(event.target.value) / 50; // Example mapping: 0-100 to 0-2
+            // Placeholder for actual brightness update logic
+            console.log('Brightness slider changed to:', event.target.value, 'Mapped intensity:', intensityValue);
+            if (directionalLight) { // Check if directionalLight is defined
+                directionalLight.intensity = intensityValue;
+            }
+            if (ambientLight) { // Check if ambientLight is defined
+                 // Optionally adjust ambient light too, perhaps less drastically
+                ambientLight.intensity = intensityValue / 2;
+            }
+        });
+    }
+
+    if (sphereSizeSlider) {
+        sphereSizeSlider.addEventListener('input', (event) => {
+            const scaleValue = parseFloat(event.target.value) / 50; // Example mapping: 0-100 to 0-2 (adjust min on slider if 0 is too small)
+            // Placeholder for actual sphere size update logic
+            console.log('Sphere Size slider changed to:', event.target.value, 'Mapped scale:', scaleValue);
+            if (sphere) { // Check if sphere is defined
+                sphere.scale.set(scaleValue, scaleValue, scaleValue);
+            }
+        });
+    }
 
     // Handle window resize
     window.addEventListener('resize', () => {
