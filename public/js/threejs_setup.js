@@ -15,6 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    const textureLoader = new THREE.TextureLoader();
+
     const brightnessSlider = document.getElementById('slider1');
     const sphereSizeSlider = document.getElementById('slider2');
 
@@ -37,11 +39,38 @@ document.addEventListener('DOMContentLoaded', () => {
     renderer.setSize(container.clientWidth, container.clientHeight);
     container.appendChild(renderer.domElement);
 
-    // Sphere
+    // Earth Texture
+    const earthDayTexture = textureLoader.load('/img/1_earth_8k.jpg');
+    // Ensure sRGBEncoding for color textures for better visual results with MeshStandardMaterial
+    earthDayTexture.encoding = THREE.sRGBEncoding;
+
+    // Sphere (Earth)
     const geometry = new THREE.SphereGeometry(1.5, 32, 32); // Radius 1.5, 32 segments width, 32 segments height
-    const material = new THREE.MeshStandardMaterial({ color: 0x0077ff, metalness: 0.5, roughness: 0.5 }); // A shiny blue material
+    // const material = new THREE.MeshStandardMaterial({ color: 0x0077ff, metalness: 0.5, roughness: 0.5 });
+    const material = new THREE.MeshStandardMaterial({
+        map: earthDayTexture,
+        metalness: 0.3, // Reduce metalness for a more matte Earth surface
+        roughness: 0.8  // Increase roughness
+    });
     const sphere = new THREE.Mesh(geometry, material);
     scene.add(sphere);
+
+    // Cloud Sphere
+    const cloudTexture = textureLoader.load('/img/cloudyEarth.jpg');
+    cloudTexture.encoding = THREE.sRGBEncoding; // sRGBEncoding for color textures
+
+    const cloudMaterial = new THREE.MeshPhongMaterial({ // Using MeshPhongMaterial for clouds for transparency options
+        map: cloudTexture,
+        transparent: true,
+        opacity: 0.6, // Adjust opacity as needed
+        // alphaMap: cloudTexture, // Can also use alphaMap if texture has alpha
+        // depthWrite: false, // Useful for transparency sorting issues sometimes
+    });
+    const cloudSphere = new THREE.Mesh(
+        new THREE.SphereGeometry(1.52, 32, 32), // Slightly larger than the Earth sphere (1.5)
+        cloudMaterial
+    );
+    scene.add(cloudSphere);
 
     // Lights
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // Soft white light
@@ -68,11 +97,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (sphereSizeSlider) {
         sphereSizeSlider.addEventListener('input', (event) => {
-            const scaleValue = parseFloat(event.target.value) / 50; // Example mapping: 0-100 to 0-2 (adjust min on slider if 0 is too small)
-            // Placeholder for actual sphere size update logic
-            console.log('Sphere Size slider changed to:', event.target.value, 'Mapped scale:', scaleValue);
-            if (sphere) { // Check if sphere is defined
-                sphere.scale.set(scaleValue, scaleValue, scaleValue);
+            // const scaleValue = parseFloat(event.target.value) / 50; // Example mapping: 0-100 to 0-2 (adjust min on slider if 0 is too small)
+            // // Placeholder for actual sphere size update logic
+            // console.log('Sphere Size slider changed to:', event.target.value, 'Mapped scale:', scaleValue);
+            // if (sphere) { // Check if sphere is defined
+            //     sphere.scale.set(scaleValue, scaleValue, scaleValue);
+            // }
+            if (sphere && cloudSphere) { // Check if both are defined
+                const earthBaseScale = 1.5; // Original radius of Earth sphere
+                const cloudBaseScale = 1.52; // Original radius of cloud sphere
+                const minSliderVal = 10, maxSliderVal = 100;
+                const minVisualScale = 0.5, maxVisualScale = 2.0; // Desired visual scale range
+
+                // Map slider value (10-100) to visual scale (0.5-2.0)
+                const visualScale = minVisualScale + (parseFloat(event.target.value) - minSliderVal) * (maxVisualScale - minVisualScale) / (maxSliderVal - minSliderVal);
+
+                sphere.scale.set(visualScale, visualScale, visualScale);
+                // Scale clouds relative to their slightly larger base size, maintaining the visual proportion
+                cloudSphere.scale.set(visualScale, visualScale, visualScale);
+                console.log('Sphere Size slider changed to:', event.target.value, 'Mapped visual scale:', visualScale);
             }
         });
     }
@@ -91,6 +134,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Optional: Add some animation to the sphere
         sphere.rotation.x += 0.005;
         sphere.rotation.y += 0.005;
+
+        if (cloudSphere) { // Check if cloudSphere is defined
+            cloudSphere.rotation.y += 0.0025; // Slower and slightly different rotation for clouds
+            cloudSphere.rotation.x += 0.001; // Slight axial tilt rotation for clouds
+        }
 
         renderer.render(scene, camera);
     }
