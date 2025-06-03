@@ -1,7 +1,7 @@
 //   3D Earth section - rendered with P5
 
 let internalIssPathHistory = [];
-const MAX_HISTORY_POINTS = 4200;
+let MAX_HISTORY_POINTS = 4200; // Changed from const to let
 const pathPointSphereSize = 2;
 
 let rotationSpeed = (Math.PI * 2) / 60; // One full rotation every 60 seconds
@@ -54,6 +54,24 @@ function keyPressed() {
 
 function mouseClicked() {
  //
+}
+
+// Add this function to public/js/earth3D.js
+function set3DMaxHistoryPoints(newLimit) {
+    if (typeof newLimit === 'number' && newLimit >= 0) {
+        MAX_HISTORY_POINTS = newLimit;
+        console.log(`[3D Path] MAX_HISTORY_POINTS updated to: ${MAX_HISTORY_POINTS}`);
+
+        // Trim internalIssPathHistory if it exceeds the new limit
+        // This ensures the array doesn't grow indefinitely beyond the new cap
+        // and also trims it down if the new cap is smaller.
+        while (internalIssPathHistory.length > MAX_HISTORY_POINTS) {
+            internalIssPathHistory.shift(); // Remove oldest points
+        }
+        // p5.js draw() loop will automatically use the updated internalIssPathHistory
+    } else {
+        console.error('[3D Path] Invalid newLimit provided to set3DMaxHistoryPoints:', newLimit);
+    }
 }
 
 function populateInitialIssHistory(responseData) {
