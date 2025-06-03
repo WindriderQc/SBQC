@@ -1,7 +1,7 @@
 //   3D Earth section - rendered with P5
 
 let internalIssPathHistory = [];
-const MAX_HISTORY_POINTS = 200;
+const MAX_HISTORY_POINTS = 1500;
 const pathPointSphereSize = 2;
 
 let rotationSpeed = (Math.PI * 2) / 60; // One full rotation every 60 seconds
@@ -56,14 +56,23 @@ function mouseClicked() {
  //
 }
 
-function populateInitialIssHistory(responseData) { // Parameter name changed
-    if (responseData && responseData.data && responseData.data.length > 0) { // Condition updated
-        console.log('Populating initial ISS history from endpoint. Points in data array:', responseData.data.length); // Log updated
-        let pointsToProcess = responseData.data; // Assignment updated
-        // Optional: If API returns points in chronological order (oldest to newest),
-        // and we want only the most recent MAX_HISTORY_POINTS:
+function populateInitialIssHistory(responseData) {
+    if (responseData && responseData.data && Array.isArray(responseData.data) && responseData.data.length > 0) {
+        console.log('Received historical ISS data. Points in data array:', responseData.data.length);
+
+        // Sort by timeStamp in ascending order
+        let pointsToProcess = responseData.data.sort((a, b) => {
+            // Assuming timeStamp is a number or can be converted to a number (e.g., Unix timestamp)
+            // If timeStamp is a string date, new Date(a.timeStamp) - new Date(b.timeStamp) might be needed
+            return a.timeStamp - b.timeStamp;
+        });
+
+        console.log('Sorted historical ISS data by timeStamp. Points available after sort:', pointsToProcess.length);
+
+        // Slice to get the most recent MAX_HISTORY_POINTS if necessary
         if (pointsToProcess.length > MAX_HISTORY_POINTS) {
             pointsToProcess = pointsToProcess.slice(pointsToProcess.length - MAX_HISTORY_POINTS);
+            console.log(`Sliced data to the most recent ${MAX_HISTORY_POINTS} points. Points to process:`, pointsToProcess.length);
         }
 
         for (let i = 0; i < pointsToProcess.length; i++) {
@@ -77,11 +86,26 @@ function populateInitialIssHistory(responseData) { // Parameter name changed
         }
         // Ensure history doesn't exceed MAX_HISTORY_POINTS after preloading
         while (internalIssPathHistory.length > MAX_HISTORY_POINTS) {
-           internalIssPathHistory.shift();
+           internalIssPathHistory.shift(); // Remove oldest points
         }
-        console.log('Internal ISS history populated. Points stored:', internalIssPathHistory.length);
+        console.log('Internal ISS history populated. Points now stored:', internalIssPathHistory.length);
+
+        // Call the function to display historical data on the 2D map
+        if (typeof window.displayHistoricalDataOn2DMap === 'function') {
+            window.displayHistoricalDataOn2DMap(internalIssPathHistory);
+        }
     } else {
-        console.log('No historical ISS data array found in response, or it is empty. Full response:', responseData); // Log updated
+        let reason = 'Unknown reason';
+        if (!responseData) {
+            reason = 'Response data is null or undefined.';
+        } else if (!responseData.data) {
+            reason = 'The "data" property in response is null or undefined.';
+        } else if (!Array.isArray(responseData.data)) {
+            reason = 'The "data" property in response is not an array.';
+        } else if (responseData.data.length === 0) {
+            reason = 'The "data" array in response is empty.';
+        }
+        console.log(`No valid historical ISS data found to populate initial history. Reason: ${reason}. Full response:`, responseData);
     }
 }
 
