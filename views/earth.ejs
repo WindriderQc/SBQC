@@ -158,7 +158,7 @@ let clientLon = null;
 
 // For 2D path
 let issPathHistory = [];
-const MAX_2D_HISTORY_POINTS = 1500;
+const MAX_2D_HISTORY_POINTS = 4200;
 let issPathPolyline = null; // Live ISS path
 let historicalIssPathSegments = []; // Historical ISS path from initial load, now stores array of segments
 let mymap; // Declare mymap globally
@@ -374,6 +374,8 @@ function displayHistoricalDataOn2DMap(historicalPoints) {
     // Assuming historicalPoints are already sorted by timestamp ASC by earth3D.js
     // The points in historicalPoints are like {lat: ..., lon: ...}
 
+    const MAX_ALLOWED_SEGMENT_JUMP_KM = 500; // Max distance between points in a single segment
+
     let prevPoint = historicalPoints[0];
     currentSegmentLatLngs.push([prevPoint.lat, prevPoint.lon]);
 
@@ -381,15 +383,16 @@ function displayHistoricalDataOn2DMap(historicalPoints) {
         const currentPoint = historicalPoints[i];
         const currentLatLng = [currentPoint.lat, currentPoint.lon];
 
-        // Check for longitude wrap around anti-meridian
-        if (Math.abs(currentPoint.lon - prevPoint.lon) > 180) { // Threshold for longitude jump
-            // Current segment has enough points to be drawn
+        const distanceKm = Tools.haversineDistance(prevPoint.lat, prevPoint.lon, currentPoint.lat, currentPoint.lon);
+
+        // Check for longitude wrap OR excessive distance jump
+        if (Math.abs(currentPoint.lon - prevPoint.lon) > 180 || distanceKm > MAX_ALLOWED_SEGMENT_JUMP_KM) {
             if (currentSegmentLatLngs.length > 1 && mymap) {
                 const segment = L.polyline(currentSegmentLatLngs, { color: 'orange', weight: 3 }).addTo(mymap);
                 historicalIssPathSegments.push(segment);
+                console.log(`[Historical 2D Path] Segment drawn due to wrap/jump. Points: ${currentSegmentLatLngs.length}. Reason: lon_diff=${Math.abs(currentPoint.lon - prevPoint.lon).toFixed(2)}, dist_km=${distanceKm.toFixed(2)}`);
             }
-            // Start a new segment
-            currentSegmentLatLngs = [];
+            currentSegmentLatLngs = []; // Start a new segment
         }
         currentSegmentLatLngs.push(currentLatLng);
         prevPoint = currentPoint;
@@ -465,7 +468,7 @@ function calculateAndDisplayPassBy() {
     predictedIssPathPoints = []; // Clear global predicted path at start of this calculation run
 
     // console.log('[PassByDebug] Starting extrapolation loop for predicted path...');
-    for (let t = 0; t < 7200; t += 30) {
+    for (let t = 0; t < 900; t += 30) { // Changed 7200 to 900
         const futureLat = lastPoint.lat + latSpeed * t;
         const futureLon = lastPoint.lng + lonSpeed * t;
         const normalizedFutureLon = (futureLon + 540) % 360 - 180;

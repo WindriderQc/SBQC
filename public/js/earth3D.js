@@ -1,7 +1,7 @@
 //   3D Earth section - rendered with P5
 
 let internalIssPathHistory = [];
-const MAX_HISTORY_POINTS = 1500;
+const MAX_HISTORY_POINTS = 4200;
 const pathPointSphereSize = 2;
 
 let rotationSpeed = (Math.PI * 2) / 60; // One full rotation every 60 seconds
