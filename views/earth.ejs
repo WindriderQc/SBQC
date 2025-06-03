@@ -363,8 +363,7 @@ function displayHistoricalDataOn2DMap(historicalPoints) {
     if (latLngs.length > 1 && mymap) {
         historicalIssPathPolyline = L.polyline(latLngs, {
             color: 'orange', // Different color for historical path
-            weight: 3,
-            dashArray: '5, 5' // Dashed line for distinction
+            weight: 3
         }).addTo(mymap);
         console.log('[Historical Path] Historical ISS path drawn on 2D map with', latLngs.length, 'points.');
     } else {
