@@ -76,11 +76,19 @@ function set3DMaxHistoryPoints(newLimit) {
 }
 
 function update3DPredictedPath(pointsFrom2D) {
+    console.log('[3D Path] update3DPredictedPath called. Received pointsFrom2D length:', pointsFrom2D ? pointsFrom2D.length : 'undefined/null');
+    if (pointsFrom2D && pointsFrom2D.length > 0) {
+        console.log('[3D Path] First 3 received pointsFrom2D:', JSON.stringify(pointsFrom2D.slice(0, 3)));
+    }
+
     if (Array.isArray(pointsFrom2D)) {
         // Create a new array of simple {lat, lon} objects
         // Note: pointsFrom2D from ejs uses {lat, lng}, so we map lng to lon
         internalPredictedPath = pointsFrom2D.map(p => ({ lat: p.lat, lon: p.lng }));
         console.log(`[3D Path] Updated internalPredictedPath with ${internalPredictedPath.length} points.`);
+        if (internalPredictedPath.length > 0) {
+            console.log('[3D Path] First 3 internalPredictedPath points after map:', JSON.stringify(internalPredictedPath.slice(0, 3)));
+        }
     } else {
         console.warn('[3D Path] Invalid or no data received for update3DPredictedPath. Clearing predicted path.');
         internalPredictedPath = []; // Clear if data is invalid or empty
@@ -108,10 +116,11 @@ function populateInitialIssHistory(responseData) {
 
         for (let i = 0; i < pointsToProcess.length; i++) {
             const point = pointsToProcess[i];
-            if (typeof point.latitude !== 'undefined' && typeof point.longitude !== 'undefined') {
+            if (typeof point.latitude !== 'undefined' && typeof point.longitude !== 'undefined' && typeof point.timeStamp !== 'undefined') {
                 internalIssPathHistory.push({
                     lat: point.latitude,
-                    lon: point.longitude
+                    lon: point.longitude,
+                    timeStamp: point.timeStamp // Store the timestamp
                 });
             }
         }
@@ -124,6 +133,12 @@ function populateInitialIssHistory(responseData) {
         // Call the function to display historical data on the 2D map
         if (typeof window.displayHistoricalDataOn2DMap === 'function') {
             window.displayHistoricalDataOn2DMap(internalIssPathHistory);
+        }
+
+        // Notify that historical data is ready for prediction logic
+        if (typeof window.onHistoricalDataReadyForPrediction === 'function') {
+            console.log('[earth3D.js] Historical data ready, calling onHistoricalDataReadyForPrediction().');
+            window.onHistoricalDataReadyForPrediction();
         }
     } else {
         let reason = 'Unknown reason';
@@ -242,12 +257,20 @@ function draw()
 
     // Draw Predicted ISS Path (Green Line)
     if (internalPredictedPath && internalPredictedPath.length > 1) {
+        console.log(`[3D Draw] Attempting to draw predicted path. Points: ${internalPredictedPath.length}`);
         push(); // Isolate styles for the predicted path
 
         stroke(0, 200, 0, 180); // Green color, slightly transparent
         strokeWeight(1.5);       // A bit thinner than the main path perhaps
         noFill();              // We are drawing lines, not filled shapes
 
+        if (internalPredictedPath.length > 0) { // Log first vertex if available
+            const firstVertPt = internalPredictedPath[0];
+            if (typeof firstVertPt.lat === 'number' && typeof firstVertPt.lon === 'number') {
+               let vFirstPred = Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, firstVertPt.lat, firstVertPt.lon);
+               console.log('[3D Draw] First predicted vertex:', `x:${vFirstPred.x.toFixed(2)}, y:${vFirstPred.y.toFixed(2)}, z:${vFirstPred.z.toFixed(2)}`);
+            }
+        }
         beginShape();
         for (let i = 0; i < internalPredictedPath.length; i++) {
             const predPoint = internalPredictedPath[i];
