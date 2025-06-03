@@ -471,21 +471,38 @@ function calculateAndDisplayPassBy() {
     passByStatus.textContent = 'Calculating...';
 
     let lastPoint, secondLastPoint, timeDiffSeconds;
+    let lastPointData, secondLastPointData; // To hold raw points from basePath
 
     if (usingHistoricalDataForPrediction) {
-        const p1 = basePathForPrediction[basePathForPrediction.length - 1]; // Newest point from historical
-        const p2 = basePathForPrediction[basePathForPrediction.length - 2]; // Second newest
-        lastPoint = { lat: p1.lat, lng: p1.lon }; // Adapt .lon to .lng
-        secondLastPoint = { lat: p2.lat, lng: p2.lon };
-        // Assuming historical points from API are roughly 5 seconds apart.
-        // This is a placeholder; ideally, populateInitialIssHistory in earth3D.js would store actual timestamps.
-        timeDiffSeconds = 5.0;
-        console.log('[PassByDebug] Using historical data, assumed timeDiffSeconds: 5s. Accuracy may vary.');
+        console.log('[PassByDebug] Using historical data for point extraction.');
+        secondLastPointData = basePathForPrediction[basePathForPrediction.length - 2];
+        lastPointData = basePathForPrediction[basePathForPrediction.length - 1];
+
+        // Adapt structure for consistency and use .lon for lng
+        // Convert ISO timestamp string to milliseconds
+        lastPoint = {
+            lat: lastPointData.lat,
+            lng: lastPointData.lon,
+            timestamp: new Date(lastPointData.timeStamp).getTime()
+        };
+        secondLastPoint = {
+            lat: secondLastPointData.lat,
+            lng: secondLastPointData.lon,
+            timestamp: new Date(secondLastPointData.timeStamp).getTime()
+        };
+
+        timeDiffSeconds = (lastPoint.timestamp - secondLastPoint.timestamp) / 1000;
+        console.log(`[PassByDebug] Historical data timeDiffSeconds: ${timeDiffSeconds}s (from actual timestamps)`);
+
     } else { // Using live issPathHistory
-        lastPoint = basePathForPrediction[basePathForPrediction.length - 1];
-        secondLastPoint = basePathForPrediction[basePathForPrediction.length - 2];
+        console.log('[PassByDebug] Using live data for point extraction.');
+        lastPointData = basePathForPrediction[basePathForPrediction.length - 1]; // Already has .lat, .lng, .timestamp
+        secondLastPointData = basePathForPrediction[basePathForPrediction.length - 2];
+        lastPoint = lastPointData;
+        secondLastPoint = secondLastPointData;
         timeDiffSeconds = (lastPoint.timestamp - secondLastPoint.timestamp) / 1000;
     }
+    console.log('[PassByDebug PredictCalc] lastPoint:', JSON.stringify(lastPoint), 'secondLastPoint:', JSON.stringify(secondLastPoint), 'timeDiffSeconds:', timeDiffSeconds);
 
     if (timeDiffSeconds <= 0) {
         passByStatus.textContent = 'Static or invalid ISS data timestamps for speed calculation.';
@@ -498,6 +515,7 @@ function calculateAndDisplayPassBy() {
 
     const latSpeed = (lastPoint.lat - secondLastPoint.lat) / timeDiffSeconds;
     const lonSpeed = (lastPoint.lng - secondLastPoint.lng) / timeDiffSeconds; // Ensure .lng is used
+    console.log('[PassByDebug PredictCalc] latSpeed:', latSpeed, 'lonSpeed:', lonSpeed);
 
     let minFutureDist = Infinity;
     let timeOfClosestApproach = null;
@@ -525,7 +543,15 @@ function calculateAndDisplayPassBy() {
     if (!(minFutureDist < PASS_BY_THRESHOLD_KM && timeOfClosestApproach !== null)) {
         predictedIssPathPoints = [];
     }
-    // console.log('[PassByDebug] Extrapolation loop finished. Stored predicted points:', predictedIssPathPoints.length);
+
+    console.log(`[PassByDebug PredictCalc] Populated predictedIssPathPoints. Length: ${predictedIssPathPoints.length}`);
+    if (predictedIssPathPoints.length > 0) {
+        console.log('[PassByDebug PredictCalc] First 3 predicted points:', JSON.stringify(predictedIssPathPoints.slice(0, 3)));
+        if (predictedIssPathPoints.length > 3) {
+            console.log('[PassByDebug PredictCalc] Last 3 predicted points:', JSON.stringify(predictedIssPathPoints.slice(-3)));
+        }
+    }
+    // Note: window.update3DPredictedPath is called by the slider event listeners after this function completes.
 
     if (minFutureDist < PASS_BY_THRESHOLD_KM && timeOfClosestApproach !== null) {
         const approachDate = new Date(Date.now() + timeOfClosestApproach * 1000);
@@ -555,8 +581,15 @@ setTimeout(() => {
     } else {
         console.log('[PassByDebug] Conditions not met for initial pass-by calculation.');
          document.getElementById('iss-passby-time').textContent = 'Waiting for initial data...';
-    }
-}, 5000);
+    // }
+// }, 5000); // Commented out/Removed: Initial call is now triggered by onHistoricalDataReadyForPrediction
+
+function onHistoricalDataReadyForPrediction() {
+    console.log('[earth.ejs] onHistoricalDataReadyForPrediction called, now calculating initial pass-by and prediction.');
+    calculateAndDisplayPassBy();
+}
+// Make it available on the window object
+window.onHistoricalDataReadyForPrediction = onHistoricalDataReadyForPrediction;
 
 const pathLengthSlider = document.getElementById('pathLengthSlider');
 const pathLengthValueSpan = document.getElementById('pathLengthValue');
