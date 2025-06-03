@@ -212,6 +212,10 @@ router.get('/specs', (req, res) => {
     res.render('specs')
 })
 
+router.get('/threejs-scene', (req, res) => {
+    res.render('threejs_scene', { menuId: 'threejs-scene' }); // Added menuId for consistency, can be adjusted
+});
+
 //Tools
 router.get('/colorfinder', (req,res) => {
     res.render('colorfinder')

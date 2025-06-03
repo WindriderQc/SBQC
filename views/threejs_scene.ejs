@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('partials/mainHead') %>
+    <title>Three.js Scene</title>
+    <style>
+        body { margin: 0; }
+        #threejs-container { width: 100%; height: calc(100vh - 112px); /* Adjusted for header and footer */ display: block; }
+    </style>
+</head>
+<body>
+    <%- include('partials/nav') %>
+    <div id="threejs-container"></div>
+    <script src="/Projects/checkins/three.js"></script> <%# Path relative to public directory %>
+    <script src="/js/threejs_setup.js"></script> <%# Path relative to public directory %>
+    <%- include('partials/footer') %>
+</body>
+</html>
