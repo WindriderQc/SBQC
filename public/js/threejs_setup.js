@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     scene.add(sphere);
 
     // Cloud Sphere
-    const cloudTexture = textureLoader.load('/img/cloudyEarth.jpg');
+    const cloudTexture = textureLoader.load('/img/Cloud_Map.jpg');
     cloudTexture.encoding = THREE.sRGBEncoding; // sRGBEncoding for color textures
 
     const cloudMaterial = new THREE.MeshPhongMaterial({ // Using MeshPhongMaterial for clouds for transparency options
