@@ -131,13 +131,25 @@
                             <div style="margin-top: 5px;">
                                 <span style="background-color: orange; display: inline-block; width: 20px; height: 10px; margin-right: 5px; border: 1px solid #555;"></span> Historical ISS Path (Database)
                             </div>
-                            <div style="margin-top: 5px;">
-                                <span style="background-color: green; display: inline-block; width: 20px; height: 3px; border-top: 3px dashed green; margin-right: 5px; vertical-align: middle;"></span> Predicted ISS Path
-                            </div>
                         </div>
                         <div style="padding: 10px; text-align: left; border-top: 1px solid #eee;">
-                            <label for="pathLengthSlider">Path Length: <span id="pathLengthValue">4200</span> points</label>
-                            <input type="range" id="pathLengthSlider" min="100" max="4200" step="100" value="4200" style="width: 100%;">
+                            <!-- Existing Path Length Slider -->
+                            <div>
+                                <label for="pathLengthSlider">Path Length: <span id="pathLengthValue">4200</span> points</label>
+                                <input type="range" id="pathLengthSlider" min="100" max="4200" step="100" value="4200" style="width: 100%;">
+                            </div>
+
+                            <!-- New Prediction Length Slider -->
+                            <div style="margin-top: 10px;">
+                                <label for="predictionLengthSlider">Prediction Length: <span id="predictionLengthValue">15</span> min</label>
+                                <input type="range" id="predictionLengthSlider" min="5" max="120" step="5" value="15" style="width: 100%;">
+                            </div>
+
+                            <!-- New Pass-by Radius Slider -->
+                            <div style="margin-top: 10px;">
+                                <label for="passByRadiusSlider">Pass-by Radius: <span id="passByRadiusValue">1000</span> km</label>
+                                <input type="range" id="passByRadiusSlider" min="100" max="5000" step="100" value="1000" style="width: 100%;">
+                            </div>
                         </div>
                 </div>
                 <div class="card-footer small text-muted"> <a href="https://eyes.nasa.gov/apps/solar-system/#/home" target="_blank" class="btn btn-outline-primary">Explore with NASA Eyes</a> </div>
@@ -168,13 +180,14 @@ let historicalIssPathSegments = []; // Historical ISS path from initial load, no
 let mymap; // Declare mymap globally
 
 // For Predicted Path
-let predictedIssPathPoints = [];
-let predictedIssPathPolyline = null;
+let predictedIssPathPoints = []; // This array remains for 3D view
+// let predictedIssPathPolyline = null; // Removed for 2D map
 
 // For pass-by estimation
 let lastPassByCheckTime = 0;
 const PASS_BY_CHECK_INTERVAL = 30000; // 30 seconds
-const PASS_BY_THRESHOLD_KM = 1000; // Max distance for a "close" pass
+let PASS_BY_THRESHOLD_KM = 1000; // Max distance for a "close" pass - Changed to let
+let predictionDurationSeconds = 15 * 60; // Default 15 minutes in seconds
 
 let socket = io();
 
@@ -348,19 +361,9 @@ async function updateIssOnMap(lat, lon) {
 
     redrawLiveIssPath(); // Call the new function for the live path
 
-    // Draw predicted path
-    if (predictedIssPathPolyline && mymap) {
-        mymap.removeLayer(predictedIssPathPolyline);
-        predictedIssPathPolyline = null;
-    }
-    if (predictedIssPathPoints && predictedIssPathPoints.length > 1 && mymap) {
-        const predictedLatLngs = predictedIssPathPoints.map(p => [p.lat, p.lng]);
-        predictedIssPathPolyline = L.polyline(predictedLatLngs, {
-            color: 'green',
-            weight: 3,
-            dashArray: '5, 10'
-        }).addTo(mymap);
-    }
+    // Removed predicted path drawing logic from 2D map
+    // The data in predictedIssPathPoints is still calculated by calculateAndDisplayPassBy()
+    // and will be used by the 3D visualization if needed.
 }
 
 function displayHistoricalDataOn2DMap(historicalPoints) {
@@ -475,7 +478,7 @@ function calculateAndDisplayPassBy() {
     predictedIssPathPoints = []; // Clear global predicted path at start of this calculation run
 
     // console.log('[PassByDebug] Starting extrapolation loop for predicted path...');
-    for (let t = 0; t < 900; t += 30) { // Changed 7200 to 900
+    for (let t = 0; t < predictionDurationSeconds; t += 30) { // Use dynamic prediction duration
         const futureLat = lastPoint.lat + latSpeed * t;
         const futureLon = lastPoint.lng + lonSpeed * t;
         const normalizedFutureLon = (futureLon + 540) % 360 - 180;
@@ -568,6 +571,48 @@ if (pathLengthSlider && pathLengthValueSpan) {
     });
 }
 
+// Event listener for Prediction Length Slider
+const predictionLengthSlider = document.getElementById('predictionLengthSlider');
+const predictionLengthValueSpan = document.getElementById('predictionLengthValue');
+
+if (predictionLengthSlider && predictionLengthValueSpan) {
+    predictionLengthSlider.addEventListener('input', function() {
+        predictionDurationSeconds = parseInt(this.value) * 60;
+        predictionLengthValueSpan.textContent = this.value;
+
+        calculateAndDisplayPassBy(); // Recalculate pass-by and prediction points
+
+        // Call to update 3D predicted path (function to be implemented in earth3D.js later)
+        if (typeof window.update3DPredictedPath === 'function') {
+            window.update3DPredictedPath(predictedIssPathPoints);
+        } else {
+            console.warn('[Prediction Slider] update3DPredictedPath function not found on window.');
+        }
+        console.log(`Prediction length slider changed: duration is now ${this.value} minutes (${predictionDurationSeconds}s).`);
+    });
+}
+
+// Event listener for Pass-by Radius Slider
+const passByRadiusSlider = document.getElementById('passByRadiusSlider');
+const passByRadiusValueSpan = document.getElementById('passByRadiusValue');
+
+if (passByRadiusSlider && passByRadiusValueSpan) {
+    passByRadiusSlider.addEventListener('input', function() {
+        PASS_BY_THRESHOLD_KM = parseInt(this.value);
+        passByRadiusValueSpan.textContent = this.value;
+
+        calculateAndDisplayPassBy(); // Recalculate pass-by info and prediction points
+
+        // The predicted path points might change if the pass-by threshold affects how many are stored/considered.
+        // So, also call update3DPredictedPath here.
+        if (typeof window.update3DPredictedPath === 'function') {
+            window.update3DPredictedPath(predictedIssPathPoints);
+        } else {
+            console.warn('[Radius Slider] update3DPredictedPath function not found on window.');
+        }
+        console.log(`Pass-by radius slider changed: threshold is now ${PASS_BY_THRESHOLD_KM} km.`);
+    });
+}
 </script>
 
 </body>

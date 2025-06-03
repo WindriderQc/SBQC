@@ -2,6 +2,7 @@
 
 let internalIssPathHistory = [];
 let MAX_HISTORY_POINTS = 4200; // Changed from const to let
+let internalPredictedPath = []; // For 3D predicted path
 const pathPointSphereSize = 2;
 
 let rotationSpeed = (Math.PI * 2) / 60; // One full rotation every 60 seconds
@@ -71,6 +72,18 @@ function set3DMaxHistoryPoints(newLimit) {
         // p5.js draw() loop will automatically use the updated internalIssPathHistory
     } else {
         console.error('[3D Path] Invalid newLimit provided to set3DMaxHistoryPoints:', newLimit);
+    }
+}
+
+function update3DPredictedPath(pointsFrom2D) {
+    if (Array.isArray(pointsFrom2D)) {
+        // Create a new array of simple {lat, lon} objects
+        // Note: pointsFrom2D from ejs uses {lat, lng}, so we map lng to lon
+        internalPredictedPath = pointsFrom2D.map(p => ({ lat: p.lat, lon: p.lng }));
+        console.log(`[3D Path] Updated internalPredictedPath with ${internalPredictedPath.length} points.`);
+    } else {
+        console.warn('[3D Path] Invalid or no data received for update3DPredictedPath. Clearing predicted path.');
+        internalPredictedPath = []; // Clear if data is invalid or empty
     }
 }
 
@@ -226,6 +239,28 @@ function draw()
     }
     pop(); // End path styles
    }
+
+    // Draw Predicted ISS Path (Green Line)
+    if (internalPredictedPath && internalPredictedPath.length > 1) {
+        push(); // Isolate styles for the predicted path
+
+        stroke(0, 200, 0, 180); // Green color, slightly transparent
+        strokeWeight(1.5);       // A bit thinner than the main path perhaps
+        noFill();              // We are drawing lines, not filled shapes
+
+        beginShape();
+        for (let i = 0; i < internalPredictedPath.length; i++) {
+            const predPoint = internalPredictedPath[i];
+            // Ensure lat/lon are valid numbers before processing
+            if (typeof predPoint.lat === 'number' && typeof predPoint.lon === 'number') {
+                // Convert lat/lon to 3D coordinates. Altitude is same as main ISS path.
+                let vPredPath = Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, predPoint.lat, predPoint.lon);
+                vertex(vPredPath.x, vPredPath.y, vPredPath.z);
+            }
+        }
+        endShape();
+        pop(); // Restore previous styles
+    }
 
    //  Showing Québec on earth  TODO:  show user location
    let p =  Tools.p5.getSphereCoord(earthSize,46.8139,-71.2080)
