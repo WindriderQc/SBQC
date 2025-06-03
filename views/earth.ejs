@@ -123,6 +123,18 @@
                         <p>Client location -  lat: <span id="clat"></span>&deg; lon: <span id="clon"></span>&deg;</span> </p>
                         <p id="default-location-msg" style="font-size: 0.8em; color: #777; display: none;">Using default location as live geolocation is unavailable.</p>
                         <div id='issMap' style="height:720px;"></div>
+                        <div style="padding: 10px; text-align: left; border-top: 1px solid #eee;">
+                            <strong>Legend:</strong>
+                            <div style="margin-top: 5px;">
+                                <span style="background-color: blue; display: inline-block; width: 20px; height: 10px; margin-right: 5px; border: 1px solid #555;"></span> Live ISS Path (WebSocket)
+                            </div>
+                            <div style="margin-top: 5px;">
+                                <span style="background-color: orange; display: inline-block; width: 20px; height: 10px; margin-right: 5px; border: 1px solid #555;"></span> Historical ISS Path (Database)
+                            </div>
+                            <div style="margin-top: 5px;">
+                                <span style="background-color: green; display: inline-block; width: 20px; height: 3px; border-top: 3px dashed green; margin-right: 5px; vertical-align: middle;"></span> Predicted ISS Path
+                            </div>
+                        </div>
                 </div>
                 <div class="card-footer small text-muted"> <a href="https://eyes.nasa.gov/apps/solar-system/#/home" target="_blank" class="btn btn-outline-primary">Explore with NASA Eyes</a> </div>
         </div>
@@ -148,7 +160,7 @@ let clientLon = null;
 let issPathHistory = [];
 const MAX_2D_HISTORY_POINTS = 1500;
 let issPathPolyline = null; // Live ISS path
-let historicalIssPathPolyline = null; // Historical ISS path from initial load
+let historicalIssPathSegments = []; // Historical ISS path from initial load, now stores array of segments
 let mymap; // Declare mymap globally
 
 // For Predicted Path
@@ -345,30 +357,54 @@ async function updateIssOnMap(lat, lon) {
 }
 
 function displayHistoricalDataOn2DMap(historicalPoints) {
-    console.log('[Historical Path] displayHistoricalDataOn2DMap called with', historicalPoints.length, 'points.');
+    console.log('[Historical 2D Path] Drawing historical data. Points received:', historicalPoints ? historicalPoints.length : 0);
 
-    if (historicalIssPathPolyline && mymap) {
-        mymap.removeLayer(historicalIssPathPolyline);
-        console.log('[Historical Path] Removed existing historical polyline from 2D map.');
+    // Clear previous segments
+    if (mymap && historicalIssPathSegments && historicalIssPathSegments.length > 0) {
+        historicalIssPathSegments.forEach(segment => mymap.removeLayer(segment));
     }
+    historicalIssPathSegments = [];
 
-    if (!historicalPoints || historicalPoints.length === 0) {
-        console.log('[Historical Path] No points provided or empty array, historical path will not be drawn.');
-        historicalIssPathPolyline = null; // Ensure it's cleared if no points
+    if (!historicalPoints || historicalPoints.length < 2) {
+        console.log('[Historical 2D Path] Not enough historical points to draw.');
         return;
     }
 
-    const latLngs = historicalPoints.map(p => [p.lat, p.lon]); // Note: earth3D.js uses p.lon
+    let currentSegmentLatLngs = [];
+    // Assuming historicalPoints are already sorted by timestamp ASC by earth3D.js
+    // The points in historicalPoints are like {lat: ..., lon: ...}
 
-    if (latLngs.length > 1 && mymap) {
-        historicalIssPathPolyline = L.polyline(latLngs, {
-            color: 'orange', // Different color for historical path
-            weight: 3
-        }).addTo(mymap);
-        console.log('[Historical Path] Historical ISS path drawn on 2D map with', latLngs.length, 'points.');
-    } else {
-        console.log('[Historical Path] Not enough points to draw historical ISS path on 2D map (need > 1) or mymap not ready. Points:', latLngs.length);
-        historicalIssPathPolyline = null; // Ensure it's cleared if not drawn
+    let prevPoint = historicalPoints[0];
+    currentSegmentLatLngs.push([prevPoint.lat, prevPoint.lon]);
+
+    for (let i = 1; i < historicalPoints.length; i++) {
+        const currentPoint = historicalPoints[i];
+        const currentLatLng = [currentPoint.lat, currentPoint.lon];
+
+        // Check for longitude wrap around anti-meridian
+        if (Math.abs(currentPoint.lon - prevPoint.lon) > 180) { // Threshold for longitude jump
+            // Current segment has enough points to be drawn
+            if (currentSegmentLatLngs.length > 1 && mymap) {
+                const segment = L.polyline(currentSegmentLatLngs, { color: 'orange', weight: 3 }).addTo(mymap);
+                historicalIssPathSegments.push(segment);
+            }
+            // Start a new segment
+            currentSegmentLatLngs = [];
+        }
+        currentSegmentLatLngs.push(currentLatLng);
+        prevPoint = currentPoint;
+    }
+
+    // Draw the last or only segment
+    if (currentSegmentLatLngs.length > 1 && mymap) {
+        const segment = L.polyline(currentSegmentLatLngs, { color: 'orange', weight: 3 }).addTo(mymap);
+        historicalIssPathSegments.push(segment);
+    }
+
+    if (historicalIssPathSegments.length > 0) {
+        console.log(`[Historical 2D Path] Historical ISS path drawn on 2D map in ${historicalIssPathSegments.length} segment(s).`);
+    } else if (historicalPoints.length > 0) {
+        console.log('[Historical 2D Path] Path had points but no drawable segments (e.g., all single points after potential splits).');
     }
 }
 
