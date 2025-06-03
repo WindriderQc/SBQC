@@ -591,6 +591,7 @@ function onHistoricalDataReadyForPrediction() {
 // Make it available on the window object
 window.onHistoricalDataReadyForPrediction = onHistoricalDataReadyForPrediction;
 
+
 const pathLengthSlider = document.getElementById('pathLengthSlider');
 const pathLengthValueSpan = document.getElementById('pathLengthValue');
 
@@ -605,12 +606,6 @@ if (pathLengthSlider && pathLengthValueSpan) {
         }
         redrawLiveIssPath(); // Redraw the live path with the new limit
 
-        // The historical path (orange) is derived from internalIssPathHistory
-        // and its length is managed by MAX_HISTORY_POINTS in earth3D.js.
-        // The slider primarily affects the live blue path.
-        // No need to call displayHistoricalDataOn2DMap here for this subtask's scope.
-        // console.log(`Slider changed: MAX_2D_HISTORY_POINTS (for live 2D path) is now ${MAX_2D_HISTORY_POINTS}`); // Original log
-
         // Update 3D path length (this will trim internalIssPathHistory in earth3D.js)
         if (typeof window.set3DMaxHistoryPoints === 'function') {
             window.set3DMaxHistoryPoints(MAX_2D_HISTORY_POINTS);
@@ -619,9 +614,6 @@ if (pathLengthSlider && pathLengthValueSpan) {
         }
 
         // Redraw historical 2D path (orange line) using the potentially updated internalIssPathHistory
-        // internalIssPathHistory is a global from earth3D.js, made available on window by earth3D.js if needed, or directly accessed.
-        // For this exercise, we assume internalIssPathHistory is accessible globally or via window.internalIssPathHistory if explicitly set.
-        // Let's assume it's window.internalIssPathHistory for clarity as per prompt.
         if (typeof window.displayHistoricalDataOn2DMap === 'function' && typeof window.internalIssPathHistory !== 'undefined') {
             window.displayHistoricalDataOn2DMap(window.internalIssPathHistory);
         } else {
@@ -630,7 +622,6 @@ if (pathLengthSlider && pathLengthValueSpan) {
         console.log(`Slider changed: Path length for 2D live, 2D historical, and 3D view set to ${MAX_2D_HISTORY_POINTS}`);
     });
 }
-
 // Event listener for Prediction Length Slider
 const predictionLengthSlider = document.getElementById('predictionLengthSlider');
 const predictionLengthValueSpan = document.getElementById('predictionLengthValue');
