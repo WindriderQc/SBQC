@@ -198,62 +198,81 @@ function draw()
   // rotateZ(-23);
    rotateY(11);
 
-
-    if (typeof iss !== 'undefined' && iss && typeof iss.latitude !== 'undefined' && typeof iss.longitude !== 'undefined') {
-        // Check if the latest history point is different from current iss coords to avoid too many identical points
+    // Guard for pushing live ISS data to internalIssPathHistory
+    if (typeof iss !== 'undefined' && iss && typeof iss.latitude === 'number' && typeof iss.longitude === 'number') {
         let addPoint = true;
         if (internalIssPathHistory.length > 0) {
             const lastPoint = internalIssPathHistory[internalIssPathHistory.length - 1];
-            if (lastPoint.lat === iss.latitude && lastPoint.lon === iss.longitude) {
+            // Check if lastPoint has lat/lon before comparing
+            if (typeof lastPoint.lat === 'number' && typeof lastPoint.lon === 'number' &&
+                lastPoint.lat === iss.latitude && lastPoint.lon === iss.longitude) {
                 addPoint = false;
             }
         }
 
         if (addPoint) {
+            // iss.timestamp is in milliseconds from the WebSocket server
+            // Store as ISO string if converting, or ensure consistency if not.
+            // For now, assume direct storage or that it's an ISO string.
+            // The API historical data has timeStamp as ISO string.
+            // The live data 'iss.timestamp' is ms since epoch.
+            // To be consistent with historical data (which is now stored as ISO string via point.timeStamp)
+            // we should convert live timestamp to ISO string as well, or convert historical to ms.
+            // Let's convert live to ISO string for consistency with historical.
+            // However, populateInitialIssHistory stores API's timeStamp (ISO string) directly.
+            // And the ejs part converts that ISO string to ms for calculation.
+            // So, for live data being added to internalIssPathHistory, we should add it in a format
+            // that the EJS part can also parse with new Date().getTime().
+            // The live `iss.timestamp` is already in ms.
+            // `populateInitialIssHistory` stores the API's `timeStamp` (ISO string)
+            // `calculateAndDisplayPassBy` converts historical `timeStamp` (ISO) to ms.
+            // So, live data pushed to `internalIssPathHistory` should also have `timeStamp` in a format parseable by `new Date().getTime()`.
+            // Milliseconds is fine, or convert to ISO string. Let's use the millisecond value directly if available.
             internalIssPathHistory.push({
                 lat: iss.latitude,
-                lon: iss.longitude
-                // We'll use earthSize + issDistanceToEarth for altitude when drawing
+                lon: iss.longitude,
+                timeStamp: iss.timestamp ? iss.timestamp : new Date().getTime() // Use ms if available, else current time in ms
             });
         }
 
-        if (internalIssPathHistory.length > MAX_HISTORY_POINTS) {
+        // Ensure MAX_HISTORY_POINTS is respected
+        while (internalIssPathHistory.length > MAX_HISTORY_POINTS) {
             internalIssPathHistory.shift();
         }
     }
 
-   if(iss)
-   {
-     let v =  Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, iss.latitude, iss.longitude)
+    // Guard for drawing the ISS model
+    if (typeof iss !== 'undefined' && iss && typeof iss.latitude === 'number' && typeof iss.longitude === 'number') {
+        let v = Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, iss.latitude, iss.longitude);
+        push();
+        translate(v.x, v.y, v.z);
+        fill(0,0,0,0);
+        texture(issGif);
+        plane(issGif.width / issSize, issGif.height / issSize);
+        pop();
+    }
 
-     push();
-     translate(v.x, v.y, v.z)
-
-     fill(0,0,0,0)
-     texture(issGif)
-     plane(issGif.width / issSize, issGif.height / issSize)
-
-
-     //fill(150, 200, 255)
-     //sphere(15)
-     pop();
-
-    // Draw ISS Path History
-    push(); // Isolate path styles
-    noStroke();
+    // Draw ISS Path History (Orange Spheres) - This should always attempt to draw from internalIssPathHistory
+    // It is NOT dependent on the 'iss' (live data) object being defined, so it's outside the above 'if(iss)'
+    if (internalIssPathHistory.length > 0) { // Check if there's anything to draw
+        push(); // Isolate path styles
+        noStroke();
     fill(255, 165, 0, 150); // Orange, semi-transparent
 
     for (let i = 0; i < internalIssPathHistory.length; i++) {
         const histPoint = internalIssPathHistory[i];
-        let vPath = Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, histPoint.lat, histPoint.lon);
-
-        push();
-        translate(vPath.x, vPath.y, vPath.z);
-        sphere(pathPointSphereSize);
-        pop();
+        // Ensure histPoint itself and its lat/lon are valid before attempting to draw
+        if (histPoint && typeof histPoint.lat === 'number' && typeof histPoint.lon === 'number') {
+            let vPath = Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, histPoint.lat, histPoint.lon);
+            push();
+            translate(vPath.x, vPath.y, vPath.z);
+            sphere(pathPointSphereSize);
+            pop();
+        }
     }
     pop(); // End path styles
-   }
+    }
+
 
     // Draw Predicted ISS Path (Green Line)
     if (internalPredictedPath && internalPredictedPath.length > 1) {
