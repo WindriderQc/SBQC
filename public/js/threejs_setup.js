@@ -132,12 +132,12 @@ document.addEventListener('DOMContentLoaded', () => {
         requestAnimationFrame(animate);
 
         // Optional: Add some animation to the sphere
-        sphere.rotation.x += 0.005;
-        sphere.rotation.y += 0.005;
+        // sphere.rotation.x += 0.005; // Remove or comment out X-axis rotation
+        sphere.rotation.y += 0.005; // Keep Y-axis rotation
 
         if (cloudSphere) { // Check if cloudSphere is defined
             cloudSphere.rotation.y += 0.0025; // Slower and slightly different rotation for clouds
-            cloudSphere.rotation.x += 0.001; // Slight axial tilt rotation for clouds
+            // cloudSphere.rotation.x += 0.001; // Remove or comment out X-axis rotation
         }
 
         renderer.render(scene, camera);
