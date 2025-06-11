@@ -25,7 +25,7 @@ function preload()
         0 + ',' + 0 + ',' + 1 + '/' +
         1028 + 'x' + 1028 +
         '?access_token=pk.eyJ1Ijoid2luZHJpZGVyIiwiYSI6ImNqczVldmR3bzBmMWU0NHRmbjlta2Y0aDEifQ.FWOdvqw-IBlcJrBKKML7iQ');        */
-        cloudyEarth = loadImage('/img/cloudyEarth.jpg') //, 0,0,width,height);
+        cloudyEarth = loadImage('/img/Planets/cloudyEarth.jpg') //, 0,0,width,height);
         earthquakes = loadStrings('/data/quakes.csv'); // loadStrings('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.csv');
         issGif = loadImage('/img/iss.png');
     loadJSON('https://data.specialblend.ca/iss', populateInitialIssHistory);

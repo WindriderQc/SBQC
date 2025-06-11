@@ -184,8 +184,8 @@ router.get('/iot',  async (req, res) =>
 
 
 router.get('/earth', async (req, res) => {
-   // res.render('earthThreeJS')
-    res.render('earth')
+    res.render('earth3D')
+   // res.render('earth')
 })
 
 
