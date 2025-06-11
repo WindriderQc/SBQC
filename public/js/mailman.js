@@ -26,7 +26,7 @@ const sendEmail = async (mail, msg, image64) => {
 
     var mailOptions = {
         from: this.admin,
-        to: mail, // yanikbeaulieu@hotmail.com, yanikbeaulieu@gmail.com, 
+        to: mail, 
         subject: 'Alert from Node server',
         //text: msg,
         html: htmlmsg,
