@@ -574,14 +574,14 @@ async function getUserInfo() {
 }
 getUserInfo();
 
-setTimeout(() => {
-    console.log('[PassByDebug] Initial timeout for calculateAndDisplayPassBy.');
-    if (clientLat !== null && clientLon !== null && issPathHistory.length > 1) {
-        calculateAndDisplayPassBy();
-    } else {
-        console.log('[PassByDebug] Conditions not met for initial pass-by calculation.');
-         document.getElementById('iss-passby-time').textContent = 'Waiting for initial data...';
-    // }
+//setTimeout(() => {
+//    console.log('[PassByDebug] Initial timeout for calculateAndDisplayPassBy.');
+//    if (clientLat !== null && clientLon !== null && issPathHistory.length > 1) {
+//        calculateAndDisplayPassBy();
+//    } else {
+//        console.log('[PassByDebug] Conditions not met for initial pass-by calculation.');
+//         document.getElementById('iss-passby-time').textContent = 'Waiting for initial data...';
+//     }
 // }, 5000); // Commented out/Removed: Initial call is now triggered by onHistoricalDataReadyForPrediction
 
 function onHistoricalDataReadyForPrediction() {
