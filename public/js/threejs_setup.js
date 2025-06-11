@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     container.appendChild(renderer.domElement);
 
     // Earth Texture
-    const earthDayTexture = textureLoader.load('/img/1_earth_8k.jpg');
+    const earthDayTexture = textureLoader.load('/img/world.200407.3x5400x2700.jpg'); //   1_earth_8k.jpg');
     // Ensure sRGBEncoding for color textures for better visual results with MeshStandardMaterial
     earthDayTexture.encoding = THREE.sRGBEncoding;
 
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     scene.add(sphere);
 
     // Cloud Sphere
-    const cloudTexture = textureLoader.load('/img/Cloud_Map.jpg');
+    const cloudTexture = textureLoader.load('/img/Transparent_Stormy_Weather_Clouds_Map.png');
     cloudTexture.encoding = THREE.sRGBEncoding; // sRGBEncoding for color textures
 
     const cloudMaterial = new THREE.MeshPhongMaterial({ // Using MeshPhongMaterial for clouds for transparency options

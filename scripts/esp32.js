@@ -274,14 +274,14 @@ const esp32 = {
 
             return true
         }
-        else if (topic === 'sbqc/iss') {
+        else if (topic === 'sbqc/iss') {   //  TODO     //  should be moved to mqttServer.js
             try {
                 const issData = JSON.parse(message.toString());
-                console.log('Received ISS data from MQTT topic sbqc/iss:', issData);
+                //console.log('Received ISS data from MQTT topic sbqc/iss:', issData);
                 const mainServerIo = get_io();
                 if (mainServerIo) {
                     mainServerIo.sockets.emit('iss', issData); // 'iss' is the event earth.ejs listens for
-                    console.log('Relayed ISS data to local Socket.IO clients.');
+                    //console.log('Relayed ISS data to local Socket.IO clients.');
                 } else {
                     console.warn('Main server IO not available to relay ISS data from MQTT.');
                 }
