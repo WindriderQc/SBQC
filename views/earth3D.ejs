@@ -11,7 +11,7 @@
 
 <div class="content-wrapper">
 <div class="container-fluid bg-3 text-center">
-    <!-- Begin Container  -->
+    <!-- Begin Container -->
 
     <div class="card mb-3">
         <div class="card-body">
@@ -64,6 +64,9 @@
                 <div style="margin-top: 5px;">
                     <span style="background-color: yellow; display: inline-block; width: 10px; height: 10px; margin-right: 5px; border: 1px solid #555; border-radius: 50%;"></span> Default Location (Quebec City)
                 </div>
+                 <div style="margin-top: 5px;">
+                    <span style="background-color: rgba(0,100,255,0.3); display: inline-block; width: 20px; height: 10px; margin-right: 5px; border: 1px solid #555;"></span> Pass-by Detection Radius
+                </div>
             </div>
 
             <div style="padding: 10px; text-align: left; border-top: 1px solid #eee;">
@@ -90,15 +93,14 @@
 </div>
 </div>
 
-<%- include('partials/footer') %>
+<%- include('partials/footer') %> <%# This should load tools.js %>
 <script src="/socket.io/socket.io.js"></script>
 <%- include('partials/p5') %>
-<script src="/js/earth3D.js"></script> <%# This line includes the p5.js sketch %>
+<%# <script src="/js/tools.js"></script> <!-- REMOVED - Loaded in footer --> %>
+<script src="/js/earth3D.js"></script>
 
 <script>
     // Page UI and Socket.IO Logic
-    // Note: p5.js sketch variables like 'iss', 'internalIssPathHistory', 'MAX_HISTORY_POINTS' 
-    // and functions like 'set3DMaxHistoryPoints', 'update3DPredictedPath' are defined in earth3D.js and globally accessible via window.
 
     let clientLat = null;
     let clientLon = null;
@@ -107,7 +109,7 @@
     
     let lastPassByCheckTime = 0;
     const PASS_BY_CHECK_INTERVAL = 30000; 
-    let PASS_BY_THRESHOLD_KM = 1000; 
+    let PASS_BY_THRESHOLD_KM = 1000; // Used for calculation logic
     let predictionDurationSeconds = 15 * 60; 
 
     const socket = io();
@@ -117,7 +119,6 @@
     });
 
     socket.on('iss', (data) => {
-        // Make 'iss' data globally available for the p5 sketch in earth3D.js
         window.iss = data; 
         
         if (document.getElementById('isslat') && document.getElementById('isslon')) {
@@ -139,19 +140,15 @@
             const response = await fetch(url);
             if (!response.ok) throw new Error(`Weather API request failed with status ${response.status}`);
             const data = await response.json();
-
             document.getElementById('summary').textContent = data.weather.weather[0].description;
             document.getElementById('temp').textContent = data.weather.main.feels_like.toFixed(1);
-            
             if (data.air_quality && data.air_quality.results && data.air_quality.results[0] && data.air_quality.results[0].latest) {
                 const air = data.air_quality.results[0];
                 document.getElementById('aq_parameter').textContent = air.parameter ? air.parameter.displayName : 'N/A';
                 document.getElementById('aq_value').textContent = air.latest.value;
                 document.getElementById('aq_units').textContent = air.parameter ? air.parameter.units : '';
                 document.getElementById('aq_date').textContent = air.latest.datetime && air.latest.datetime.local ? air.latest.datetime.local : 'N/A';
-            } else {
-                 document.getElementById('aq_value').textContent = 'NO READING';
-            }
+            } else { document.getElementById('aq_value').textContent = 'NO READING'; }
             const wind = data.weather.wind;
             document.getElementById('wind-speed').textContent = wind.speed;
             document.getElementById('wind-gust').textContent = wind.gust || 'N/A';
@@ -165,27 +162,26 @@
 
     async function setDefaultLocationAndFetchWeather() {
         console.log("Using default client location (Quebec City area).");
-        clientLat = 46.8139; 
-        clientLon = -71.2080; 
-
+        clientLat = 46.8139; clientLon = -71.2080; 
         document.getElementById('clat').textContent = clientLat.toFixed(2);
         document.getElementById('clon').textContent = clientLon.toFixed(2);
         document.getElementById('default-location-msg').style.display = 'block';
-        
         await fetchWeatherForCoords(clientLat, clientLon);
     }
 
     async function updateGeoData() {
-        if (!Tools.isGeoLocAvailable()) { // Assumes Tools.js is loaded
+        if (typeof Tools === 'undefined' || !Tools.isGeoLocAvailable || !Tools.geoLocate) {
+            console.log("Tools.js not available or complete. Using default location.");
+            await setDefaultLocationAndFetchWeather(); return;
+        }
+        if (!Tools.isGeoLocAvailable()) { 
             console.log("Geolocation not available in this browser.");
-            await setDefaultLocationAndFetchWeather();
-            return;
+            await setDefaultLocationAndFetchWeather(); return;
         }
         try {
             console.log("Attempting to get live geolocation...");
-            const { coords } = await Tools.geoLocate(); // Assumes Tools.js is loaded
-            clientLat = coords.latitude;
-            clientLon = coords.longitude;
+            const { coords } = await Tools.geoLocate(); 
+            clientLat = coords.latitude; clientLon = coords.longitude;
             console.log("Live geolocation successful:", clientLat, clientLon);
             document.getElementById('default-location-msg').style.display = 'none';
             document.getElementById('clat').textContent = clientLat.toFixed(2);
@@ -199,67 +195,47 @@
     
     function calculateAndDisplayPassBy() {
         const passByStatus = document.getElementById('iss-passby-time');
-        // Accessing internalIssPathHistory from the p5.js sketch (earth3D.js) via window scope
-        console.log('[calculateAndDisplayPassBy] Checking window.internalIssPathHistory. Length:', window.internalIssPathHistory ? window.internalIssPathHistory.length : 'undefined');
-
+        let currentIssHistory = [];
+        if (window.earth3DSketch && typeof window.earth3DSketch.getInternalIssPathHistory === 'function') {
+            currentIssHistory = window.earth3DSketch.getInternalIssPathHistory();
+        }
+        console.log('[calculateAndDisplayPassBy] Checking sketch history via window.earth3DSketch. Length:', currentIssHistory ? currentIssHistory.length : 'undefined');
         if (clientLat === null || clientLon === null) {
             passByStatus.textContent = 'Waiting for client location...';
-            if (typeof update3DPredictedPath === 'function') update3DPredictedPath([]); 
-            console.log('[PassByDebug] Returning: Client location not available.');
+            if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') window.earth3DSketch.updatePredictedPath([]); 
             return;
         }
-
-        if (typeof window.internalIssPathHistory === 'undefined' || window.internalIssPathHistory.length < 2) {
-            console.log('[PassByDebug] ISS path history (window.internalIssPathHistory) too short or unavailable. Length:', window.internalIssPathHistory ? window.internalIssPathHistory.length : 'undefined');
+        if (!currentIssHistory || currentIssHistory.length < 2) {
             passByStatus.textContent = 'Insufficient ISS path data...';
             pagePredictedIssPathPoints = []; 
-            if (typeof update3DPredictedPath === 'function') update3DPredictedPath(pagePredictedIssPathPoints); 
+            if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') window.earth3DSketch.updatePredictedPath(pagePredictedIssPathPoints); 
             return;
         }
-        
-        let basePath = window.internalIssPathHistory; 
-        console.log('[PassByDebug] Using window.internalIssPathHistory for prediction. Points:', basePath.length);
-
-        if (typeof Tools.haversineDistance !== 'function') { // Assumes Tools.js is loaded
+        let basePath = currentIssHistory; 
+        if (typeof Tools === 'undefined' || typeof Tools.haversineDistance !== 'function') { 
             passByStatus.textContent = 'Distance calculation tool not available.';
-            if (typeof update3DPredictedPath === 'function') update3DPredictedPath([]); 
-            console.error('[PassByDebug] Returning: Tools.haversineDistance is not a function.');
+            if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') window.earth3DSketch.updatePredictedPath([]); 
             return;
         }
-
         passByStatus.textContent = 'Calculating...';
-
-        const lastPointData = basePath[basePath.length - 1];
-        const secondLastPointData = basePath[basePath.length - 2];
-
-        const lastPointTimestamp = new Date(lastPointData.timeStamp).getTime();
-        const secondLastPointTimestamp = new Date(secondLastPointData.timeStamp).getTime();
-
+        const lastPointData = basePath[basePath.length - 1]; const secondLastPointData = basePath[basePath.length - 2];
+        const lastPointTimestamp = new Date(lastPointData.timeStamp).getTime(); const secondLastPointTimestamp = new Date(secondLastPointData.timeStamp).getTime();
         if (isNaN(lastPointTimestamp) || isNaN(secondLastPointTimestamp)) {
-            console.error('[PassByDebug] Invalid timestamps in history data.');
             passByStatus.textContent = 'Error with timestamp data.';
-            if (typeof update3DPredictedPath === 'function') update3DPredictedPath([]);
+            if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') window.earth3DSketch.updatePredictedPath([]);
             return;
         }
-        
         const timeDiffSeconds = (lastPointTimestamp - secondLastPointTimestamp) / 1000;
-
         if (timeDiffSeconds <= 0) {
             passByStatus.textContent = 'Static or invalid ISS data timestamps for speed calculation.';
-            if (typeof update3DPredictedPath === 'function') update3DPredictedPath([]); 
-            console.log('[PassByDebug] Returning: Time difference issue. timeDiffSeconds:', timeDiffSeconds);
+            if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') window.earth3DSketch.updatePredictedPath([]); 
             return;
         }
-
-        const latSpeed = (lastPointData.lat - secondLastPointData.lat) / timeDiffSeconds;
-        const lonSpeed = (lastPointData.lon - secondLastPointData.lon) / timeDiffSeconds; 
-
-        let minFutureDist = Infinity;
-        let timeOfClosestApproach = null;
-        let tempPredictedPath = []; 
-
+        const latSpeed = (lastPointData.lat - secondLastPointData.lat) / timeDiffSeconds; const lonSpeed = (lastPointData.lon - secondLastPointData.lon) / timeDiffSeconds; 
+        let minFutureDist = Infinity; let timeOfClosestApproach = null; let tempPredictedPath = []; 
         for (let t = 0; t < predictionDurationSeconds; t += 30) { 
-            const futureLat = lastPointData.lat + latSpeed * t;
+            let futureLat = lastPointData.lat + latSpeed * t; // Changed const to let
+            futureLat = Math.max(-52.0, Math.min(52.0, futureLat)); // Added clamping for latitude
             const futureLon = lastPointData.lon + lonSpeed * t;
             const normalizedFutureLon = (futureLon + 540) % 360 - 180; 
 
@@ -271,15 +247,23 @@
                 timeOfClosestApproach = t;
             }
         }
-        
+
+        console.log(`[PassByDebug] minFutureDist: ${minFutureDist.toFixed(2)} km, PASS_BY_THRESHOLD_KM: ${PASS_BY_THRESHOLD_KM} km, timeOfClosestApproach: ${timeOfClosestApproach}s`);
+
         if (minFutureDist < PASS_BY_THRESHOLD_KM && timeOfClosestApproach !== null) {
             pagePredictedIssPathPoints = tempPredictedPath.filter((pt, idx) => (idx * 30) <= timeOfClosestApproach || minFutureDist < PASS_BY_THRESHOLD_KM);
+            console.log(`[PassByDebug] Close pass DETECTED. pagePredictedIssPathPoints length: ${pagePredictedIssPathPoints.length}`);
         } else {
             pagePredictedIssPathPoints = []; 
+            console.log(`[PassByDebug] No close pass detected or condition not met. pagePredictedIssPathPoints CLEARED.`);
         }
         
-        if (typeof update3DPredictedPath === 'function') update3DPredictedPath(pagePredictedIssPathPoints); 
+        console.log(`[PassByDebug] Just before calling update3DPredictedPath, pagePredictedIssPathPoints length: ${pagePredictedIssPathPoints.length}`);
+        if (pagePredictedIssPathPoints.length > 0) {
+            console.log('[PassByDebug] pagePredictedIssPathPoints (first 3):', JSON.stringify(pagePredictedIssPathPoints.slice(0,3)));
+        }
 
+        if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') window.earth3DSketch.updatePredictedPath(pagePredictedIssPathPoints); 
         if (minFutureDist < PASS_BY_THRESHOLD_KM && timeOfClosestApproach !== null) {
             const approachDate = new Date(Date.now() + timeOfClosestApproach * 1000);
             passByStatus.textContent = `Approx. pass at ${approachDate.toLocaleTimeString()} (distance ~${minFutureDist.toFixed(0)} km).`;
@@ -301,9 +285,8 @@
         if (pathLengthSlider && pathLengthValueSpan) {
             pathLengthSlider.addEventListener('input', function() {
                 pathLengthValueSpan.textContent = this.value;
-                // Call function from earth3D.js (now global via window)
-                if (typeof set3DMaxHistoryPoints === 'function') {
-                    set3DMaxHistoryPoints(parseInt(this.value)); 
+                if (window.earth3DSketch && typeof window.earth3DSketch.setMaxHistoryPoints === 'function') {
+                    window.earth3DSketch.setMaxHistoryPoints(parseInt(this.value)); 
                 }
                 calculateAndDisplayPassBy(); 
             });
@@ -320,8 +303,11 @@
         if (passByRadiusSlider && passByRadiusValueSpan) {
             passByRadiusSlider.addEventListener('input', function() {
                 passByRadiusValueSpan.textContent = this.value;
-                PASS_BY_THRESHOLD_KM = parseInt(this.value);
-                calculateAndDisplayPassBy();
+                PASS_BY_THRESHOLD_KM = parseInt(this.value); 
+                if (window.earth3DSketch && typeof window.earth3DSketch.setSketchPassByRadiusKM === 'function') {
+                    window.earth3DSketch.setSketchPassByRadiusKM(parseInt(this.value)); 
+                }
+                calculateAndDisplayPassBy(); 
             });
         }
     });
