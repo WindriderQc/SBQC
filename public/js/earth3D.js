@@ -6,8 +6,10 @@ let originalLoadedIssHistory = [];
 let internalPredictedPath = []; 
 const pathPointSphereSize = 2;
 
-let rotationSpeed = (Math.PI * 2) / 60; 
-let angle = 0; 
+let autoRotationSpeed = (Math.PI * 2) / 120; 
+let angleY = 0; // Renamed from angle
+let angleX = 0; // For vertical rotation
+let zoomLevel = 1.0; // For mouse wheel zoom
 
 let cloudyEarth;
 let earthquakes; 
@@ -106,20 +108,47 @@ function draw() {
         console.log(`[draw frameCount: ${frameCount}] internalIssPathHistory.length: ${internalIssPathHistory ? internalIssPathHistory.length : 'undefined'}, MAX_HISTORY_POINTS: ${MAX_HISTORY_POINTS}, sketchPassByRadiusKM: ${sketchPassByRadiusKM}`);
     }
 
+    // Update angle for auto-rotation
+    // Assuming p5.js tries to run at 60 FPS. autoRotationSpeed is per 2 minutes.
+    // So, per frame, angle increment is autoRotationSpeed / (120 seconds * 60 frames/second)
+    // Simplified: autoRotationSpeed is radians per 120s. We want radians per frame.
+    // If p5 runs at 60fps, then 1 frame is 1/60th of a second.
+    // So, angle change per frame = autoRotationSpeed / (120 * 60)
+    // The prompt asks for angle += autoRotationSpeed / 60.0; which implies autoRotationSpeed is rad/sec.
+    // If autoRotationSpeed = (Math.PI * 2) / 120 (rad/sec for 2 min rotation), then per frame (assuming 60fps):
+    // angle += ((Math.PI * 2) / 120) / 60; 
+    // Let's stick to the prompt's simpler: angle += autoRotationSpeed / 60.0;
+    // This means autoRotationSpeed should be thought of as 'radians per second' for this calculation to be correct.
+    // If autoRotationSpeed = (Math.PI*2)/120 means rad for 2min, then it should be angle += autoRotationSpeed / (120*targetFrameRate)
+    // Let's adjust autoRotationSpeed to be per second for the prompt's formula.
+    // (Math.PI * 2) / 120 is already radians per second for a 2-minute rotation.
+    // angle += autoRotationSpeed / frameRate(); // Using prompt's version for now.
+    
     background(52); 
-    angle = (millis() / 1000) * rotationSpeed; 
+
+    if (typeof autoRotationSpeed === 'number' && !isNaN(autoRotationSpeed)) {
+        angleY += autoRotationSpeed / 60.0; // Assumes ~60 FPS for auto-rotation
+    } else {
+        // console.warn("[draw] autoRotationSpeed is not a valid number:", autoRotationSpeed); // Keep if needed
+    }
+    // console.log("[draw] angle before rotateY:", angleY); // DEBUG LOG REMOVED
 
     ambientLight(250); 
+    scale(zoomLevel); // Apply zoom
     
-    push(); 
-    rotateY(angle); 
+    push(); // Main push for all rotating elements
+    rotateY(angleY); // Apply horizontal rotation
+    rotateX(angleX); // Apply vertical rotation
+
+    // Earth rendering
+    push(); // Optional inner push for Earth specific transforms if any, besides rotation
     texture(cloudyEarth); 
     noStroke(); 
     sphere(earthSize); 
-    pop(); 
+    pop(); // End Earth's optional inner push
 
-    push(); 
-    rotateY(angle); 
+    // ISS model, historical path, and predicted path rendering are now within this main rotation context
+    // No additional rotateY(angle) should be applied to them individually.
 
     if (typeof window.iss !== 'undefined' && window.iss && typeof window.iss.latitude === 'number' && typeof window.iss.longitude === 'number') {
         let addPoint = true; 
@@ -200,7 +229,9 @@ function draw() {
     }
 
     show3DQuakes(); 
-    pop(); 
+    // Note: The pop(); that was here, which matched the second rotateY group, is removed.
+    // All elements are now part of the single main rotation group.
+    pop(); // Matching pop for the main rotateY context (the one applied to all elements)
 }
 
 function show3DQuakes() {
@@ -226,3 +257,21 @@ window.earth3DSketch = {
     getMaxHistoryPoints: () => MAX_HISTORY_POINTS,
     setSketchPassByRadiusKM: setSketchPassByRadiusKM
 };
+
+function mouseDragged() {
+    // Check if the mouse is within the canvas bounds approximately
+    if (mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height) {
+        let dx = mouseX - pmouseX;
+        let dy = mouseY - pmouseY;
+        angleY += dx * 0.01;
+        angleX += dy * 0.01;
+        angleX = constrain(angleX, -Math.PI/2.1, Math.PI/2.1); // Clamp X rotation
+        return false; 
+    }
+}
+
+function mouseWheel(event) {
+    zoomLevel -= event.deltaY * 0.001 * zoomLevel; // Proportional zoom
+    zoomLevel = constrain(zoomLevel, 0.2, 5.0); // Min/max zoom
+    return false; // Prevent page scrolling
+}

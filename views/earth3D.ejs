@@ -193,84 +193,142 @@
         }
     }
     
-    function calculateAndDisplayPassBy() {
-        const passByStatus = document.getElementById('iss-passby-time');
-        let currentIssHistory = [];
-        if (window.earth3DSketch && typeof window.earth3DSketch.getInternalIssPathHistory === 'function') {
-            currentIssHistory = window.earth3DSketch.getInternalIssPathHistory();
-        }
-        console.log('[calculateAndDisplayPassBy] Checking sketch history via window.earth3DSketch. Length:', currentIssHistory ? currentIssHistory.length : 'undefined');
-        if (clientLat === null || clientLon === null) {
-            passByStatus.textContent = 'Waiting for client location...';
-            if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') window.earth3DSketch.updatePredictedPath([]); 
-            return;
-        }
-        if (!currentIssHistory || currentIssHistory.length < 2) {
-            passByStatus.textContent = 'Insufficient ISS path data...';
-            pagePredictedIssPathPoints = []; 
-            if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') window.earth3DSketch.updatePredictedPath(pagePredictedIssPathPoints); 
-            return;
-        }
-        let basePath = currentIssHistory; 
-        if (typeof Tools === 'undefined' || typeof Tools.haversineDistance !== 'function') { 
-            passByStatus.textContent = 'Distance calculation tool not available.';
-            if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') window.earth3DSketch.updatePredictedPath([]); 
-            return;
-        }
-        passByStatus.textContent = 'Calculating...';
-        const lastPointData = basePath[basePath.length - 1]; const secondLastPointData = basePath[basePath.length - 2];
-        const lastPointTimestamp = new Date(lastPointData.timeStamp).getTime(); const secondLastPointTimestamp = new Date(secondLastPointData.timeStamp).getTime();
-        if (isNaN(lastPointTimestamp) || isNaN(secondLastPointTimestamp)) {
-            passByStatus.textContent = 'Error with timestamp data.';
-            if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') window.earth3DSketch.updatePredictedPath([]);
-            return;
-        }
-        const timeDiffSeconds = (lastPointTimestamp - secondLastPointTimestamp) / 1000;
-        if (timeDiffSeconds <= 0) {
-            passByStatus.textContent = 'Static or invalid ISS data timestamps for speed calculation.';
-            if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') window.earth3DSketch.updatePredictedPath([]); 
-            return;
-        }
-        const latSpeed = (lastPointData.lat - secondLastPointData.lat) / timeDiffSeconds; const lonSpeed = (lastPointData.lon - secondLastPointData.lon) / timeDiffSeconds; 
-        let minFutureDist = Infinity; let timeOfClosestApproach = null; let tempPredictedPath = []; 
-        for (let t = 0; t < predictionDurationSeconds; t += 30) { 
-            let futureLat = lastPointData.lat + latSpeed * t; // Changed const to let
-            futureLat = Math.max(-52.0, Math.min(52.0, futureLat)); // Added clamping for latitude
-            const futureLon = lastPointData.lon + lonSpeed * t;
-            const normalizedFutureLon = (futureLon + 540) % 360 - 180; 
+function calculateAndDisplayPassBy() {
+    const passByStatus = document.getElementById('iss-passby-time');
+    let currentIssHistory = [];
+    if (window.earth3DSketch && typeof window.earth3DSketch.getInternalIssPathHistory === 'function') {
+        currentIssHistory = window.earth3DSketch.getInternalIssPathHistory();
+    }
 
-            tempPredictedPath.push({ lat: futureLat, lng: normalizedFutureLon }); 
-
-            const dist = Tools.haversineDistance(clientLat, clientLon, futureLat, normalizedFutureLon);
-            if (dist < minFutureDist) {
-                minFutureDist = dist;
-                timeOfClosestApproach = t;
-            }
+    if (clientLat === null || clientLon === null) {
+        passByStatus.textContent = 'Waiting for client location...';
+        if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') {
+            window.earth3DSketch.updatePredictedPath([]); 
         }
+        return;
+    }
 
-        console.log(`[PassByDebug] minFutureDist: ${minFutureDist.toFixed(2)} km, PASS_BY_THRESHOLD_KM: ${PASS_BY_THRESHOLD_KM} km, timeOfClosestApproach: ${timeOfClosestApproach}s`);
-
-        if (minFutureDist < PASS_BY_THRESHOLD_KM && timeOfClosestApproach !== null) {
-            pagePredictedIssPathPoints = tempPredictedPath.filter((pt, idx) => (idx * 30) <= timeOfClosestApproach || minFutureDist < PASS_BY_THRESHOLD_KM);
-            console.log(`[PassByDebug] Close pass DETECTED. pagePredictedIssPathPoints length: ${pagePredictedIssPathPoints.length}`);
-        } else {
-            pagePredictedIssPathPoints = []; 
-            console.log(`[PassByDebug] No close pass detected or condition not met. pagePredictedIssPathPoints CLEARED.`);
+    if (!currentIssHistory || currentIssHistory.length < 2) {
+        passByStatus.textContent = 'Insufficient ISS path data...';
+        pagePredictedIssPathPoints = []; 
+        if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') {
+            window.earth3DSketch.updatePredictedPath(pagePredictedIssPathPoints); 
         }
+        return;
+    }
+    
+    let basePath = currentIssHistory; 
+
+    if (typeof Tools === 'undefined' || typeof Tools.haversineDistance !== 'function' || typeof Tools.toRadians !== 'function' ) { 
+        passByStatus.textContent = 'Essential calculation tools not available.';
+        if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') {
+            window.earth3DSketch.updatePredictedPath([]); 
+        }
+        console.error('[PassByDebug] Returning: Tools.js function(s) missing.');
+        return;
+    }
+
+    passByStatus.textContent = 'Calculating...';
+
+    const lastPointData = basePath[basePath.length - 1];
+    const secondLastPointData = basePath[basePath.length - 2];
+    const lastPointTimestamp = new Date(lastPointData.timeStamp).getTime();
+    const secondLastPointTimestamp = new Date(secondLastPointData.timeStamp).getTime();
+
+    if (isNaN(lastPointTimestamp) || isNaN(secondLastPointTimestamp)) {
+        console.error('[PassByDebug] Invalid timestamps in history data.');
+        passByStatus.textContent = 'Error with timestamp data.';
+        if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') {
+            window.earth3DSketch.updatePredictedPath([]);
+        }
+        return;
+    }
+    
+    const timeDiffSeconds = (lastPointTimestamp - secondLastPointTimestamp) / 1000;
+
+    if (timeDiffSeconds <= 0) {
+        passByStatus.textContent = 'Static or invalid ISS data timestamps for speed calculation.';
+        if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') {
+            window.earth3DSketch.updatePredictedPath([]); 
+        }
+        return;
+    }
+
+    const measuredLonSpeedDegPerSec = (lastPointData.lon - secondLastPointData.lon) / timeDiffSeconds; 
+    const latSpeedDegPerSec = (lastPointData.lat - secondLastPointData.lat) / timeDiffSeconds;
+
+    const ORBITAL_AMPLITUDE_DEG = 51.6;
+    const ORBITAL_PERIOD_SECONDS = 92 * 60;
+    const ANGULAR_FREQUENCY_RAD_PER_SEC = (2 * Math.PI) / ORBITAL_PERIOD_SECONDS;
+
+    const lastLatRad = Tools.toRadians(lastPointData.lat);
+    const cosOfLastLat = Math.cos(lastLatRad);
+    let lonSpeedDegPerSecAtEquator = measuredLonSpeedDegPerSec;
+    if (Math.abs(cosOfLastLat) > 0.01) {
+        lonSpeedDegPerSecAtEquator = measuredLonSpeedDegPerSec / cosOfLastLat;
+    } else {
+        console.warn("[PassByDebug] Last latitude is very close to a pole, using measured longitude speed directly for equatorial baseline.");
+    }
+
+    let value_for_asin = lastPointData.lat / ORBITAL_AMPLITUDE_DEG;
+    value_for_asin = Math.max(-1.0, Math.min(1.0, value_for_asin)); 
+    let initialPhaseRad = Math.asin(value_for_asin); 
+
+    if (latSpeedDegPerSec > 0.01) { 
+        if (Math.cos(initialPhaseRad) < 0) initialPhaseRad = Math.PI - initialPhaseRad;
+    } else if (latSpeedDegPerSec < -0.01) { 
+        if (Math.cos(initialPhaseRad) > 0) initialPhaseRad = Math.PI - initialPhaseRad;
+    } 
+    
+    let minFutureDist = Infinity;
+    let timeOfClosestApproach = null;
+    let tempPredictedPath = []; 
+    let currentLon = lastPointData.lon; 
+    const timeStepForLoop = 30;
+
+    for (let t = 0; t < predictionDurationSeconds; t += timeStepForLoop) { 
+        let futureLat = ORBITAL_AMPLITUDE_DEG * Math.sin(ANGULAR_FREQUENCY_RAD_PER_SEC * t + initialPhaseRad);
         
-        console.log(`[PassByDebug] Just before calling update3DPredictedPath, pagePredictedIssPathPoints length: ${pagePredictedIssPathPoints.length}`);
-        if (pagePredictedIssPathPoints.length > 0) {
-            console.log('[PassByDebug] pagePredictedIssPathPoints (first 3):', JSON.stringify(pagePredictedIssPathPoints.slice(0,3)));
+        let cosOfFutureLat = Math.cos(Tools.toRadians(futureLat));
+        let effectiveLonSpeedThisStep = lonSpeedDegPerSecAtEquator;
+        if (Math.abs(cosOfFutureLat) > 0.01) {
+            effectiveLonSpeedThisStep = lonSpeedDegPerSecAtEquator * cosOfFutureLat;
+        } else if (Math.abs(futureLat) > ORBITAL_AMPLITUDE_DEG + 5) { 
+            effectiveLonSpeedThisStep = lonSpeedDegPerSecAtEquator * Math.cos(Tools.toRadians(ORBITAL_AMPLITUDE_DEG));
         }
 
-        if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') window.earth3DSketch.updatePredictedPath(pagePredictedIssPathPoints); 
-        if (minFutureDist < PASS_BY_THRESHOLD_KM && timeOfClosestApproach !== null) {
-            const approachDate = new Date(Date.now() + timeOfClosestApproach * 1000);
-            passByStatus.textContent = `Approx. pass at ${approachDate.toLocaleTimeString()} (distance ~${minFutureDist.toFixed(0)} km).`;
-        } else {
-            passByStatus.textContent = `No close pass predicted (within ${PASS_BY_THRESHOLD_KM}km and ${predictionDurationSeconds/60}min). Closest ~${minFutureDist.toFixed(0)}km.`;
+        if (t > 0) {
+             currentLon += effectiveLonSpeedThisStep * timeStepForLoop;
+        }
+        // For t=0, futureLon is lastPointData.lon. For t>0, it's the iteratively updated currentLon.
+        let futureLon = (t === 0) ? lastPointData.lon : currentLon;
+        const normalizedFutureLon = (futureLon + 540) % 360 - 180; 
+
+        tempPredictedPath.push({ lat: futureLat, lng: normalizedFutureLon }); 
+
+        const dist = Tools.haversineDistance(clientLat, clientLon, futureLat, normalizedFutureLon);
+        if (dist < minFutureDist) {
+            minFutureDist = dist;
+            timeOfClosestApproach = t;
         }
     }
+    
+    console.log(`[PassByDebug] minFutureDist: ${minFutureDist.toFixed(2)} km, PASS_BY_THRESHOLD_KM: ${PASS_BY_THRESHOLD_KM} km, timeOfClosestApproach: ${timeOfClosestApproach}s, initialPhaseRad: ${initialPhaseRad}`);
+
+    pagePredictedIssPathPoints = tempPredictedPath;
+    console.log(`[PassByDebug] Populating pagePredictedIssPathPoints with full tempPredictedPath. Length: ${pagePredictedIssPathPoints.length}`);
+    
+    if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') {
+        window.earth3DSketch.updatePredictedPath(pagePredictedIssPathPoints); 
+    }
+
+    if (minFutureDist < PASS_BY_THRESHOLD_KM && timeOfClosestApproach !== null) {
+        const approachDate = new Date(lastPointTimestamp + timeOfClosestApproach * 1000); 
+        passByStatus.textContent = `Approx. pass at ${approachDate.toLocaleTimeString()} (distance ~${minFutureDist.toFixed(0)} km).`;
+    } else {
+        passByStatus.textContent = `No close pass predicted (within ${PASS_BY_THRESHOLD_KM}km for next ${predictionDurationSeconds/60}min). Closest ~${minFutureDist.toFixed(0)}km.`;
+    }
+}
 
     document.addEventListener('DOMContentLoaded', () => {
         updateGeoData(); 
