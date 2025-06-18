@@ -234,7 +234,7 @@ const Tools = {
 
         getSphereCoord: (rayon, latitude, longitude ) => {
             var theta = radians(latitude);
-            var phi = radians(longitude) + PI;
+            var phi = radians(longitude) + HALF_PI; // Changed PI to HALF_PI
             var x = rayon * cos(theta) * cos(phi);
             var y = -rayon * sin(theta);
             var z = -rayon * cos(theta) * sin(phi);
@@ -248,13 +248,13 @@ const Tools = {
             valForAsin = Math.max(-1.0, Math.min(1.0, valForAsin));
             let theta = Math.asin(valForAsin);
             let latDegrees = degrees(theta);
-            let phi_offset;
+            let phi_offset_calc; // Renamed to avoid conflict if phi_offset was intended to be something else
             if (Math.abs(Math.cos(theta)) < 0.00001) {
-                phi_offset = 0;
+                phi_offset_calc = 0;
             } else {
-                phi_offset = Math.atan2(-z, x);
+                phi_offset_calc = Math.atan2(-z, x);
             }
-            let lonRadians = phi_offset - Math.PI;
+            let lonRadians = phi_offset_calc - HALF_PI; // Changed Math.PI to HALF_PI
             while (lonRadians <= -Math.PI) lonRadians += 2 * Math.PI;
             while (lonRadians > Math.PI) lonRadians -= 2 * Math.PI;
             let lonDegrees = degrees(lonRadians);

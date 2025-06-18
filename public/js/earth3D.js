@@ -104,43 +104,26 @@ function populateInitialIssHistory(responseData) {
 }
 
 function draw() {
+    // Updated periodic log
     if (typeof frameCount !== 'undefined' && frameCount % 60 === 1) { 
-        console.log(`[draw frameCount: ${frameCount}] internalIssPathHistory.length: ${internalIssPathHistory ? internalIssPathHistory.length : 'undefined'}, MAX_HISTORY_POINTS: ${MAX_HISTORY_POINTS}, sketchPassByRadiusKM: ${sketchPassByRadiusKM}`);
+        console.log(`[draw frameCount: ${frameCount}] AngleY: ${angleY.toFixed(2)}, AngleX: ${angleX.toFixed(2)}, Zoom: ${zoomLevel.toFixed(2)}`);
     }
-
-    // Update angle for auto-rotation
-    // Assuming p5.js tries to run at 60 FPS. autoRotationSpeed is per 2 minutes.
-    // So, per frame, angle increment is autoRotationSpeed / (120 seconds * 60 frames/second)
-    // Simplified: autoRotationSpeed is radians per 120s. We want radians per frame.
-    // If p5 runs at 60fps, then 1 frame is 1/60th of a second.
-    // So, angle change per frame = autoRotationSpeed / (120 * 60)
-    // The prompt asks for angle += autoRotationSpeed / 60.0; which implies autoRotationSpeed is rad/sec.
-    // If autoRotationSpeed = (Math.PI * 2) / 120 (rad/sec for 2 min rotation), then per frame (assuming 60fps):
-    // angle += ((Math.PI * 2) / 120) / 60; 
-    // Let's stick to the prompt's simpler: angle += autoRotationSpeed / 60.0;
-    // This means autoRotationSpeed should be thought of as 'radians per second' for this calculation to be correct.
-    // If autoRotationSpeed = (Math.PI*2)/120 means rad for 2min, then it should be angle += autoRotationSpeed / (120*targetFrameRate)
-    // Let's adjust autoRotationSpeed to be per second for the prompt's formula.
-    // (Math.PI * 2) / 120 is already radians per second for a 2-minute rotation.
-    // angle += autoRotationSpeed / frameRate(); // Using prompt's version for now.
     
     background(52); 
 
-    // --- TEMPORARY FOR DEBUGGING MARKER ALIGNMENT ---
-    let effectiveAngleY = 0; // Force no rotation for Y
-    let effectiveAngleX = 0; // Force no rotation for X
-    // Comment out or bypass the normal angleY auto-rotation line for this test
-    if (false && typeof autoRotationSpeed === 'number' && !isNaN(autoRotationSpeed)) {
-        angleY += autoRotationSpeed / 60.0; 
+    // Normal angleY auto-rotation
+    if (typeof autoRotationSpeed === 'number' && !isNaN(autoRotationSpeed)) {
+        angleY += autoRotationSpeed / 60.0; // Assumes ~60 FPS
+    } else {
+        // console.warn("[draw] autoRotationSpeed is not a valid number:", autoRotationSpeed); 
     }
-    // --- END TEMPORARY ---
 
     ambientLight(250); 
     scale(zoomLevel); // Apply zoom
     
     push(); // Main push for all rotating elements
-    rotateY(effectiveAngleY); // Apply horizontal rotation using effectiveAngleY
-    rotateX(effectiveAngleX); // Apply vertical rotation using effectiveAngleX
+    rotateY(angleY); // Use dynamic angleY
+    rotateX(angleX); // Use dynamic angleX
 
     // Earth rendering
     push(); // Optional inner push for Earth specific transforms if any, besides rotation
@@ -149,15 +132,15 @@ function draw() {
     sphere(earthSize); 
     pop(); // End Earth's optional inner push
 
-    // --- TEMPORARY TEST MARKER at (0,0) ---
-    let testLat0Lon0 = { lat: 0, lon: 0 };
-    let pTest00 = Tools.p5.getSphereCoord(earthSize, testLat0Lon0.lat, testLat0Lon0.lon);
-    push();
-    translate(pTest00.x, pTest00.y, pTest00.z);
-    noStroke();
-    fill(255, 0, 0); // Bright Red
-    sphere(gpsSize * 1.5); // Slightly larger to be visible
-    pop();
+    // --- TEMPORARY TEST MARKER at (0,0) REMOVED ---
+    // let testLat0Lon0 = { lat: 0, lon: 0 };
+    // let pTest00 = Tools.p5.getSphereCoord(earthSize, testLat0Lon0.lat, testLat0Lon0.lon);
+    // push();
+    // translate(pTest00.x, pTest00.y, pTest00.z);
+    // noStroke();
+    // fill(255, 0, 0); // Bright Red
+    // sphere(gpsSize * 1.5); // Slightly larger to be visible
+    // pop();
     // --- END TEMPORARY TEST MARKER ---
 
     // ISS model, historical path, and predicted path rendering are now within this main rotation context
