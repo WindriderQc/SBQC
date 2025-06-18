@@ -2,10 +2,9 @@
 <html lang="en">
 
 <head>
-        <%- include('partials/mainHead', { title: 'SBQC ' }) %>
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"    integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="    crossorigin=""/>
+    <%- include('partials/mainHead', { title: 'SBQC ISS Tracker' }) %>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.0.0/satellite.min.js"></script>
 </head>
-
 
 <body class="fixed-nav sticky-footer bg-light sidenav-toggled" id="page-top">
 
@@ -13,764 +12,390 @@
 
 <div class="content-wrapper">
 <div class="container-fluid bg-3 text-center">
-<!-- Begin Container  -->
+    <!-- Begin Container -->
 
-<div class="card mb-3">
-    <div class="card-body">
-        <div class="row">
-            <div class="col">
-                <div>Speed: <span id="wind-speed"></span> m/s</div>
-                <div>Gust: <span id="wind-gust"></span> m/s</div>
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row">
+                <div class="col">
+                    <div>Wind Speed: <span id="wind-speed">N/A</span> m/s</div>
+                    <div>Wind Gust: <span id="wind-gust">N/A</span> m/s</div>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-        <p>
-            At location: <span id="summary"></span> with a temperature of <span id="temp"></span>&deg; C. <br>
-            Concentration of particulate matter - (<span id="aq_parameter"></span>) <span id="aq_value"></span> <span id="aq_units"></span> <br>
-            <small> Last read on <span id="aq_date"></span></small>
-        </p>
+    <p>
+        At location: <span id="summary">N/A</span> with a temperature of <span id="temp">N/A</span>&deg; C. <br>
+        Air Quality (<span id="aq_parameter">N/A</span>): <span id="aq_value">N/A</span> <span id="aq_units"></span>
+        <small>(Last read on <span id="aq_date">N/A</span>)</small>
+    </p>
 
-        <div class="card mb-3">
-            <div class="card-body">
-                <p>Next ISS pass-by: <span id="iss-passby-time">Calculating...</span></p>
+    <div class="card mb-3">
+        <div class="card-body">
+            <p>Next ISS pass-by: <span id="iss-passby-time">Calculating...</span></p>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header">3D ISS Viewer</div>
+        <div class="card-body" style="padding: 0; /* Adjust if needed */">
+            <div id="sketch-holder-wrapper" style="position: relative; width: 1280px; height: 720px; margin: 0 auto; background-color: #343a40; /* Dark background for canvas area */">
+                <div id="sketch-holder" style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;">
+                    <!-- p5.js canvas will be parented here by setup() in earth3D.js -->
+                </div>
+                <div id="controls-overlay" style="position: absolute; top: 10px; left: 10px; background-color: transparent; padding: 12px; border-radius: 6px; z-index: 1000; width: auto; min-width: 250px;">
+                    <div style="margin-bottom: 8px;">
+                        <label for="pathLengthSlider" style="font-size: 0.85em; display: block; margin-bottom: 2px;">Hist. Path: <span id="pathLengthValue">4200</span> pts</label>
+                        <input type="range" id="pathLengthSlider" min="100" max="4200" step="100" value="4200" style="width: 100%; margin-top: -2px;">
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <label for="predictionLengthSlider" style="font-size: 0.85em; display: block; margin-bottom: 2px;">Pred. Length: <span id="predictionLengthValue">15</span> min</label>
+                        <input type="range" id="predictionLengthSlider" min="5" max="360" step="5" value="15" style="width: 100%; margin-top: -2px;">
+                    </div>
+                    <div>
+                        <label for="passByRadiusSlider" style="font-size: 0.85em; display: block; margin-bottom: 2px;">Detect Radius: <span id="passByRadiusValue">1500</span> km</label>
+                        <input type="range" id="passByRadiusSlider" min="250" max="3000" step="50" value="1500" style="width: 100%; margin-top: -2px;">
+                    </div>
+                </div>
             </div>
         </div>
+        <div class="card-footer small text-muted">Press 'S' to save canvas to PNG.</div>
+    </div>
 
-        <div class="card mb-3">
-                <div class="card-title">3D Viewer</div>
-                <div class="card-body" >
-                        <div id="sketch-holder">
+    <div class="card mb-3" style="max-width: 1280px; margin: 0 auto;">
+        <div class="card-header">Controls & Info</div>
+        <div class="card-body">
+            <p>ISS Location - Latitude: <span id="isslat">N/A</span>&deg;, Longitude: <span id="isslon">N/A</span>&deg;</p>
+            <p>Client Location - Latitude: <span id="clat">N/A</span>&deg;, Longitude: <span id="clon">N/A</span>&deg;</p>
+            <p id="default-location-msg" style="font-size: 0.8em; color: #777; display: none;">Using default client location as live geolocation is unavailable or denied.</p>
+
+            <div style="padding: 10px; text-align: left; border-top: 1px solid #eee;">
+                <strong>Legend (3D View):</strong>
+                <div style="margin-top: 5px;">
+                    <span style="background-color: orange; display: inline-block; width: 20px; height: 10px; margin-right: 5px; border: 1px solid #555;"></span> Historical ISS Path
                 </div>
-                <div class="card-footer small text-muted">Press 's' to save canvas to png  </div>
-        </div>
-
-        <div class="card mb-3" style="max-width: 1280px; margin: 0 auto;">
-                <div class="card-body" >
-                        <p>ISS location -  lat: <span id="isslat"></span>&deg; lon: <span id="isslon"></span>&deg; </p>
-                        <p>Client location -  lat: <span id="clat"></span>&deg; lon: <span id="clon"></span>&deg;</span> </p>
-                        <p id="default-location-msg" style="font-size: 0.8em; color: #777; display: none;">Using default location as live geolocation is unavailable.</p>
-                      
-                        <div style="padding: 10px; text-align: left; border-top: 1px solid #eee;">
-                            <strong>Legend:</strong>
-                            <div style="margin-top: 5px;">
-                                <span style="background-color: blue; display: inline-block; width: 20px; height: 10px; margin-right: 5px; border: 1px solid #555;"></span> Live ISS Path (WebSocket)
-                            </div>
-                            <div style="margin-top: 5px;">
-                                <span style="background-color: orange; display: inline-block; width: 20px; height: 10px; margin-right: 5px; border: 1px solid #555;"></span> Historical ISS Path (Database)
-                            </div>
-                        </div>
-                        <div style="padding: 10px; text-align: left; border-top: 1px solid #eee;">
-                            <!-- Existing Path Length Slider -->
-                            <div>
-                                <label for="pathLengthSlider">Path Length: <span id="pathLengthValue">4200</span> points</label>
-                                <input type="range" id="pathLengthSlider" min="100" max="4200" step="100" value="4200" style="width: 100%;">
-                            </div>
-
-                            <!-- New Prediction Length Slider -->
-                            <div style="margin-top: 10px;">
-                                <label for="predictionLengthSlider">Prediction Length: <span id="predictionLengthValue">15</span> min</label>
-                                <input type="range" id="predictionLengthSlider" min="5" max="360" step="5" value="15" style="width: 100%;">
-                            </div>
-
-                            <!-- New Pass-by Radius Slider -->
-                            <div style="margin-top: 10px;">
-                                <label for="passByRadiusSlider">Pass-by Radius: <span id="passByRadiusValue">1000</span> km</label>
-                                <input type="range" id="passByRadiusSlider" min="100" max="5000" step="100" value="1000" style="width: 100%;">
-                            </div>
-                        </div>
+                 <div style="margin-top: 5px;">
+                    <span style="background-color: #00FF00; display: inline-block; width: 20px; height: 10px; margin-right: 5px; border: 1px solid #555;"></span> Predicted ISS Path
                 </div>
-                <br><br>
-                <div class="card-footer small text-muted"> <a href="https://eyes.nasa.gov/apps/solar-system/#/home" target="_blank" class="btn btn-outline-primary">Explore with NASA Eyes</a> </div>
+                <div style="margin-top: 5px;">
+                    <span style="background-color: yellow; display: inline-block; width: 10px; height: 10px; margin-right: 5px; border: 1px solid #555; border-radius: 50%;"></span> Default Location (Quebec City)
+                </div>
+                 <div style="margin-top: 5px;">
+                    <span style="background-color: rgba(0,100,255,0.3); display: inline-block; width: 20px; height: 10px; margin-right: 5px; border: 1px solid #555;"></span> Pass-by Detection Radius
+                </div>
+            </div>
+
+            <div style="padding: 10px; text-align: left; border-top: 1px solid #eee;">
+                <%# Slider content was moved to the overlay %>
+            </div>
         </div>
+        <div class="card-footer small text-muted">
+            <a href="https://eyes.nasa.gov/apps/solar-system/#/home" target="_blank" class="btn btn-outline-primary">Explore with NASA Eyes</a>
+        </div>
+    </div>
+    <%# Removed <div id="ip_id"></div> %>
+</div>
+</div>
+</div>
 
-<!-- End Container  -->
-</div>
-</div>
-</div>
-<div id="ip_id"></div>
-
-<%- include('partials/footer') %>
+<%- include('partials/footer') %> <%# This should load tools.js %>
+<script src="/socket.io/socket.io.js"></script>
 <%- include('partials/p5') %>
-
-
+<%# <script src="/js/tools.js"></script> <!-- REMOVED - Loaded in footer --> %>
+<script src="/js/earth3D.js"></script>
 
 <script>
+   window.ISSOrbitPredictor = (function () {
+       const TLE_URL = 'https://celestrak.com/NORAD/elements/stations.txt';
+       let predictionIntervalSec = 10; // Made let for potential future config
+       let predictionDurationSec = 5400; // 90 mins, made let for setter
+       let radiusKM = 1500; // UPDATED DEFAULT
+       const targetLat = 46.8139; // Default target (Quebec City)
+       const targetLon = -71.2080;
+       let satrec; // Stores the satellite record from TLE
 
-//   3D Earth section - rendered with P5
+       async function fetchTLE() {
+           try {
+               const res = await fetch(TLE_URL);
+               if (!res.ok) throw new Error(`Failed to fetch TLE: ${res.status}`);
+               const txt = await res.text();
+               const lines = txt.split('\n');
+               // Find ISS TLE lines (more robustly)
+               const i = lines.findIndex(l => l.includes('ISS (ZARYA)') || l.includes('ISS'));
+               if (i >= 0 && lines[i+1] && lines[i+2]) {
+                   satrec = satellite.twoline2satrec(lines[i+1].trim(), lines[i+2].trim());
+                   console.log("[ISSOrbitPredictor] Fetched new TLE for ISS.");
+               } else {
+                   console.error("[ISSOrbitPredictor] Could not parse TLE from fetched text.");
+                   satrec = null;
+               }
+           } catch (error) {
+               console.error("[ISSOrbitPredictor] Error fetching TLE:", error);
+               satrec = null;
+           }
+       }
 
-let internalIssPathHistory = [];
-let MAX_HISTORY_POINTS = 4200; // Changed from const to let
-let internalPredictedPath = []; // For 3D predicted path
-const pathPointSphereSize = 2;
+       function positionAt(time) {
+           if (!satrec) return null;
+           try {
+               const propagateResult = satellite.propagate(satrec, time);
+               if (!propagateResult || !propagateResult.position) {
+                   // console.warn('[ISSOrbitPredictor] Propagation failed for time:', time);
+                   return null;
+               }
+               const { position } = propagateResult;
+               const gmst = satellite.gstime(time);
+               const geodetic = satellite.eciToGeodetic(position, gmst);
+               return {
+                   lat: geodetic.latitude * 180 / Math.PI,
+                   lon: geodetic.longitude * 180 / Math.PI,
+                   alt: geodetic.height
+               };
+           } catch (e) {
+               console.error("[ISSOrbitPredictor] Error in positionAt or propagate:", e);
+               return null;
+           }
+       }
 
-let rotationSpeed = (Math.PI * 2) / 60; // One full rotation every 60 seconds
-let angle = 0;
+       function haversineDistance(lat1, lon1, lat2, lon2) {
+           const R = 6371; // Earth radius in km
+           const toRad = angle => angle * Math.PI / 180;
+           const dLat = toRad(lat2 - lat1);
+           const dLon = toRad(lon2 - lon1);
+           const a = Math.sin(dLat/2)**2 +
+                     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                     Math.sin(dLon/2)**2;
+           return 2 * R * Math.asin(Math.sqrt(a));
+       }
 
-let cloudyEarth;
-let earthquakes
+       async function generatePredictedPath() {
+           if (!satrec) {
+               console.log("[ISSOrbitPredictor] No TLE data (satrec), attempting to fetch...");
+               await fetchTLE();
+               if (!satrec) {
+                   console.error("[ISSOrbitPredictor] TLE data still unavailable. Cannot generate path.");
+                   if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') {
+                        window.earth3DSketch.updatePredictedPath([]);
+                   }
+                   return;
+               }
+           }
 
-let issGif
+           const now = new Date();
+           let predicted = [];
+           let closest = null;
+           let closestDistance = Infinity;
+           const passByStatus = document.getElementById('iss-passby-time');
 
-const earthSize = 300
-const gpsSize = 5
-const issSize = 6
-const issDistanceToEarth = 50
+           for (let t = 0; t < predictionDurationSec; t += predictionIntervalSec) {
+               const time = new Date(now.getTime() + t * 1000);
+               const pos = positionAt(time);
+               if (pos) {
+                   predicted.push({ lat: pos.lat, lng: pos.lon, alt: pos.alt }); // lng for compatibility with update3DPredictedPath
+                   const dist = haversineDistance(pos.lat, pos.lon, targetLat, targetLon);
+                   if (dist < closestDistance) {
+                       closestDistance = dist;
+                       closest = { time, dist, ...pos };
+                   }
+               }
+           }
 
-function preload()
-{
-    // The clon and clat in this url are edited to be in the correct order.
-        /*cloudyEarth = loadImage('https://api.mapbox.com/styles/v1/' + 'windrider/cjs5io5kz1mvq1fqjb1x3e0ta' + '/static/' +
-        0 + ',' + 0 + ',' + 1 + '/' +
-        1028 + 'x' + 1028 +
-        '?access_token=pk.eyJ1Ijoid2luZHJpZGVyIiwiYSI6ImNqczVldmR3bzBmMWU0NHRmbjlta2Y0aDEifQ.FWOdvqw-IBlcJrBKKML7iQ');        */
-        cloudyEarth = loadImage('/img/Planets/cloudyEarth.jpg') //, 0,0,width,height);
-        earthquakes = loadStrings('/data/quakes.csv'); // loadStrings('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.csv');
-        issGif = loadImage('/img/iss.png');
-    loadJSON('https://data.specialblend.ca/iss', populateInitialIssHistory);
-}
+           if (passByStatus) {
+               if (closest && closest.dist < radiusKM) {
+                   passByStatus.textContent = `Approx. pass at ${closest.time.toLocaleTimeString()} (distance ~${Math.round(closest.dist)} km). TLE based.`;
+                   console.log(`[ISSOrbitPredictor PASS DETECTED] Closest pass at ${closest.time.toLocaleTimeString()} within ${Math.round(closest.dist)} km`);
+               } else {
+                   passByStatus.textContent = `No close pass predicted (within ${radiusKM}km for next ${predictionDurationSec/60}min). Closest ~${closestDistance.toFixed(0)}km. TLE based.`;
+                   console.log(`[ISSOrbitPredictor No pass within ${radiusKM} km in next ${predictionDurationSec/60} mins]. Closest: ${closestDistance.toFixed(0)}km`);
+               }
+           }
 
+           if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') {
+              window.earth3DSketch.updatePredictedPath(predicted);
+           }
+       }
 
-function setup()
-{
-  var canvas = createCanvas(1280, 720, WEBGL)
-  // Move the canvas so it’s inside our <div id="sketch-holder">.
-  canvas.parent('sketch-holder');
-  //  var cnv = createCanvas(windowWidth, windowHeight);
-  // cnv.style('display', 'block');  //  prevents scrool bar to show...
+       return {
+           fetchAndPredict: async function () {
+               await fetchTLE();
+               if (satrec) {
+                   await generatePredictedPath();
+               } else {
+                   console.error("[ISSOrbitPredictor] Cannot predict path due to TLE fetch/parse error.");
+                   if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') {
+                       window.earth3DSketch.updatePredictedPath([]);
+                   }
+                   const passByStatus = document.getElementById('iss-passby-time');
+                   if(passByStatus) passByStatus.textContent = 'Error fetching TLE data for prediction.';
+               }
+           },
+           setPredictionDurationSec: function(duration) {
+               if (typeof duration === 'number' && duration > 0) predictionDurationSec = duration;
+               if (satrec) generatePredictedPath(); // Re-predict if TLE is available
+           },
+           setRadiusKM: function(rad) {
+               if (typeof rad === 'number' && rad > 0) radiusKM = rad;
+               if (satrec) generatePredictedPath(); // Re-predict for text update if TLE is available
+           }
+       };
+   })();
 
-}
+    // Page UI and Socket.IO Logic
 
-/* function windowResized()    //  called everytime the browser window is resized.
-{
-  resizeCanvas(windowWidth, windowHeight);
-} */
+    let clientLat = null;
+    let clientLon = null;
 
-function keyPressed() {
-  if (key === 's') {
-   saveCanvas('earth3d', 'png');
-  }
-}
+    // let pagePredictedIssPathPoints = []; // Now managed by ISSOrbitPredictor
 
-function mouseClicked() {
- //
-}
+    let lastPassByCheckTime = 0;
+    const PASS_BY_CHECK_INTERVAL = 30000;
+    // let PASS_BY_THRESHOLD_KM = 1000; // Now managed by ISSOrbitPredictor (as radiusKM)
+    // let predictionDurationSeconds = 15 * 60; // Now managed by ISSOrbitPredictor
 
-// Add this function to public/js/earth3D.js
-function set3DMaxHistoryPoints(newLimit) {
-    if (typeof newLimit === 'number' && newLimit >= 0) {
-        MAX_HISTORY_POINTS = newLimit;
-        console.log(`[3D Path] MAX_HISTORY_POINTS updated to: ${MAX_HISTORY_POINTS}`);
+    const socket = io();
 
-        // Trim internalIssPathHistory if it exceeds the new limit
-        // This ensures the array doesn't grow indefinitely beyond the new cap
-        // and also trims it down if the new cap is smaller.
-        while (internalIssPathHistory.length > MAX_HISTORY_POINTS) {
-            internalIssPathHistory.shift(); // Remove oldest points
+    socket.on('connect', () => {
+        console.log('Connected to server via Socket.IO');
+    });
+
+    socket.on('iss', (data) => {
+        window.iss = data;
+
+        if (document.getElementById('isslat') && document.getElementById('isslon')) {
+            document.getElementById('isslat').textContent = parseFloat(data.latitude).toFixed(2);
+            document.getElementById('isslon').textContent = parseFloat(data.longitude).toFixed(2);
         }
-        // p5.js draw() loop will automatically use the updated internalIssPathHistory
-    } else {
-        console.error('[3D Path] Invalid newLimit provided to set3DMaxHistoryPoints:', newLimit);
-    }
-}
 
-function update3DPredictedPath(pointsFrom2D) {
-    console.log('[3D Path] update3DPredictedPath called. Received pointsFrom2D length:', pointsFrom2D ? pointsFrom2D.length : 'undefined/null');
-    if (pointsFrom2D && pointsFrom2D.length > 0) {
-        console.log('[3D Path] First 3 received pointsFrom2D:', JSON.stringify(pointsFrom2D.slice(0, 3)));
-    }
-
-    if (Array.isArray(pointsFrom2D)) {
-        // Create a new array of simple {lat, lon} objects
-        // Note: pointsFrom2D from ejs uses {lat, lng}, so we map lng to lon
-        internalPredictedPath = pointsFrom2D.map(p => ({ lat: p.lat, lon: p.lng }));
-        console.log(`[3D Path] Updated internalPredictedPath with ${internalPredictedPath.length} points.`);
-        if (internalPredictedPath.length > 0) {
-            console.log('[3D Path] First 3 internalPredictedPath points after map:', JSON.stringify(internalPredictedPath.slice(0, 3)));
-        }
-    } else {
-        console.warn('[3D Path] Invalid or no data received for update3DPredictedPath. Clearing predicted path.');
-        internalPredictedPath = []; // Clear if data is invalid or empty
-    }
-}
-
-function populateInitialIssHistory(responseData) {
-    if (responseData && responseData.data && Array.isArray(responseData.data) && responseData.data.length > 0) {
-        console.log('Received historical ISS data. Points in data array:', responseData.data.length);
-
-        // Sort by timeStamp in ascending order
-        let pointsToProcess = responseData.data.sort((a, b) => {
-            // Assuming timeStamp is a number or can be converted to a number (e.g., Unix timestamp)
-            // If timeStamp is a string date, new Date(a.timeStamp) - new Date(b.timeStamp) might be needed
-            return a.timeStamp - b.timeStamp;
-        });
-
-        console.log('Sorted historical ISS data by timeStamp. Points available after sort:', pointsToProcess.length);
-
-        // Slice to get the most recent MAX_HISTORY_POINTS if necessary
-        if (pointsToProcess.length > MAX_HISTORY_POINTS) {
-            pointsToProcess = pointsToProcess.slice(pointsToProcess.length - MAX_HISTORY_POINTS);
-            console.log(`Sliced data to the most recent ${MAX_HISTORY_POINTS} points. Points to process:`, pointsToProcess.length);
-        }
-
-        for (let i = 0; i < pointsToProcess.length; i++) {
-            const point = pointsToProcess[i];
-            if (typeof point.latitude !== 'undefined' && typeof point.longitude !== 'undefined' && typeof point.timeStamp !== 'undefined') {
-                internalIssPathHistory.push({
-                    lat: point.latitude,
-                    lon: point.longitude,
-                    timeStamp: point.timeStamp // Store the timestamp
-                });
+        const now = Date.now();
+        if (clientLat !== null && clientLon !== null && now - lastPassByCheckTime > PASS_BY_CHECK_INTERVAL) {
+            // calculateAndDisplayPassBy(); // Old function, will be replaced by ISSOrbitPredictor logic
+            // For now, prediction is triggered by sliders or initially.
+            // To trigger on interval, ISSOrbitPredictor.fetchAndPredict() could be called here.
+            // However, TLE fetching on interval might be too frequent.
+            // The current ISSOrbitPredictor design re-predicts if parameters change via sliders.
+            // A separate timer for fetchAndPredict() might be better if periodic refresh is needed.
+            // For this step, we rely on initial call and slider changes.
+            if (window.ISSOrbitPredictor) {
+                // This will refetch TLE and predict. Consider if this is too frequent.
+                // window.ISSOrbitPredictor.fetchAndPredict();
             }
+            lastPassByCheckTime = now;
         }
-        // Ensure history doesn't exceed MAX_HISTORY_POINTS after preloading
-        while (internalIssPathHistory.length > MAX_HISTORY_POINTS) {
-           internalIssPathHistory.shift(); // Remove oldest points
-        }
-        console.log('Internal ISS history populated. Points now stored:', internalIssPathHistory.length);
+    });
 
-        // Call the function to display historical data on the 2D map
-        if (typeof window.displayHistoricalDataOn2DMap === 'function') {
-            window.displayHistoricalDataOn2DMap(internalIssPathHistory);
+    async function fetchWeatherForCoords(lat, lon) {
+        if (!lat || !lon) return;
+        const url = `/api/weather/${lat},${lon}`;
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`Weather API request failed with status ${response.status}`);
+            const data = await response.json();
+            document.getElementById('summary').textContent = data.weather.weather[0].description;
+            document.getElementById('temp').textContent = data.weather.main.feels_like.toFixed(1);
+            if (data.air_quality && data.air_quality.results && data.air_quality.results[0] && data.air_quality.results[0].latest) {
+                const air = data.air_quality.results[0];
+                document.getElementById('aq_parameter').textContent = air.parameter ? air.parameter.displayName : 'N/A';
+                document.getElementById('aq_value').textContent = air.latest.value;
+                document.getElementById('aq_units').textContent = air.parameter ? air.parameter.units : '';
+                document.getElementById('aq_date').textContent = air.latest.datetime && air.latest.datetime.local ? air.latest.datetime.local : 'N/A';
+            } else { document.getElementById('aq_value').textContent = 'NO READING'; }
+            const wind = data.weather.wind;
+            document.getElementById('wind-speed').textContent = wind.speed;
+            document.getElementById('wind-gust').textContent = wind.gust || 'N/A';
+        } catch (e) {
+            console.error('Error fetching weather data:', e);
+            document.getElementById('summary').textContent = 'Error';
+            document.getElementById('temp').textContent = 'N/A';
+            document.getElementById('aq_value').textContent = 'NO READING';
         }
-
-        // Notify that historical data is ready for prediction logic
-        if (typeof window.onHistoricalDataReadyForPrediction === 'function') {
-            console.log('[earth3D.js] Historical data ready, calling onHistoricalDataReadyForPrediction().');
-            window.onHistoricalDataReadyForPrediction();
-        }
-    } else {
-        let reason = 'Unknown reason';
-        if (!responseData) {
-            reason = 'Response data is null or undefined.';
-        } else if (!responseData.data) {
-            reason = 'The "data" property in response is null or undefined.';
-        } else if (!Array.isArray(responseData.data)) {
-            reason = 'The "data" property in response is not an array.';
-        } else if (responseData.data.length === 0) {
-            reason = 'The "data" array in response is empty.';
-        }
-        console.log(`No valid historical ISS data found to populate initial history. Reason: ${reason}. Full response:`, responseData);
     }
-}
 
-function draw()
-{
-    background(52)
-    angle = (millis() / 1000) * rotationSpeed;
+    async function setDefaultLocationAndFetchWeather() {
+        console.log("Using default client location (Quebec City area).");
+        clientLat = 46.8139; clientLon = -71.2080;
+        document.getElementById('clat').textContent = clientLat.toFixed(2);
+        document.getElementById('clon').textContent = clientLon.toFixed(2);
+        document.getElementById('default-location-msg').style.display = 'block';
+        await fetchWeatherForCoords(clientLat, clientLon);
+    }
 
-    //move your mouse to change light position
-    let locX = mouseX - width / 2;
-    let locY = mouseY - height / 2;
-    //let v = createVector(locX, locY, 0)
-    //let v = createVector(1, 1, 0)
-
-    //v.div(100)
-    //directionalLight(255,255,0, v);
-    ambientLight(250)
-    // to set the light position,
-    // think of the world's coordinate as:
-    // -width/2,-height/2 -------- width/2,-height/2
-    //                |            |
-    //                |     0,0    |
-    //                |            |
-    // -width/2,height/2--------width/2,height/2
-   // pointLight(250, 250, 250, locX, locY, 100);
-
-    // pointLight(0,0,255, 0, -200, 0)
-    //pointLight(255,0,0,0, 200,0)
-
-    //ambientMaterial(250)
-    texture(cloudyEarth)
-    //specularMaterial(250)
-    //specularMaterial(75,75,255);
-    //fill(0,0,255)
-   // stroke(0.5)
-    noStroke()
-    //normalMaterial()
-
-   //rotateZ(23);
-   rotateY(angle);
-
-   texture(cloudyEarth)
-   sphere(earthSize)
-  // rotateZ(-23);
-   rotateY(11);
-
-    // Guard for pushing live ISS data to internalIssPathHistory
-    if (typeof iss !== 'undefined' && iss && typeof iss.latitude === 'number' && typeof iss.longitude === 'number') {
-        let addPoint = true;
-        if (internalIssPathHistory.length > 0) {
-            const lastPoint = internalIssPathHistory[internalIssPathHistory.length - 1];
-            // Check if lastPoint has lat/lon before comparing
-            if (typeof lastPoint.lat === 'number' && typeof lastPoint.lon === 'number' &&
-                lastPoint.lat === iss.latitude && lastPoint.lon === iss.longitude) {
-                addPoint = false;
-            }
+    async function updateGeoData() {
+        if (typeof Tools === 'undefined' || !Tools.isGeoLocAvailable || !Tools.geoLocate) {
+            console.log("Tools.js not available or complete. Using default location.");
+            await setDefaultLocationAndFetchWeather(); return;
         }
+        if (!Tools.isGeoLocAvailable()) {
+            console.log("Geolocation not available in this browser.");
+            await setDefaultLocationAndFetchWeather(); return;
+        }
+        try {
+            console.log("Attempting to get live geolocation...");
+            const { coords } = await Tools.geoLocate();
+            clientLat = coords.latitude; clientLon = coords.longitude;
+            console.log("Live geolocation successful:", clientLat, clientLon);
+            document.getElementById('default-location-msg').style.display = 'none';
+            document.getElementById('clat').textContent = clientLat.toFixed(2);
+            document.getElementById('clon').textContent = clientLon.toFixed(2);
+            await fetchWeatherForCoords(clientLat, clientLon);
+        } catch (e) {
+            console.warn('Error getting live geolocation or permission denied:', e.message);
+            await setDefaultLocationAndFetchWeather();
+        }
+    }
 
-        if (addPoint) {
-            // iss.timestamp is in milliseconds from the WebSocket server
-            // Store as ISO string if converting, or ensure consistency if not.
-            // For now, assume direct storage or that it's an ISO string.
-            // The API historical data has timeStamp as ISO string.
-            // The live data 'iss.timestamp' is ms since epoch.
-            // To be consistent with historical data (which is now stored as ISO string via point.timeStamp)
-            // we should convert live timestamp to ISO string as well, or convert historical to ms.
-            // Let's convert live to ISO string for consistency with historical.
-            // However, populateInitialIssHistory stores API's timeStamp (ISO string) directly.
-            // And the ejs part converts that ISO string to ms for calculation.
-            // So, for live data being added to internalIssPathHistory, we should add it in a format
-            // that the EJS part can also parse with new Date().getTime().
-            // The live `iss.timestamp` is already in ms.
-            // `populateInitialIssHistory` stores the API's `timeStamp` (ISO string)
-            // `calculateAndDisplayPassBy` converts historical `timeStamp` (ISO) to ms.
-            // So, live data pushed to `internalIssPathHistory` should also have `timeStamp` in a format parseable by `new Date().getTime()`.
-            // Milliseconds is fine, or convert to ISO string. Let's use the millisecond value directly if available.
-            internalIssPathHistory.push({
-                lat: iss.latitude,
-                lon: iss.longitude,
-                timeStamp: iss.timestamp ? iss.timestamp : new Date().getTime() // Use ms if available, else current time in ms
+// calculateAndDisplayPassBy() function is now removed and replaced by ISSOrbitPredictor module.
+
+    document.addEventListener('DOMContentLoaded', () => {
+        updateGeoData();
+
+        const pathLengthSlider = document.getElementById('pathLengthSlider');
+        const pathLengthValueSpan = document.getElementById('pathLengthValue');
+        const predictionLengthSlider = document.getElementById('predictionLengthSlider');
+        const predictionLengthValueSpan = document.getElementById('predictionLengthValue');
+        const passByRadiusSlider = document.getElementById('passByRadiusSlider');
+        const passByRadiusValueSpan = document.getElementById('passByRadiusValue');
+
+        if (pathLengthSlider && pathLengthValueSpan) {
+            pathLengthSlider.addEventListener('input', function() {
+                pathLengthValueSpan.textContent = this.value;
+                if (window.earth3DSketch && typeof window.earth3DSketch.setMaxHistoryPoints === 'function') {
+                    window.earth3DSketch.setMaxHistoryPoints(parseInt(this.value));
+                }
+                // calculateAndDisplayPassBy(); // Old function call removed
+                // Prediction is handled by ISSOrbitPredictor setters or its internal logic
             });
         }
 
-        // Ensure MAX_HISTORY_POINTS is respected
-        while (internalIssPathHistory.length > MAX_HISTORY_POINTS) {
-            internalIssPathHistory.shift();
+        if (predictionLengthSlider && predictionLengthValueSpan) {
+            predictionLengthSlider.addEventListener('input', function() {
+                predictionLengthValueSpan.textContent = this.value;
+                // predictionDurationSeconds = parseInt(this.value) * 60; // Old variable
+                if (window.ISSOrbitPredictor) {
+                    window.ISSOrbitPredictor.setPredictionDurationSec(parseInt(this.value) * 60);
+                }
+                // calculateAndDisplayPassBy(); // Old function call removed
+            });
         }
-    }
 
-    // Guard for drawing the ISS model
-    if (typeof iss !== 'undefined' && iss && typeof iss.latitude === 'number' && typeof iss.longitude === 'number') {
-        let v = Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, iss.latitude, iss.longitude);
-        push();
-        translate(v.x, v.y, v.z);
-        fill(0,0,0,0);
-        texture(issGif);
-        plane(issGif.width / issSize, issGif.height / issSize);
-        pop();
-    }
-
-    // Draw ISS Path History (Orange Spheres) - This should always attempt to draw from internalIssPathHistory
-    // It is NOT dependent on the 'iss' (live data) object being defined, so it's outside the above 'if(iss)'
-    if (internalIssPathHistory.length > 0) { // Check if there's anything to draw
-        push(); // Isolate path styles
-        noStroke();
-    fill(255, 165, 0, 150); // Orange, semi-transparent
-
-    for (let i = 0; i < internalIssPathHistory.length; i++) {
-        const histPoint = internalIssPathHistory[i];
-        // Ensure histPoint itself and its lat/lon are valid before attempting to draw
-        if (histPoint && typeof histPoint.lat === 'number' && typeof histPoint.lon === 'number') {
-            let vPath = Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, histPoint.lat, histPoint.lon);
-            push();
-            translate(vPath.x, vPath.y, vPath.z);
-            sphere(pathPointSphereSize);
-            pop();
+        if (passByRadiusSlider && passByRadiusValueSpan) {
+            passByRadiusSlider.addEventListener('input', function() {
+                passByRadiusValueSpan.textContent = this.value;
+                // PASS_BY_THRESHOLD_KM = parseInt(this.value); // Old variable for calculation
+                if (window.ISSOrbitPredictor) {
+                    window.ISSOrbitPredictor.setRadiusKM(parseInt(this.value));
+                }
+                if (window.earth3DSketch && typeof window.earth3DSketch.setSketchPassByRadiusKM === 'function') {
+                    window.earth3DSketch.setSketchPassByRadiusKM(parseInt(this.value));
+                }
+                // calculateAndDisplayPassBy(); // Old function call removed
+            });
         }
-    }
-    pop(); // End path styles
-    }
 
-
-    // Draw Predicted ISS Path (Green Line)
-    if (internalPredictedPath && internalPredictedPath.length > 1) {
-        console.log(`[3D Draw] Attempting to draw predicted path. Points: ${internalPredictedPath.length}`);
-        push(); // Isolate styles for the predicted path
-
-        stroke(0, 200, 0, 180); // Green color, slightly transparent
-        strokeWeight(1.5);       // A bit thinner than the main path perhaps
-        noFill();              // We are drawing lines, not filled shapes
-
-        if (internalPredictedPath.length > 0) { // Log first vertex if available
-            const firstVertPt = internalPredictedPath[0];
-            if (typeof firstVertPt.lat === 'number' && typeof firstVertPt.lon === 'number') {
-               let vFirstPred = Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, firstVertPt.lat, firstVertPt.lon);
-               console.log('[3D Draw] First predicted vertex:', `x:${vFirstPred.x.toFixed(2)}, y:${vFirstPred.y.toFixed(2)}, z:${vFirstPred.z.toFixed(2)}`);
-            }
+        if (window.ISSOrbitPredictor) {
+            window.ISSOrbitPredictor.fetchAndPredict();
         }
-        beginShape();
-        for (let i = 0; i < internalPredictedPath.length; i++) {
-            const predPoint = internalPredictedPath[i];
-            // Ensure lat/lon are valid numbers before processing
-            if (typeof predPoint.lat === 'number' && typeof predPoint.lon === 'number') {
-                // Convert lat/lon to 3D coordinates. Altitude is same as main ISS path.
-                let vPredPath = Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, predPoint.lat, predPoint.lon);
-                vertex(vPredPath.x, vPredPath.y, vPredPath.z);
-            }
-        }
-        endShape();
-        pop(); // Restore previous styles
-    }
-
-   //  Showing Québec on earth  TODO:  show user location
-   let p =  Tools.p5.getSphereCoord(earthSize,46.8139,-71.2080)
-   push();
-   translate(p.x, p.y, p.z);
-   fill(255,255,0)
-   sphere(gpsSize)
-   pop();
-
-    show3DQuakes();
-    // angle -= 0.01; // Replaced by time-based calculation
-  }
-
-
-
-
-  function show3DQuakes()
-  {
-
-    for (var i = 1; i < earthquakes.length; i++) {
-      var data = earthquakes[i].split(/,/);  //  splitting csv
-      var lat = data[1];
-      var lon = data[2];
-      var mag = data[4];
-
-      let pos =  Tools.p5.getSphereCoord(earthSize, lat, lon)
-
-      var h = pow(10, mag);
-      var maxh = pow(10, 8);
-      h = map(h, 0, maxh, 1, 100);
-      let xaxis = createVector(1, 0, 0);
-      var angleb = xaxis.angleBetween(pos);
-      let raxis = xaxis.cross(pos);
-
-      from = color(0, 255, 0);
-      to = color(255, 0, 0);
-      c = lerpColor(from, to, map(float(mag), -1, 10, 0,1))
-
-      push();
-      translate(pos.x, pos.y, pos.z);
-      rotate(angleb, raxis);
-      fill(c);
-      if(mag <= 0 )
-        sphere(0.5)
-      else
-        sphere(h);
-     //box(h, 5, 5);
-      pop();
-
-
-    }
-  }
-
-
-
-let iss;   // International Space Station location
-let clientLat = null;
-let clientLon = null;
-
-
-let socket = io();
-
-// For pass-by estimation
-let lastPassByCheckTime = 0;
-const PASS_BY_CHECK_INTERVAL = 30000; // 30 seconds
-let PASS_BY_THRESHOLD_KM = 1000; // Max distance for a "close" pass - Changed to let
-let predictionDurationSeconds = 15 * 60; // Default 15 minutes in seconds
-
-socket.on('connect', () => {
-    console.log('Connected to server');
-});
-
-socket.on('iss', (data) => {
-    iss = data; // iss is used by earth3D.js globally
-
-    updateIssOnMap(iss.latitude, iss.longitude); // This will also update predicted path display
-
-    const now = Date.now();
-    if (clientLat !== null && clientLon !== null && now - lastPassByCheckTime > PASS_BY_CHECK_INTERVAL) {
-        calculateAndDisplayPassBy();
-        // updateIssOnMap() is called above, which will refresh the predicted path if it changed
-        lastPassByCheckTime = now;
-    }
-});
-
-
-
-function setClientMarker(lat, lon) {
-    if (window.clientMarker) {
-        window.clientMarker.setLatLng([lat, lon]);
-        if (mymap) {
-            mymap.setView([lat, lon], 5);
-        }
-    }
-    clientLat = lat;
-    clientLon = lon;
-}
-
-async function fetchWeatherForCoords(lat, lon) {
-    const url =`api/weather/${lat},${lon}`;
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
-
-        document.getElementById('summary').textContent = data.weather.weather[0].description;
-        document.getElementById('temp').textContent =  data.weather.main.feels_like;
-        if (data.air_quality && data.air_quality.results && data.air_quality.results[0]) {
-            const air = data.air_quality.results[0];
-            document.getElementById('aq_parameter').textContent = air.parameter.displayName;
-            document.getElementById('aq_value').textContent = air.latest.value;
-            document.getElementById('aq_units').textContent = air.parameter.units;
-            document.getElementById('aq_date').textContent = air.latest.datetime.local;
-        } else {
-             document.getElementById('aq_value').textContent = 'NO READING';
-        }
-        const wind = data.weather.wind;
-        document.getElementById('wind-speed').textContent = wind.speed;
-        document.getElementById('wind-gust').textContent = wind.gust;
-      
-
-    } catch (e) {
-        Tools.cliError(e);
-        document.getElementById('aq_value').textContent = 'NO READING';
-    }
-}
-
-async function setDefaultLocationAndFetchWeather() {
-    console.log("Using default client location.");
-    clientLat = 46.82;
-    clientLon = -71.30;
-
-    document.getElementById('clat').textContent = clientLat.toFixed(2);
-    document.getElementById('clon').textContent = clientLon.toFixed(2);
-    document.getElementById('default-location-msg').style.display = 'block';
-
-    setClientMarker(clientLat, clientLon);
-    await fetchWeatherForCoords(clientLat, clientLon);
-}
-
-async function updateGeoData() {
-    try {
-        console.log("Attempting to get live geolocation...");
-        const {coords} = await Tools.geoLocate();
-        clientLat = coords.latitude;
-        clientLon = coords.longitude;
-        console.log("Live geolocation successful:", clientLat, clientLon);
-        document.getElementById('default-location-msg').style.display = 'none';
-
-        document.getElementById('clat').textContent = clientLat.toFixed(2);
-        document.getElementById('clon').textContent = clientLon.toFixed(2);
-
-        setClientMarker(clientLat, clientLon);
-        await fetchWeatherForCoords(clientLat, clientLon);
-
-    } catch(e) {
-        console.warn('Error getting live geolocation or permission denied:', e.message);
-        alert('Live geolocation failed. Using default location (Quebec City area). Error: '+e.message);
-        await setDefaultLocationAndFetchWeather();
-    }
-}
-
-if (Tools.isGeoLocAvailable()) {
-    updateGeoData();
-} else {
-    console.log("Geolocation not available in this browser, using default location.");
-    setDefaultLocationAndFetchWeather();
-}
-
-let firstTime = true;
-
-async function updateIssOnMap(lat, lon) {
-    if (window.issMarker) {
-         window.issMarker.setLatLng([lat, lon]);
-    } else {
-        console.warn("ISS marker not initialized for updateIssOnMap");
-        return;
-    }
-
-    if (firstTime && mymap) {
-        if (clientLat === null) {
-             mymap.setView([lat, lon], 2);
-        }
-        firstTime = false;
-    }
-
-    document.getElementById('isslat').textContent = parseFloat(lat).toFixed(2);
-    document.getElementById('isslon').textContent = parseFloat(lon).toFixed(2);
-
-   
-}
-
-
-
-
-
-function calculateAndDisplayPassBy() {
-    const passByStatus = document.getElementById('iss-passby-time');
-    console.log('[PassByDebug] calculateAndDisplayPassBy called.');
-
-    if (!clientLat || !clientLon) {
-        passByStatus.textContent = 'Waiting for client location...';
-        predictedIssPathPoints = [];
-        if (typeof window.update3DPredictedPath === 'function') window.update3DPredictedPath(predictedIssPathPoints);
-        // Conditional map update based on available data
-        if (window.issMarker && typeof iss !== 'undefined' && iss) updateIssOnMap(iss.latitude, iss.longitude);
-        else if (issPathHistory.length > 0) updateIssOnMap(issPathHistory[issPathHistory.length-1].lat, issPathHistory[issPathHistory.length-1].lng);
-        console.log('[PassByDebug] Returning: Client location not available.');
-        return;
-    }
-
-    let basePathForPrediction = issPathHistory; // Default to live data
-    let usingHistoricalDataForPrediction = false;
-
-    if (issPathHistory.length < 2) {
-        console.log('[PassByDebug] Live ISS path history too short, attempting to use historical data for prediction.');
-        if (typeof window.internalIssPathHistory !== 'undefined' && window.internalIssPathHistory.length >= 2) {
-            basePathForPrediction = window.internalIssPathHistory;
-            usingHistoricalDataForPrediction = true;
-            console.log('[PassByDebug] Using historical data for prediction. Points:', basePathForPrediction.length);
-        } else {
-            console.log('[PassByDebug] Historical data also too short or unavailable for prediction.');
-            passByStatus.textContent = 'Insufficient ISS path data (live or historical)...';
-            predictedIssPathPoints = [];
-            if (typeof window.update3DPredictedPath === 'function') {
-                 window.update3DPredictedPath(predictedIssPathPoints);
-            }
-            if (window.issMarker && typeof iss !== 'undefined' && iss) updateIssOnMap(iss.latitude, iss.longitude);
-            else if (issPathHistory.length > 0) updateIssOnMap(issPathHistory[issPathHistory.length-1].lat, issPathHistory[issPathHistory.length-1].lng);
-            return;
-        }
-    } else {
-        console.log('[PassByDebug] Using live ISS path history for prediction. Points:', basePathForPrediction.length);
-    }
-
-    if (typeof Tools.haversineDistance !== 'function') {
-        passByStatus.textContent = 'Distance calculation tool not available.';
-        predictedIssPathPoints = [];
-        if (typeof window.update3DPredictedPath === 'function') window.update3DPredictedPath(predictedIssPathPoints);
-        console.error('[PassByDebug] Returning: Tools.haversineDistance is not a function.');
-        return;
-    }
-
-    passByStatus.textContent = 'Calculating...';
-
-    let lastPoint, secondLastPoint, timeDiffSeconds;
-    let lastPointData, secondLastPointData; // To hold raw points from basePath
-
-    if (usingHistoricalDataForPrediction) {
-        console.log('[PassByDebug] Using historical data for point extraction.');
-        secondLastPointData = basePathForPrediction[basePathForPrediction.length - 2];
-        lastPointData = basePathForPrediction[basePathForPrediction.length - 1];
-
-        // Adapt structure for consistency and use .lon for lng
-        // Convert ISO timestamp string to milliseconds
-        lastPoint = {
-            lat: lastPointData.lat,
-            lng: lastPointData.lon,
-            timestamp: new Date(lastPointData.timeStamp).getTime()
-        };
-        secondLastPoint = {
-            lat: secondLastPointData.lat,
-            lng: secondLastPointData.lon,
-            timestamp: new Date(secondLastPointData.timeStamp).getTime()
-        };
-
-        timeDiffSeconds = (lastPoint.timestamp - secondLastPoint.timestamp) / 1000;
-        console.log(`[PassByDebug] Historical data timeDiffSeconds: ${timeDiffSeconds}s (from actual timestamps)`);
-
-    } else { // Using live issPathHistory
-        console.log('[PassByDebug] Using live data for point extraction.');
-        lastPointData = basePathForPrediction[basePathForPrediction.length - 1]; // Already has .lat, .lng, .timestamp
-        secondLastPointData = basePathForPrediction[basePathForPrediction.length - 2];
-        lastPoint = lastPointData;
-        secondLastPoint = secondLastPointData;
-        timeDiffSeconds = (lastPoint.timestamp - secondLastPoint.timestamp) / 1000;
-    }
-    console.log('[PassByDebug PredictCalc] lastPoint:', JSON.stringify(lastPoint), 'secondLastPoint:', JSON.stringify(secondLastPoint), 'timeDiffSeconds:', timeDiffSeconds);
-
-    if (timeDiffSeconds <= 0) {
-        passByStatus.textContent = 'Static or invalid ISS data timestamps for speed calculation.';
-        predictedIssPathPoints = [];
-        if (typeof window.update3DPredictedPath === 'function') window.update3DPredictedPath(predictedIssPathPoints);
-        console.log('[PassByDebug] Returning: Time difference issue for speed calculation.');
-        // updateIssOnMap might not be helpful here as path is not changing.
-        return;
-    }
-
-    const latSpeed = (lastPoint.lat - secondLastPoint.lat) / timeDiffSeconds;
-    const lonSpeed = (lastPoint.lng - secondLastPoint.lng) / timeDiffSeconds; // Ensure .lng is used
-    console.log('[PassByDebug PredictCalc] latSpeed:', latSpeed, 'lonSpeed:', lonSpeed);
-
-    let minFutureDist = Infinity;
-    let timeOfClosestApproach = null;
-    let tempPredictedPath = [];
-    predictedIssPathPoints = []; // Clear global predicted path at start of this calculation run
-
-    // console.log('[PassByDebug] Starting extrapolation loop for predicted path...');
-    for (let t = 0; t < predictionDurationSeconds; t += 30) { // Use dynamic prediction duration
-        const futureLat = lastPoint.lat + latSpeed * t;
-        const futureLon = lastPoint.lng + lonSpeed * t;
-        const normalizedFutureLon = (futureLon + 540) % 360 - 180;
-
-        tempPredictedPath.push({lat: futureLat, lng: normalizedFutureLon});
-
-        const dist = Tools.haversineDistance(clientLat, clientLon, futureLat, normalizedFutureLon);
-        if (dist < minFutureDist) {
-            minFutureDist = dist;
-            timeOfClosestApproach = t;
-            if (minFutureDist < PASS_BY_THRESHOLD_KM) {
-                 predictedIssPathPoints = tempPredictedPath.slice(0, tempPredictedPath.length);
-            }
-        }
-    }
-
-    if (!(minFutureDist < PASS_BY_THRESHOLD_KM && timeOfClosestApproach !== null)) {
-        predictedIssPathPoints = [];
-    }
-
-    console.log(`[PassByDebug PredictCalc] Populated predictedIssPathPoints. Length: ${predictedIssPathPoints.length}`);
-    if (predictedIssPathPoints.length > 0) {
-        console.log('[PassByDebug PredictCalc] First 3 predicted points:', JSON.stringify(predictedIssPathPoints.slice(0, 3)));
-        if (predictedIssPathPoints.length > 3) {
-            console.log('[PassByDebug PredictCalc] Last 3 predicted points:', JSON.stringify(predictedIssPathPoints.slice(-3)));
-        }
-    }
-    // Note: window.update3DPredictedPath is called by the slider event listeners after this function completes.
-
-    if (minFutureDist < PASS_BY_THRESHOLD_KM && timeOfClosestApproach !== null) {
-        const approachDate = new Date(Date.now() + timeOfClosestApproach * 1000);
-        passByStatus.textContent = `Approx. pass at ${approachDate.toLocaleTimeString()} (distance ~${minFutureDist.toFixed(0)} km).`;
-    } else {
-        passByStatus.textContent = `No close pass predicted soon (closest ~${minFutureDist.toFixed(0)}km).`;
-    }
-
-    if (iss && typeof iss.latitude !== 'undefined') {
-         updateIssOnMap(iss.latitude, iss.longitude);
-    } /*else if (issPathHistory.length > 0) {
-        const lastKnownIss = issPathHistory[issPathHistory.length -1];
-        updateIssOnMap(lastKnownIss.lat, lastKnownIss.lng);
-    }*/
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-async function getUserInfo() {
-    const info = await Tools.ipLookUp();
-    document.getElementById('ip_id').innerHTML =  "<pre>"+JSON.stringify(info,null, '\t') +"</pre>";
-}
-getUserInfo();
-
-
+    });
 </script>
 
 </body>
