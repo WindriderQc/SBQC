@@ -126,19 +126,21 @@ function draw() {
     
     background(52); 
 
-    if (typeof autoRotationSpeed === 'number' && !isNaN(autoRotationSpeed)) {
-        angleY += autoRotationSpeed / 60.0; // Assumes ~60 FPS for auto-rotation
-    } else {
-        // console.warn("[draw] autoRotationSpeed is not a valid number:", autoRotationSpeed); // Keep if needed
+    // --- TEMPORARY FOR DEBUGGING MARKER ALIGNMENT ---
+    let effectiveAngleY = 0; // Force no rotation for Y
+    let effectiveAngleX = 0; // Force no rotation for X
+    // Comment out or bypass the normal angleY auto-rotation line for this test
+    if (false && typeof autoRotationSpeed === 'number' && !isNaN(autoRotationSpeed)) {
+        angleY += autoRotationSpeed / 60.0; 
     }
-    // console.log("[draw] angle before rotateY:", angleY); // DEBUG LOG REMOVED
+    // --- END TEMPORARY ---
 
     ambientLight(250); 
     scale(zoomLevel); // Apply zoom
     
     push(); // Main push for all rotating elements
-    rotateY(angleY); // Apply horizontal rotation
-    rotateX(angleX); // Apply vertical rotation
+    rotateY(effectiveAngleY); // Apply horizontal rotation using effectiveAngleY
+    rotateX(effectiveAngleX); // Apply vertical rotation using effectiveAngleX
 
     // Earth rendering
     push(); // Optional inner push for Earth specific transforms if any, besides rotation
@@ -146,6 +148,17 @@ function draw() {
     noStroke(); 
     sphere(earthSize); 
     pop(); // End Earth's optional inner push
+
+    // --- TEMPORARY TEST MARKER at (0,0) ---
+    let testLat0Lon0 = { lat: 0, lon: 0 };
+    let pTest00 = Tools.p5.getSphereCoord(earthSize, testLat0Lon0.lat, testLat0Lon0.lon);
+    push();
+    translate(pTest00.x, pTest00.y, pTest00.z);
+    noStroke();
+    fill(255, 0, 0); // Bright Red
+    sphere(gpsSize * 1.5); // Slightly larger to be visible
+    pop();
+    // --- END TEMPORARY TEST MARKER ---
 
     // ISS model, historical path, and predicted path rendering are now within this main rotation context
     // No additional rotateY(angle) should be applied to them individually.

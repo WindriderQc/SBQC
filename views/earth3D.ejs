@@ -3,6 +3,7 @@
 
 <head>
     <%- include('partials/mainHead', { title: 'SBQC ISS Tracker' }) %>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.0.0/satellite.min.js"></script>
 </head>
 
 <body class="fixed-nav sticky-footer bg-light sidenav-toggled" id="page-top">
@@ -100,17 +101,152 @@
 <script src="/js/earth3D.js"></script>
 
 <script>
+   window.ISSOrbitPredictor = (function () {
+       const TLE_URL = 'https://celestrak.com/NORAD/elements/stations.txt';
+       let predictionIntervalSec = 10; // Made let for potential future config
+       let predictionDurationSec = 5400; // 90 mins, made let for setter
+       let radiusKM = 1000; // Made let for setter
+       const targetLat = 46.8139; // Default target (Quebec City)
+       const targetLon = -71.2080;
+       let satrec; // Stores the satellite record from TLE
+
+       async function fetchTLE() {
+           try {
+               const res = await fetch(TLE_URL);
+               if (!res.ok) throw new Error(`Failed to fetch TLE: ${res.status}`);
+               const txt = await res.text();
+               const lines = txt.split('\n');
+               // Find ISS TLE lines (more robustly)
+               const i = lines.findIndex(l => l.includes('ISS (ZARYA)') || l.includes('ISS'));
+               if (i >= 0 && lines[i+1] && lines[i+2]) {
+                   satrec = satellite.twoline2satrec(lines[i+1].trim(), lines[i+2].trim());
+                   console.log("[ISSOrbitPredictor] Fetched new TLE for ISS.");
+               } else {
+                   console.error("[ISSOrbitPredictor] Could not parse TLE from fetched text.");
+                   satrec = null;
+               }
+           } catch (error) {
+               console.error("[ISSOrbitPredictor] Error fetching TLE:", error);
+               satrec = null;
+           }
+       }
+
+       function positionAt(time) {
+           if (!satrec) return null;
+           try {
+               const propagateResult = satellite.propagate(satrec, time);
+               if (!propagateResult || !propagateResult.position) {
+                   // console.warn('[ISSOrbitPredictor] Propagation failed for time:', time);
+                   return null; 
+               }
+               const { position } = propagateResult;
+               const gmst = satellite.gstime(time);
+               const geodetic = satellite.eciToGeodetic(position, gmst);
+               return {
+                   lat: geodetic.latitude * 180 / Math.PI,
+                   lon: geodetic.longitude * 180 / Math.PI,
+                   alt: geodetic.height
+               };
+           } catch (e) {
+               console.error("[ISSOrbitPredictor] Error in positionAt or propagate:", e);
+               return null;
+           }
+       }
+
+       function haversineDistance(lat1, lon1, lat2, lon2) {
+           const R = 6371; // Earth radius in km
+           const toRad = angle => angle * Math.PI / 180;
+           const dLat = toRad(lat2 - lat1);
+           const dLon = toRad(lon2 - lon1);
+           const a = Math.sin(dLat/2)**2 +
+                     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                     Math.sin(dLon/2)**2;
+           return 2 * R * Math.asin(Math.sqrt(a));
+       }
+
+       async function generatePredictedPath() {
+           if (!satrec) {
+               console.log("[ISSOrbitPredictor] No TLE data (satrec), attempting to fetch...");
+               await fetchTLE();
+               if (!satrec) {
+                   console.error("[ISSOrbitPredictor] TLE data still unavailable. Cannot generate path.");
+                   if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') {
+                        window.earth3DSketch.updatePredictedPath([]);
+                   }
+                   return;
+               }
+           }
+
+           const now = new Date();
+           let predicted = [];
+           let closest = null;
+           let closestDistance = Infinity;
+           const passByStatus = document.getElementById('iss-passby-time');
+
+           for (let t = 0; t < predictionDurationSec; t += predictionIntervalSec) {
+               const time = new Date(now.getTime() + t * 1000);
+               const pos = positionAt(time);
+               if (pos) {
+                   predicted.push({ lat: pos.lat, lng: pos.lon, alt: pos.alt }); // lng for compatibility with update3DPredictedPath
+                   const dist = haversineDistance(pos.lat, pos.lon, targetLat, targetLon);
+                   if (dist < closestDistance) {
+                       closestDistance = dist;
+                       closest = { time, dist, ...pos };
+                   }
+               }
+           }
+           
+           if (passByStatus) {
+               if (closest && closest.dist < radiusKM) {
+                   passByStatus.textContent = `Approx. pass at ${closest.time.toLocaleTimeString()} (distance ~${Math.round(closest.dist)} km). TLE based.`;
+                   console.log(`[ISSOrbitPredictor PASS DETECTED] Closest pass at ${closest.time.toLocaleTimeString()} within ${Math.round(closest.dist)} km`);
+               } else {
+                   passByStatus.textContent = `No close pass predicted (within ${radiusKM}km for next ${predictionDurationSec/60}min). Closest ~${closestDistance.toFixed(0)}km. TLE based.`;
+                   console.log(`[ISSOrbitPredictor No pass within ${radiusKM} km in next ${predictionDurationSec/60} mins]. Closest: ${closestDistance.toFixed(0)}km`);
+               }
+           }
+
+           if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') {
+              window.earth3DSketch.updatePredictedPath(predicted);
+           }
+       }
+
+       return {
+           fetchAndPredict: async function () {
+               await fetchTLE(); 
+               if (satrec) {
+                   await generatePredictedPath();
+               } else {
+                   console.error("[ISSOrbitPredictor] Cannot predict path due to TLE fetch/parse error.");
+                   if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') {
+                       window.earth3DSketch.updatePredictedPath([]);
+                   }
+                   const passByStatus = document.getElementById('iss-passby-time');
+                   if(passByStatus) passByStatus.textContent = 'Error fetching TLE data for prediction.';
+               }
+           },
+           setPredictionDurationSec: function(duration) {
+               if (typeof duration === 'number' && duration > 0) predictionDurationSec = duration;
+               if (satrec) generatePredictedPath(); // Re-predict if TLE is available
+           },
+           setRadiusKM: function(rad) {
+               if (typeof rad === 'number' && rad > 0) radiusKM = rad;
+               if (satrec) generatePredictedPath(); // Re-predict for text update if TLE is available
+           }
+       };
+   })();
+
     // Page UI and Socket.IO Logic
 
     let clientLat = null;
     let clientLon = null;
     
-    let pagePredictedIssPathPoints = []; 
+    // let pagePredictedIssPathPoints = []; // Now managed by ISSOrbitPredictor
     
     let lastPassByCheckTime = 0;
     const PASS_BY_CHECK_INTERVAL = 30000; 
-    let PASS_BY_THRESHOLD_KM = 1000; // Used for calculation logic
-    let predictionDurationSeconds = 15 * 60; 
+    // let PASS_BY_THRESHOLD_KM = 1000; // Now managed by ISSOrbitPredictor (as radiusKM)
+    // let predictionDurationSeconds = 15 * 60; // Now managed by ISSOrbitPredictor
 
     const socket = io();
 
@@ -128,7 +264,17 @@
 
         const now = Date.now();
         if (clientLat !== null && clientLon !== null && now - lastPassByCheckTime > PASS_BY_CHECK_INTERVAL) {
-            calculateAndDisplayPassBy(); 
+            // calculateAndDisplayPassBy(); // Old function, will be replaced by ISSOrbitPredictor logic
+            // For now, prediction is triggered by sliders or initially.
+            // To trigger on interval, ISSOrbitPredictor.fetchAndPredict() could be called here.
+            // However, TLE fetching on interval might be too frequent.
+            // The current ISSOrbitPredictor design re-predicts if parameters change via sliders.
+            // A separate timer for fetchAndPredict() might be better if periodic refresh is needed.
+            // For this step, we rely on initial call and slider changes.
+            if (window.ISSOrbitPredictor) {
+                // This will refetch TLE and predict. Consider if this is too frequent.
+                // window.ISSOrbitPredictor.fetchAndPredict(); 
+            }
             lastPassByCheckTime = now;
         }
     });
@@ -193,142 +339,7 @@
         }
     }
     
-function calculateAndDisplayPassBy() {
-    const passByStatus = document.getElementById('iss-passby-time');
-    let currentIssHistory = [];
-    if (window.earth3DSketch && typeof window.earth3DSketch.getInternalIssPathHistory === 'function') {
-        currentIssHistory = window.earth3DSketch.getInternalIssPathHistory();
-    }
-
-    if (clientLat === null || clientLon === null) {
-        passByStatus.textContent = 'Waiting for client location...';
-        if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') {
-            window.earth3DSketch.updatePredictedPath([]); 
-        }
-        return;
-    }
-
-    if (!currentIssHistory || currentIssHistory.length < 2) {
-        passByStatus.textContent = 'Insufficient ISS path data...';
-        pagePredictedIssPathPoints = []; 
-        if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') {
-            window.earth3DSketch.updatePredictedPath(pagePredictedIssPathPoints); 
-        }
-        return;
-    }
-    
-    let basePath = currentIssHistory; 
-
-    if (typeof Tools === 'undefined' || typeof Tools.haversineDistance !== 'function' || typeof Tools.toRadians !== 'function' ) { 
-        passByStatus.textContent = 'Essential calculation tools not available.';
-        if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') {
-            window.earth3DSketch.updatePredictedPath([]); 
-        }
-        console.error('[PassByDebug] Returning: Tools.js function(s) missing.');
-        return;
-    }
-
-    passByStatus.textContent = 'Calculating...';
-
-    const lastPointData = basePath[basePath.length - 1];
-    const secondLastPointData = basePath[basePath.length - 2];
-    const lastPointTimestamp = new Date(lastPointData.timeStamp).getTime();
-    const secondLastPointTimestamp = new Date(secondLastPointData.timeStamp).getTime();
-
-    if (isNaN(lastPointTimestamp) || isNaN(secondLastPointTimestamp)) {
-        console.error('[PassByDebug] Invalid timestamps in history data.');
-        passByStatus.textContent = 'Error with timestamp data.';
-        if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') {
-            window.earth3DSketch.updatePredictedPath([]);
-        }
-        return;
-    }
-    
-    const timeDiffSeconds = (lastPointTimestamp - secondLastPointTimestamp) / 1000;
-
-    if (timeDiffSeconds <= 0) {
-        passByStatus.textContent = 'Static or invalid ISS data timestamps for speed calculation.';
-        if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') {
-            window.earth3DSketch.updatePredictedPath([]); 
-        }
-        return;
-    }
-
-    const measuredLonSpeedDegPerSec = (lastPointData.lon - secondLastPointData.lon) / timeDiffSeconds; 
-    const latSpeedDegPerSec = (lastPointData.lat - secondLastPointData.lat) / timeDiffSeconds;
-
-    const ORBITAL_AMPLITUDE_DEG = 51.6;
-    const ORBITAL_PERIOD_SECONDS = 92 * 60;
-    const ANGULAR_FREQUENCY_RAD_PER_SEC = (2 * Math.PI) / ORBITAL_PERIOD_SECONDS;
-
-    const lastLatRad = Tools.toRadians(lastPointData.lat);
-    const cosOfLastLat = Math.cos(lastLatRad);
-    let lonSpeedDegPerSecAtEquator = measuredLonSpeedDegPerSec;
-    if (Math.abs(cosOfLastLat) > 0.01) {
-        lonSpeedDegPerSecAtEquator = measuredLonSpeedDegPerSec / cosOfLastLat;
-    } else {
-        console.warn("[PassByDebug] Last latitude is very close to a pole, using measured longitude speed directly for equatorial baseline.");
-    }
-
-    let value_for_asin = lastPointData.lat / ORBITAL_AMPLITUDE_DEG;
-    value_for_asin = Math.max(-1.0, Math.min(1.0, value_for_asin)); 
-    let initialPhaseRad = Math.asin(value_for_asin); 
-
-    if (latSpeedDegPerSec > 0.01) { 
-        if (Math.cos(initialPhaseRad) < 0) initialPhaseRad = Math.PI - initialPhaseRad;
-    } else if (latSpeedDegPerSec < -0.01) { 
-        if (Math.cos(initialPhaseRad) > 0) initialPhaseRad = Math.PI - initialPhaseRad;
-    } 
-    
-    let minFutureDist = Infinity;
-    let timeOfClosestApproach = null;
-    let tempPredictedPath = []; 
-    let currentLon = lastPointData.lon; 
-    const timeStepForLoop = 30;
-
-    for (let t = 0; t < predictionDurationSeconds; t += timeStepForLoop) { 
-        let futureLat = ORBITAL_AMPLITUDE_DEG * Math.sin(ANGULAR_FREQUENCY_RAD_PER_SEC * t + initialPhaseRad);
-        
-        let cosOfFutureLat = Math.cos(Tools.toRadians(futureLat));
-        let effectiveLonSpeedThisStep = lonSpeedDegPerSecAtEquator;
-        if (Math.abs(cosOfFutureLat) > 0.01) {
-            effectiveLonSpeedThisStep = lonSpeedDegPerSecAtEquator * cosOfFutureLat;
-        } else if (Math.abs(futureLat) > ORBITAL_AMPLITUDE_DEG + 5) { 
-            effectiveLonSpeedThisStep = lonSpeedDegPerSecAtEquator * Math.cos(Tools.toRadians(ORBITAL_AMPLITUDE_DEG));
-        }
-
-        if (t > 0) {
-             currentLon += effectiveLonSpeedThisStep * timeStepForLoop;
-        }
-        // For t=0, futureLon is lastPointData.lon. For t>0, it's the iteratively updated currentLon.
-        let futureLon = (t === 0) ? lastPointData.lon : currentLon;
-        const normalizedFutureLon = (futureLon + 540) % 360 - 180; 
-
-        tempPredictedPath.push({ lat: futureLat, lng: normalizedFutureLon }); 
-
-        const dist = Tools.haversineDistance(clientLat, clientLon, futureLat, normalizedFutureLon);
-        if (dist < minFutureDist) {
-            minFutureDist = dist;
-            timeOfClosestApproach = t;
-        }
-    }
-    
-    console.log(`[PassByDebug] minFutureDist: ${minFutureDist.toFixed(2)} km, PASS_BY_THRESHOLD_KM: ${PASS_BY_THRESHOLD_KM} km, timeOfClosestApproach: ${timeOfClosestApproach}s, initialPhaseRad: ${initialPhaseRad}`);
-
-    pagePredictedIssPathPoints = tempPredictedPath;
-    console.log(`[PassByDebug] Populating pagePredictedIssPathPoints with full tempPredictedPath. Length: ${pagePredictedIssPathPoints.length}`);
-    
-    if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') {
-        window.earth3DSketch.updatePredictedPath(pagePredictedIssPathPoints); 
-    }
-
-    if (minFutureDist < PASS_BY_THRESHOLD_KM && timeOfClosestApproach !== null) {
-        const approachDate = new Date(lastPointTimestamp + timeOfClosestApproach * 1000); 
-        passByStatus.textContent = `Approx. pass at ${approachDate.toLocaleTimeString()} (distance ~${minFutureDist.toFixed(0)} km).`;
-    } else {
-        passByStatus.textContent = `No close pass predicted (within ${PASS_BY_THRESHOLD_KM}km for next ${predictionDurationSeconds/60}min). Closest ~${minFutureDist.toFixed(0)}km.`;
-    }
-}
+// calculateAndDisplayPassBy() function is now removed and replaced by ISSOrbitPredictor module.
 
     document.addEventListener('DOMContentLoaded', () => {
         updateGeoData(); 
@@ -346,27 +357,38 @@ function calculateAndDisplayPassBy() {
                 if (window.earth3DSketch && typeof window.earth3DSketch.setMaxHistoryPoints === 'function') {
                     window.earth3DSketch.setMaxHistoryPoints(parseInt(this.value)); 
                 }
-                calculateAndDisplayPassBy(); 
+                // calculateAndDisplayPassBy(); // Old function call removed
+                // Prediction is handled by ISSOrbitPredictor setters or its internal logic
             });
         }
 
         if (predictionLengthSlider && predictionLengthValueSpan) {
             predictionLengthSlider.addEventListener('input', function() {
                 predictionLengthValueSpan.textContent = this.value;
-                predictionDurationSeconds = parseInt(this.value) * 60;
-                calculateAndDisplayPassBy();
+                // predictionDurationSeconds = parseInt(this.value) * 60; // Old variable
+                if (window.ISSOrbitPredictor) {
+                    window.ISSOrbitPredictor.setPredictionDurationSec(parseInt(this.value) * 60);
+                }
+                // calculateAndDisplayPassBy(); // Old function call removed
             });
         }
 
         if (passByRadiusSlider && passByRadiusValueSpan) {
             passByRadiusSlider.addEventListener('input', function() {
                 passByRadiusValueSpan.textContent = this.value;
-                PASS_BY_THRESHOLD_KM = parseInt(this.value); 
+                // PASS_BY_THRESHOLD_KM = parseInt(this.value); // Old variable for calculation
+                if (window.ISSOrbitPredictor) {
+                    window.ISSOrbitPredictor.setRadiusKM(parseInt(this.value));
+                }
                 if (window.earth3DSketch && typeof window.earth3DSketch.setSketchPassByRadiusKM === 'function') {
                     window.earth3DSketch.setSketchPassByRadiusKM(parseInt(this.value)); 
                 }
-                calculateAndDisplayPassBy(); 
+                // calculateAndDisplayPassBy(); // Old function call removed
             });
+        }
+
+        if (window.ISSOrbitPredictor) {
+            window.ISSOrbitPredictor.fetchAndPredict();
         }
     });
 </script>

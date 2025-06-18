@@ -240,6 +240,25 @@ const Tools = {
             var z = -rayon * cos(theta) * sin(phi);
             let vecCoord = createVector(x,y,z); // Assumes p5 'createVector' is available globally
             return vecCoord
+        },
+
+        getLatLonFromSphereCoord: (x, y, z, rayon) => {
+            if (rayon === 0) return { lat: 0, lon: 0 };
+            let valForAsin = -y / rayon;
+            valForAsin = Math.max(-1.0, Math.min(1.0, valForAsin));
+            let theta = Math.asin(valForAsin);
+            let latDegrees = degrees(theta);
+            let phi_offset;
+            if (Math.abs(Math.cos(theta)) < 0.00001) {
+                phi_offset = 0;
+            } else {
+                phi_offset = Math.atan2(-z, x);
+            }
+            let lonRadians = phi_offset - Math.PI;
+            while (lonRadians <= -Math.PI) lonRadians += 2 * Math.PI;
+            while (lonRadians > Math.PI) lonRadians -= 2 * Math.PI;
+            let lonDegrees = degrees(lonRadians);
+            return { lat: latDegrees, lon: lonDegrees };
         }
     },
 
