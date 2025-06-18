@@ -1,5 +1,6 @@
 // Global variables for the p5.js sketch
 let internalIssPathHistory = [];
+
 let MAX_HISTORY_POINTS = 4200;
 let originalLoadedIssHistory = [];
 
@@ -50,12 +51,14 @@ function set3DMaxHistoryPoints(newLimit) {
         console.error('[set3DMaxHistoryPoints] Invalid newLimit provided. Value:', newLimit);
         return;
     }
+
     MAX_HISTORY_POINTS = newLimit;
     if (originalLoadedIssHistory && originalLoadedIssHistory.length > 0) {
         let startIndex = Math.max(0, originalLoadedIssHistory.length - MAX_HISTORY_POINTS);
         internalIssPathHistory = originalLoadedIssHistory.slice(startIndex);
     } else {
         internalIssPathHistory = [];
+
     }
     console.log('[set3DMaxHistoryPoints] internalIssPathHistory updated. New length:', internalIssPathHistory.length);
 }
@@ -96,6 +99,7 @@ function populateInitialIssHistory(responseData) {
         }));
         let startIndex = Math.max(0, originalLoadedIssHistory.length - MAX_HISTORY_POINTS);
         internalIssPathHistory = originalLoadedIssHistory.slice(startIndex);
+
         console.log(`[populateInitialIssHistory] Initial internalIssPathHistory populated with ${internalIssPathHistory.length} points.`);
         if (typeof window.onHistoricalDataReadyForPrediction === 'function') {
             window.onHistoricalDataReadyForPrediction();
@@ -123,7 +127,7 @@ function draw() {
 
     ambientLight(250);
     scale(zoomLevel); // Apply zoom
-
+  
     push(); // Main push for all rotating elements
     rotateY(angleY); // Use dynamic angleY
     rotateX(angleX); // Use dynamic angleX
@@ -133,6 +137,7 @@ function draw() {
     texture(cloudyEarth);
     noStroke();
     sphere(earthSize);
+
     pop(); // End Earth's optional inner push
 
     // --- TEMPORARY TEST MARKER at (0,0) REMOVED ---
@@ -194,6 +199,7 @@ function draw() {
         stroke(0, 200, 0, 180);
         strokeWeight(1.5);
         noFill();
+
         beginShape();
         for (let i = 0; i < internalPredictedPath.length; i++) {
             const predPoint = internalPredictedPath[i];
@@ -228,6 +234,7 @@ function draw() {
     }
 
     show3DQuakes();
+
     // Note: The pop(); that was here, which matched the second rotateY group, is removed.
     // All elements are now part of the single main rotation group.
     pop(); // Matching pop for the main rotateY context (the one applied to all elements)

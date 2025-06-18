@@ -218,7 +218,9 @@
 
        return {
            fetchAndPredict: async function () {
+
                await fetchTLE();
+
                if (satrec) {
                    await generatePredictedPath();
                } else {
@@ -250,6 +252,7 @@
 
     let lastPassByCheckTime = 0;
     const PASS_BY_CHECK_INTERVAL = 30000;
+
     // let PASS_BY_THRESHOLD_KM = 1000; // Now managed by ISSOrbitPredictor (as radiusKM)
     // let predictionDurationSeconds = 15 * 60; // Now managed by ISSOrbitPredictor
 
@@ -313,7 +316,9 @@
 
     async function setDefaultLocationAndFetchWeather() {
         console.log("Using default client location (Quebec City area).");
+
         clientLat = 46.8139; clientLon = -71.2080;
+
         document.getElementById('clat').textContent = clientLat.toFixed(2);
         document.getElementById('clon').textContent = clientLon.toFixed(2);
         document.getElementById('default-location-msg').style.display = 'block';
@@ -326,12 +331,14 @@
             await setDefaultLocationAndFetchWeather(); return;
         }
         if (!Tools.isGeoLocAvailable()) {
+
             console.log("Geolocation not available in this browser.");
             await setDefaultLocationAndFetchWeather(); return;
         }
         try {
             console.log("Attempting to get live geolocation...");
             const { coords } = await Tools.geoLocate();
+
             clientLat = coords.latitude; clientLon = coords.longitude;
             console.log("Live geolocation successful:", clientLat, clientLon);
             document.getElementById('default-location-msg').style.display = 'none';
