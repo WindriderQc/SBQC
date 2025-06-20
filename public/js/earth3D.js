@@ -18,13 +18,17 @@ let cloudyEarth;
 let earthquakes;
 let issGif;
 
-const earthSize = 300; // Visual radius of Earth in 3D units
-const earthActualRadiusKM = 6371; // Actual radius of Earth in KM for scaling
-let sketchPassByRadiusKM = 1500; // Default pass-by radius in KM, will be updated by slider
+// Constants for sizes and distances
+const earthSize = 300;
+const earthActualRadiusKM = 6371; 
+const issDistanceToEarth = 50; 
+const gpsSize = 5; 
+const issSize = 6; 
+const CYLINDER_VISUAL_LENGTH = issDistanceToEarth * 3; // Now correctly uses defined constants
 
-const gpsSize = 5;
-const issSize = 6;
-const issDistanceToEarth = 50;
+// Global variables for the p5.js sketch (ensure these are below all const declarations they might depend on)
+// ... (rest of variable declarations like sketchPassByRadiusKM are effectively here or remain where they are if not dependent)
+let sketchPassByRadiusKM = 1500; // Default pass-by radius in KM, will be updated by slider
 
 function preload() {
     cloudyEarth = loadImage('/img/Planets/cloudyEarth.jpg');
@@ -115,8 +119,11 @@ function draw() {
     if (typeof frameCount !== 'undefined' && frameCount % 60 === 1) {
         console.log(`[draw frameCount: ${frameCount}] AngleY: ${angleY.toFixed(2)}, AngleX: ${angleX.toFixed(2)}, Zoom: ${zoomLevel.toFixed(2)}`);
     }
+    
+    let currentDisplayLat = (typeof window.clientLat === 'number' && window.clientLat !== null) ? window.clientLat : 46.8139; 
+    let currentDisplayLon = (typeof window.clientLon === 'number' && window.clientLon !== null) ? window.clientLon : -71.2080;
 
-    background(52);
+    background(52); 
 
     // Normal angleY auto-rotation
     if (typeof autoRotationSpeed === 'number' && !isNaN(autoRotationSpeed)) {
@@ -211,25 +218,58 @@ function draw() {
         endShape();
         pop();
     }
-
-    let qcLat = 46.8139;
-    let qcLon = -71.2080;
-    let pQC = Tools.p5.getSphereCoord(earthSize, qcLat, qcLon);
-    push();
-    translate(pQC.x, pQC.y, pQC.z);
-    noStroke();
-    fill(255, 255, 0);
+    
+    // Use currentDisplayLat, currentDisplayLon for the client location marker
+    let pClientLoc = Tools.p5.getSphereCoord(earthSize, currentDisplayLat, currentDisplayLon); 
+    push(); 
+    translate(pClientLoc.x, pClientLoc.y, pClientLoc.z);
+    noStroke(); 
+    fill(255, 255, 0); 
     sphere(gpsSize);
     pop();
 
+    // --- DIAGNOSTIC LINE REMOVED ---
+
+    // Draw Pass-by Detection Cylinder (Standard Alignment)
     if (sketchPassByRadiusKM > 0) {
         const detectionRadius3DUnits = (sketchPassByRadiusKM / earthActualRadiusKM) * earthSize;
-        push();
-        let detectionCenterPos = Tools.p5.getSphereCoord(earthSize, qcLat, qcLon);
-        translate(detectionCenterPos.x, detectionCenterPos.y, detectionCenterPos.z);
+       
+        let directionVector = pClientLoc.copy().normalize(); 
+        let defaultCylinderAxis = createVector(0, -1, 0); // p5.js cylinder's height is along its local Y-axis
+        
+        let rotationAngle = defaultCylinderAxis.angleBetween(directionVector);
+        let rotationAxis = defaultCylinderAxis.cross(directionVector);
+
+        if (rotationAxis.magSq() < 0.0001) { 
+            if (defaultCylinderAxis.dot(directionVector) < 0) { 
+                rotationAngle = 0;//PI;
+                rotationAxis = createVector(1, 0, 0); 
+            } else {
+                rotationAngle = 0;
+            }
+        }
+        
+        push(); // Start a new context for the cylinder
+          
+        
+       // 1. Translate to where the BASE of the cylinder should be.
+        translate(pClientLoc.x, pClientLoc.y, pClientLoc.z);
+
+      
+        // 2. Apply the orientation rotation `q` (aligns local Y with upVector).
+        //    (This is the block with defaultCylinderAxis, angleBetween, cross, rotate)
+        if (rotationAngle !== 0 && rotationAxis.magSq() > 0.0001) {
+            rotate(rotationAngle, rotationAxis);
+        }
+        
+        // 3. Translate UP along the NEW Y-axis (which is now upVector) by HALF the cylinder's desired visual height.
+        translate(0, -CYLINDER_VISUAL_LENGTH / 2, 0);
+
+        // 4. Draw the cylinder using standard (radius, height) parameters.
         fill(0, 100, 255, 30);
         noStroke();
-        sphere(detectionRadius3DUnits);
+        cylinder(detectionRadius3DUnits, CYLINDER_VISUAL_LENGTH);
+        //drawAxis(500);
         pop();
     }
 
@@ -239,6 +279,24 @@ function draw() {
     // All elements are now part of the single main rotation group.
     pop(); // Matching pop for the main rotateY context (the one applied to all elements)
 }
+
+
+function drawAxis(len, width = 2) {  //  TODO : that should be in the tools.p5 section
+  strokeWeight(width);
+
+  // X axis - red
+  stroke(255, 0, 0);
+  line(0, 0, 0, len, 0, 0);
+
+  // Y axis - green
+  stroke(0, 255, 0);
+  line(0, 0, 0, 0, len, 0);
+
+  // Z axis - blue
+  stroke(0, 0, 255);
+  line(0, 0, 0, 0, 0, len);
+}
+
 
 function show3DQuakes() {
     if (!earthquakes || earthquakes.length === 0) return;
@@ -287,8 +345,8 @@ function mouseWheel(event) {
     // Check if the mouse is within the canvas bounds
     // p5.js global variables 'width' and 'height' refer to canvas dimensions
     if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
-        zoomLevel -= event.deltaY * 0.001 * zoomLevel;
-        zoomLevel = constrain(zoomLevel, 0.2, 5.0);
+        zoomLevel -= event.deltaY * 0.001 * zoomLevel; 
+        zoomLevel = constrain(zoomLevel, 0.2, 5.0); 
         return false; // Prevent default scrolling ONLY if mouse is over canvas
     }
     // If mouse is not over canvas, allow default browser scrolling (do not return false, implicitly returns undefined)
