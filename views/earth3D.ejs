@@ -84,6 +84,12 @@
                  <div style="margin-top: 5px;">
                     <span style="background-color: rgba(0,100,255,0.3); display: inline-block; width: 20px; height: 10px; margin-right: 5px; border: 1px solid #555;"></span> Pass-by Detection Radius
                 </div>
+                <div style="margin-top: 5px;">
+                    <span style="background-color: teal; display: inline-block; width: 10px; height: 10px; margin-right: 5px; border: 1px solid #555; border-radius: 50%;"></span> Point of Closest Approach (if detected)
+                </div>
+                <div style="margin-top: 5px;">
+                    <span style="background-color: green; display: inline-block; width: 7px; height: 7px; margin-right: 5px; border: 1px solid #555; border-radius: 50%;"></span> End of Predicted Path
+                </div>
             </div>
 
             <div style="padding: 10px; text-align: left; border-top: 1px solid #eee;">
@@ -124,6 +130,7 @@ window.ISSOrbitPredictor = (function () {
 
     let fullCalculatedPath = []; // Stores all points up to MAX_SEARCH_DURATION_SEC
     let timeToFirstClosePassSec = null; // Time in seconds to the first detected pass
+    let exposedClosestApproachDetails = null; // Stores details of the closest approach
 
        // Fetches TLE data for ISS, using localStorage caching to reduce network requests
        // and avoid potential 403 errors from excessive downloads from Celestrak.
@@ -242,6 +249,7 @@ window.ISSOrbitPredictor = (function () {
             const tleSetupSuccess = await fetchTLE();
             if (!tleSetupSuccess) {
                 console.error("[ISSOrbitPredictor] TLE data (satrec) could not be initialized. Cannot calculate full prediction.");
+                exposedClosestApproachDetails = null; // Ensure details are cleared on TLE error
                 updatePassByText(null, Infinity); // Update text to show error/no pass
                 updatePredictionLengthSlider(DEFAULT_SLIDER_MAX_DURATION_SEC / 60, DEFAULT_SLIDER_MAX_DURATION_SEC / 60); // Default slider range
                 displaySlicedPath(0); // Display no path
@@ -273,6 +281,20 @@ window.ISSOrbitPredictor = (function () {
         }
         console.log(`[ISSOrbitPredictor] Full path calculated. Points: ${fullCalculatedPath.length}. Closest overall: ${closestOverallDistance.toFixed(0)}km at ${closestOverallPoint ? closestOverallPoint.time/60 : 'N/A'} mins.`);
         
+        if (closestOverallPoint && closestOverallDistance < currentRadiusKM) {
+            exposedClosestApproachDetails = {
+                lat: closestOverallPoint.lat,
+                lon: closestOverallPoint.lon,
+                alt: closestOverallPoint.alt, // Assumes alt is part of closestOverallPoint from '...pos'
+                time: closestOverallPoint.time,
+                dist: closestOverallDistance
+            };
+            // console.log('[ISSOrbitPredictor] Closest approach details updated:', exposedClosestApproachDetails);
+        } else {
+            exposedClosestApproachDetails = null;
+            // console.log('[ISSOrbitPredictor] No close approach within radius, details cleared.');
+        }
+
         updatePassByText(closestOverallPoint, closestOverallDistance);
         
         let sliderMaxDurationSec = timeToFirstClosePassSec !== null ? timeToFirstClosePassSec : DEFAULT_SLIDER_MAX_DURATION_SEC;
@@ -349,6 +371,9 @@ window.ISSOrbitPredictor = (function () {
             // Recalculate to find new timeToFirstClosePassSec and update slider/text
             // This will re-use existing TLE if already fetched and satrec is valid.
             calculateFullPredictionAndDeterminePass(); 
+        },
+        getClosestApproachDetails: function() {
+            return exposedClosestApproachDetails;
         }
     };
 })();
