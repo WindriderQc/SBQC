@@ -18,6 +18,16 @@ let cloudyEarth;
 let earthquakes;
 let issGif;
 
+// New marker variables
+let closestApproachMarker = {
+    visible: false,
+    lat: 0,
+    lon: 0,
+    alt: 0 // Store altitude if available/needed for positioning
+};
+// No specific global needed for end-of-path marker as it's derived from internalPredictedPath
+
+
 // Constants for sizes and distances
 const earthSize = 300;
 const earthActualRadiusKM = 6371; 
@@ -25,6 +35,14 @@ const issDistanceToEarth = 50;
 const gpsSize = 5; 
 const issSize = 6; 
 const CYLINDER_VISUAL_LENGTH = issDistanceToEarth * 3; // Now correctly uses defined constants
+
+// Constants for marker appearance
+const MARKER_COLOR_TEAL = [0, 128, 128]; // Teal
+const MARKER_COLOR_GREEN = [0, 200, 0]; // Green (matching predicted path)
+const USER_LOCATION_MARKER_SIZE = gpsSize;
+const CLOSEST_APPROACH_MARKER_SIZE = USER_LOCATION_MARKER_SIZE;
+const END_OF_PATH_MARKER_SIZE = USER_LOCATION_MARKER_SIZE / 2;
+
 
 // Global variables for the p5.js sketch (ensure these are below all const declarations they might depend on)
 // ... (rest of variable declarations like sketchPassByRadiusKM are effectively here or remain where they are if not dependent)
@@ -229,6 +247,37 @@ function draw() {
     pop();
 
     // --- DIAGNOSTIC LINE REMOVED ---
+
+    // Draw Closest Approach Marker (Teal)
+    if (window.ISSOrbitPredictor && typeof window.ISSOrbitPredictor.getClosestApproachDetails === 'function') {
+        const approachDetails = window.ISSOrbitPredictor.getClosestApproachDetails();
+        if (approachDetails) {
+            // Ensure approachDetails has lat, lon. alt might be optional or used if available.
+            // The ISS path is drawn at earthSize + issDistanceToEarth.
+            // The closest approach point should also be at this altitude relative to Earth's surface.
+            let vApproach = Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, approachDetails.lat, approachDetails.lon);
+            push();
+            translate(vApproach.x, vApproach.y, vApproach.z);
+            noStroke();
+            fill(MARKER_COLOR_TEAL[0], MARKER_COLOR_TEAL[1], MARKER_COLOR_TEAL[2]); // Use defined Teal color
+            sphere(CLOSEST_APPROACH_MARKER_SIZE); // Use defined size
+            pop();
+        }
+    }
+
+    // Draw End of Prediction Path Marker (Green)
+    if (internalPredictedPath && internalPredictedPath.length > 0) {
+        const lastPoint = internalPredictedPath[internalPredictedPath.length - 1];
+        // Ensure lastPoint has lat, lon.
+        // Similar to the closest approach marker, position it relative to Earth's surface.
+        let vEndPath = Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, lastPoint.lat, lastPoint.lon);
+        push();
+        translate(vEndPath.x, vEndPath.y, vEndPath.z);
+        noStroke();
+        fill(MARKER_COLOR_GREEN[0], MARKER_COLOR_GREEN[1], MARKER_COLOR_GREEN[2]); // Use defined Green color
+        sphere(END_OF_PATH_MARKER_SIZE); // Use defined size
+        pop();
+    }
 
     // Draw Pass-by Detection Cylinder (Standard Alignment)
     if (sketchPassByRadiusKM > 0) {
