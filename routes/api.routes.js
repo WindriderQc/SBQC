@@ -2,6 +2,11 @@ const router = require('express').Router();
 //const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const fetch = require('node-fetch');
 
+// TLE Cache variables
+let tleCache = { data: null, timestamp: 0 };
+const TLE_CELESTRAK_URL = 'https://celestrak.com/NORAD/elements/stations.txt';
+const TLE_CACHE_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hours
+
 const moment = require('moment');
 const getMqtt = require('../scripts/mqttServer').getClient;
 const mailman = require('../public/js/mailman'); // For /alert route
@@ -217,5 +222,32 @@ router.get('/data/:options',  async (req, res) =>
         return res.status(400).send("Could not get data");
     }
 })
+
+// Route to serve TLE data (will include caching logic in a subsequent step)
+router.get('/tle', async (req, res) => {
+    const now = Date.now();
+    if (now - tleCache.timestamp < TLE_CACHE_DURATION_MS && tleCache.data) {
+        console.log('Serving TLE data from cache.');
+        return res.type('text/plain').send(tleCache.data);
+    }
+
+    console.log('Fetching new TLE data from Celestrak.');
+    try {
+        const response = await fetch(TLE_CELESTRAK_URL);
+        if (!response.ok) {
+            console.error(`Failed to fetch TLE data from Celestrak: ${response.status}`);
+            return res.status(response.status).json({ error: 'Failed to fetch TLE data from Celestrak' });
+        }
+        const data = await response.text();
+        tleCache = { data, timestamp: Date.now() };
+        console.log('Updated TLE cache.');
+        res.type('text/plain').send(data);
+    } catch (error) {
+        console.error('Error fetching TLE data:', error);
+        // If fetch fails, and we have stale cache, we could optionally serve it.
+        // For now, just sending an error.
+        res.status(500).json({ error: 'Unable to fetch TLE data' });
+    }
+});
 
 module.exports = router;

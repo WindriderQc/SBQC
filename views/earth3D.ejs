@@ -107,7 +107,10 @@
 
 <script>
 window.ISSOrbitPredictor = (function () {
-    const TLE_URL = 'https://celestrak.com/NORAD/elements/stations.txt';
+    const TLE_URL = '/api/tle'; // Use our own server endpoint to get TLE data (handles server-side caching)
+    const TLE_CACHE_KEY = 'tleDataCache'; // Key for localStorage TLE cache
+    const CACHE_DURATION_MS = 2 * 60 * 60 * 1000; // Cache TLE data for 2 hours (in milliseconds)
+
     const PREDICTION_INTERVAL_SEC = 10; // Calculate points every 10 seconds
     const MAX_SEARCH_DURATION_SEC = 12 * 3600; // Max time to search for a pass (e.g., 12 hours)
     const DEFAULT_SLIDER_MAX_DURATION_SEC = 6 * 3600; // Default max for slider if no pass found (e.g., 6 hours)
@@ -122,17 +125,59 @@ window.ISSOrbitPredictor = (function () {
     let fullCalculatedPath = []; // Stores all points up to MAX_SEARCH_DURATION_SEC
     let timeToFirstClosePassSec = null; // Time in seconds to the first detected pass
 
+       // Fetches TLE data for ISS, using localStorage caching to reduce network requests
+       // and avoid potential 403 errors from excessive downloads from Celestrak.
        async function fetchTLE() {
+           // Try to retrieve and use cached TLE data if it's recent enough
            try {
+               const cachedItem = localStorage.getItem(TLE_CACHE_KEY);
+               if (cachedItem) {
+                   const cachedEntry = JSON.parse(cachedItem);
+                   // Check if the cached data is still valid (not older than CACHE_DURATION_MS)
+                   if (Date.now() - cachedEntry.timestamp < CACHE_DURATION_MS) {
+                       console.log("[ISSOrbitPredictor] Using cached TLE data.");
+                       const txt = cachedEntry.data;
+                       const lines = txt.split('\n');
+                       const i = lines.findIndex(l => l.includes('ISS (ZARYA)') || l.includes('ISS'));
+                       if (i >= 0 && lines[i+1] && lines[i+2]) {
+                           satrec = satellite.twoline2satrec(lines[i+1].trim(), lines[i+2].trim());
+                           // console.log("[ISSOrbitPredictor] Set satrec from cached TLE.");
+                       } else {
+                           console.error("[ISSOrbitPredictor] Could not parse TLE from cached text.");
+                           satrec = null;
+                           localStorage.removeItem(TLE_CACHE_KEY); // Remove invalid cached data
+                       }
+                       return; // Return after using cache or failing to parse cache
+                   } else {
+                       console.log("[ISSOrbitPredictor] Cached TLE data expired.");
+                   }
+               }
+           } catch (e) {
+               console.error("[ISSOrbitPredictor] Error reading TLE from cache:", e);
+               localStorage.removeItem(TLE_CACHE_KEY); // Clear corrupted cache
+           }
+
+           // If cache is invalid, expired, or not present, fetch new TLE data from the network.
+           try {
+               console.log("[ISSOrbitPredictor] Fetching new TLE data from network.");
                const res = await fetch(TLE_URL);
                if (!res.ok) throw new Error(`Failed to fetch TLE: ${res.status}`);
                const txt = await res.text();
+               
+               // Store the newly fetched TLE data and current timestamp in localStorage.
+               try {
+                   const cacheEntry = { timestamp: Date.now(), data: txt };
+                   localStorage.setItem(TLE_CACHE_KEY, JSON.stringify(cacheEntry));
+                   console.log("[ISSOrbitPredictor] Fetched new TLE and updated cache.");
+               } catch (e) {
+                   console.error("[ISSOrbitPredictor] Error saving TLE to cache:", e);
+                   // Potentially clear cache if quota exceeded, but for now just log
+               }
+               
                const lines = txt.split('\n');
-               // Find ISS TLE lines (more robustly)
                const i = lines.findIndex(l => l.includes('ISS (ZARYA)') || l.includes('ISS'));
                if (i >= 0 && lines[i+1] && lines[i+2]) {
                    satrec = satellite.twoline2satrec(lines[i+1].trim(), lines[i+2].trim());
-                   console.log("[ISSOrbitPredictor] Fetched new TLE for ISS.");
                } else {
                    console.error("[ISSOrbitPredictor] Could not parse TLE from fetched text.");
                    satrec = null;
