@@ -118,7 +118,7 @@ window.ISSOrbitPredictor = (function () {
     const CACHE_DURATION_MS = 2 * 60 * 60 * 1000; // Cache TLE data for 2 hours (in milliseconds)
 
     const PREDICTION_INTERVAL_SEC = 10; // Calculate points every 10 seconds
-    const MAX_SEARCH_DURATION_SEC = 12 * 3600; // Max time to search for a pass (e.g., 12 hours)
+    const MAX_SEARCH_DURATION_SEC = 36 * 3600; // Max time to search for a pass (e.g., 36 hours)
     const DEFAULT_SLIDER_MAX_DURATION_SEC = 6 * 3600; // Default max for slider if no pass found (e.g., 6 hours)
 
     let currentRadiusKM = 1500; // Default, will be set by slider
