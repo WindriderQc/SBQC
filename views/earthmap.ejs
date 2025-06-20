@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+        <%- include('partials/mainHead', { title: 'SBQC ' }) %>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"    integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="    crossorigin=""/>
+        <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"    integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="    crossorigin=""></script>
+       
+
+    </head>
+
+
+<body class="fixed-nav sticky-footer bg-light sidenav-toggled" id="page-top">
+
+<%- include('partials/nav') %>
+
+<div class="content-wrapper">
+<div class="container-fluid bg-3 text-center">
+<!-- Begin Container  -->
+
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-6">
+                
+            </div>
+            <div class="col-6">
+                <div>Wind </div>
+                <div>Speed: <span id="wind-speed"></span> m/s</div>
+                <div>Gust: <span id="wind-gust"></span> m/s</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+        <p>
+            At location: <span id="summary"></span> with a temperature of <span id="temp"></span>&deg; C. <br>
+            Concentration of particulate matter - (<span id="aq_parameter"></span>) <span id="aq_value"></span> <span id="aq_units"></span> <br>
+            <small> Last read on <span id="aq_date"></span></small>
+        </p>
+
+ 
+       
+
+        <div class="card mb-3" style="max-width: 1280px; margin: 0 auto;">
+                <div class="card-body" >
+                        <p>ISS location -  lat: <span id="isslat"></span>&deg; lon: <span id="isslon"></span>&deg; </p>
+                        <p>Client location -  lat: <span id="clat"></span>&deg; lon: <span id="clon"></span>&deg;</span> </p>
+                        <p id="default-location-msg" style="font-size: 0.8em; color: #777; display: none;">Using default location as live geolocation is unavailable.</p>
+                        <div id='issMap' style="height:720px;"></div>
+                        <div style="padding: 10px; text-align: left; border-top: 1px solid #eee;">
+                            <strong>Legend:</strong>
+                            <div style="margin-top: 5px;">
+                                <span style="background-color: blue; display: inline-block; width: 20px; height: 10px; margin-right: 5px; border: 1px solid #555;"></span> Live ISS Path (WebSocket)
+                            </div>
+                            <div style="margin-top: 5px;">
+                                <span style="background-color: orange; display: inline-block; width: 20px; height: 10px; margin-right: 5px; border: 1px solid #555;"></span> Historical ISS Path (Database)
+                            </div>
+                        </div>
+                      
+                </div>
+         </div>
+
+<!-- End Container  -->
+</div>
+</div>
+</div>
+<div id="ip_id"></div>
+
+<%- include('partials/footer') %>
+<%- include('partials/p5') %>
+
+
+<script>
+
+let iss;   // International Space Station location
+let clientLat = null;
+let clientLon = null;
+
+// For 2D path
+let issPathHistory = [];
+let MAX_2D_HISTORY_POINTS = 4200; // Changed from const to let
+let issPathPolyline = null; // Live ISS path
+let historicalIssPathSegments = []; // Historical ISS path from initial load, now stores array of segments
+let mymap; // Declare mymap globally
+
+
+let socket = io();
+
+socket.on('connect', () => {
+    console.log('Connected to server');
+});
+
+socket.on('iss', (data) => {
+    iss = data; // iss is used by earth3D.js globally
+
+    issPathHistory.push({lat: iss.latitude, lng: iss.longitude, timestamp: Date.now()});
+    if (issPathHistory.length > MAX_2D_HISTORY_POINTS) {
+        issPathHistory.shift();
+    }
+    updateIssOnMap(iss.latitude, iss.longitude); // This will also update predicted path display
+
+});
+
+function setMap() {
+    mymap = L.map('issMap').setView([0, 0], 1);
+    const attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+    const tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    const tiles = L.tileLayer(tileUrl, { attribution });
+    tiles.addTo(mymap);
+
+    const issIcon = L.icon({
+        iconUrl: 'img/iss.png',
+        iconSize: [50, 32],
+        iconAnchor: [25, 16]
+    });
+
+    let clientMarkerInstance = L.marker([0, 0]).addTo(mymap);
+    let issMarkerInstance = L.marker([0, 0], { icon: issIcon }).addTo(mymap);
+
+    mymap.on('zoomend', function() {
+        const zoom = mymap.getZoom() + 1;
+        const w = 50 * zoom;
+        const h = 32 * zoom;
+        issIcon.options.iconSize = [w, h];
+        issIcon.options.iconAnchor = [w / 2, h / 2];
+        mymap.removeLayer(issMarkerInstance);
+        let latlng = issMarkerInstance.getLatLng();
+        issMarkerInstance = L.marker([0,0], {icon: issIcon}).addTo(mymap);
+        issMarkerInstance.setLatLng(latlng);
+    });
+
+    window.clientMarker = clientMarkerInstance;
+    window.issMarker = issMarkerInstance;
+
+    return { mymap_local: mymap, clientMarker_local: clientMarkerInstance, issMarker_local: issMarkerInstance };
+}
+
+const mapSetUp = setMap();
+
+function setClientMarker(lat, lon) {
+    if (window.clientMarker) {
+        window.clientMarker.setLatLng([lat, lon]);
+        if (mymap) {
+            mymap.setView([lat, lon], 5);
+        }
+    }
+    clientLat = lat;
+    clientLon = lon;
+}
+
+async function fetchWeatherForCoords(lat, lon) {
+    const url =`api/weather/${lat},${lon}`;
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        document.getElementById('summary').textContent = data.weather.weather[0].description;
+        document.getElementById('temp').textContent =  data.weather.main.feels_like;
+        if (data.air_quality && data.air_quality.results && data.air_quality.results[0]) {
+            const air = data.air_quality.results[0];
+            document.getElementById('aq_parameter').textContent = air.parameter.displayName;
+            document.getElementById('aq_value').textContent = air.latest.value;
+            document.getElementById('aq_units').textContent = air.parameter.units;
+            document.getElementById('aq_date').textContent = air.latest.datetime.local;
+        } else {
+             document.getElementById('aq_value').textContent = 'NO READING';
+        }
+        const wind = data.weather.wind;
+        document.getElementById('wind-speed').textContent = wind.speed;
+        document.getElementById('wind-gust').textContent = wind.gust;
+        
+
+    } catch (e) {
+        Tools.cliError(e);
+        document.getElementById('aq_value').textContent = 'NO READING';
+    }
+}
+
+async function setDefaultLocationAndFetchWeather() {
+    console.log("Using default client location.");
+    clientLat = 46.82;
+    clientLon = -71.30;
+
+    document.getElementById('clat').textContent = clientLat.toFixed(2);
+    document.getElementById('clon').textContent = clientLon.toFixed(2);
+    document.getElementById('default-location-msg').style.display = 'block';
+
+    setClientMarker(clientLat, clientLon);
+    await fetchWeatherForCoords(clientLat, clientLon);
+}
+
+async function updateGeoData() {
+    try {
+        console.log("Attempting to get live geolocation...");
+        const {coords} = await Tools.geoLocate();
+        clientLat = coords.latitude;
+        clientLon = coords.longitude;
+        console.log("Live geolocation successful:", clientLat, clientLon);
+        document.getElementById('default-location-msg').style.display = 'none';
+
+        document.getElementById('clat').textContent = clientLat.toFixed(2);
+        document.getElementById('clon').textContent = clientLon.toFixed(2);
+
+        setClientMarker(clientLat, clientLon);
+        await fetchWeatherForCoords(clientLat, clientLon);
+
+    } catch(e) {
+        console.warn('Error getting live geolocation or permission denied:', e.message);
+        alert('Live geolocation failed. Using default location (Quebec City area). Error: '+e.message);
+        await setDefaultLocationAndFetchWeather();
+    }
+}
+
+if (Tools.isGeoLocAvailable()) {
+    updateGeoData();
+} else {
+    console.log("Geolocation not available in this browser, using default location.");
+    setDefaultLocationAndFetchWeather();
+}
+
+let firstTime = true;
+
+function redrawLiveIssPath() {
+    if (issPathPolyline && mymap) {
+        mymap.removeLayer(issPathPolyline);
+    }
+    const latLngs = issPathHistory.map(p => [p.lat, p.lng]);
+    if (latLngs.length > 1 && mymap) {
+        issPathPolyline = L.polyline(latLngs, { color: 'blue', weight: 5 }).addTo(mymap);
+    }
+}
+
+async function updateIssOnMap(lat, lon) {
+    if (window.issMarker) {
+         window.issMarker.setLatLng([lat, lon]);
+    } else {
+        console.warn("ISS marker not initialized for updateIssOnMap");
+        return;
+    }
+
+    if (firstTime && mymap) {
+        if (clientLat === null) {
+             mymap.setView([lat, lon], 2);
+        }
+        firstTime = false;
+    }
+
+    document.getElementById('isslat').textContent = parseFloat(lat).toFixed(2);
+    document.getElementById('isslon').textContent = parseFloat(lon).toFixed(2);
+
+    redrawLiveIssPath(); // Call the new function for the live path
+
+}
+
+function displayHistoricalDataOn2DMap(historicalPoints) {
+    console.log('[Historical 2D Path] Drawing historical data. Points received:', historicalPoints ? historicalPoints.length : 0);
+
+    // Clear previous segments
+    if (mymap && historicalIssPathSegments && historicalIssPathSegments.length > 0) {
+        historicalIssPathSegments.forEach(segment => mymap.removeLayer(segment));
+    }
+    historicalIssPathSegments = [];
+
+    if (!historicalPoints || historicalPoints.length < 2) {
+        console.log('[Historical 2D Path] Not enough historical points to draw.');
+        return;
+    }
+
+    let currentSegmentLatLngs = [];
+    // Assuming historicalPoints are already sorted by timestamp ASC by earth3D.js
+    // The points in historicalPoints are like {lat: ..., lon: ...}
+
+    const MAX_ALLOWED_SEGMENT_JUMP_KM = 500; // Max distance between points in a single segment
+
+    let prevPoint = historicalPoints[0];
+    currentSegmentLatLngs.push([prevPoint.lat, prevPoint.lon]);
+
+    for (let i = 1; i < historicalPoints.length; i++) {
+        const currentPoint = historicalPoints[i];
+        const currentLatLng = [currentPoint.lat, currentPoint.lon];
+
+        const distanceKm = Tools.haversineDistance(prevPoint.lat, prevPoint.lon, currentPoint.lat, currentPoint.lon);
+
+        // Check for longitude wrap OR excessive distance jump
+        if (Math.abs(currentPoint.lon - prevPoint.lon) > 180 || distanceKm > MAX_ALLOWED_SEGMENT_JUMP_KM) {
+            if (currentSegmentLatLngs.length > 1 && mymap) {
+                const segment = L.polyline(currentSegmentLatLngs, { color: 'orange', weight: 3 }).addTo(mymap);
+                historicalIssPathSegments.push(segment);
+                console.log(`[Historical 2D Path] Segment drawn due to wrap/jump. Points: ${currentSegmentLatLngs.length}. Reason: lon_diff=${Math.abs(currentPoint.lon - prevPoint.lon).toFixed(2)}, dist_km=${distanceKm.toFixed(2)}`);
+            }
+            currentSegmentLatLngs = []; // Start a new segment
+        }
+        currentSegmentLatLngs.push(currentLatLng);
+        prevPoint = currentPoint;
+    }
+
+    // Draw the last or only segment
+    if (currentSegmentLatLngs.length > 1 && mymap) {
+        const segment = L.polyline(currentSegmentLatLngs, { color: 'orange', weight: 3 }).addTo(mymap);
+        historicalIssPathSegments.push(segment);
+    }
+
+    if (historicalIssPathSegments.length > 0) {
+        console.log(`[Historical 2D Path] Historical ISS path drawn on 2D map in ${historicalIssPathSegments.length} segment(s).`);
+    } else if (historicalPoints.length > 0) {
+        console.log('[Historical 2D Path] Path had points but no drawable segments (e.g., all single points after potential splits).');
+    }
+}
+
+
+async function getUserInfo() {
+    const info = await Tools.ipLookUp();
+    document.getElementById('ip_id').innerHTML =  "<pre>"+JSON.stringify(info,null, '\t') +"</pre>";
+}
+getUserInfo();
+
+
+
+
+</script>
+
+</body>
+</html>

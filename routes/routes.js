@@ -188,6 +188,10 @@ router.get('/earth', async (req, res) => {
    // res.render('earth')
 })
 
+router.get('/earthmap', async (req, res) => {
+    res.render('earthmap')
+})
+
 
 router.get('/natureCode', (req, res) => {
     res.render('natureCode')
