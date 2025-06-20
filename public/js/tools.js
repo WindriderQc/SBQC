@@ -119,11 +119,11 @@ const Tools = {
                 //const response = await fetch('http://ip-api.com/json')
                 const response = await fetch('/api/proxy-location')
                 const data = await response.json()
-                console.log('User\'s Location Data is ', data); // Escaped '
-                console.log('User\'s Country', data.country); // Escaped '
+                // console.log('User\'s Location Data is ', data);
+                // console.log('User\'s Country', data.country);
                 return data
             } catch (error) {
-                console.log('Request failed.  Returned status of', error);
+                console.error('IP Lookup Request failed:', error); // Changed to console.error
             }
 
     },

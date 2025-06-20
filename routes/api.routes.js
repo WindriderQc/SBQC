@@ -250,4 +250,16 @@ router.get('/tle', async (req, res) => {
     }
 });
 
+// New route for feeds
+router.get('/feeds', (req, res) => {
+    const feeds = [
+        { "icon": "fas fa-user text-primary fa-lg", "description": "New user registered: @john_doe", "time": "5 mins ago" },
+        { "icon": "fas fa-bell text-danger fa-lg", "description": "System alert: CPU usage at 92%.", "time": "10 mins ago" },
+        { "icon": "fas fa-comment text-warning fa-lg", "description": "New comment on 'My Awesome Post'.", "time": "12 mins ago" },
+        { "icon": "fas fa-server text-info fa-lg", "description": "Server rebooted successfully.", "time": "30 mins ago" },
+        { "icon": "fas fa-shopping-cart text-success fa-lg", "description": "New order #12345 placed.", "time": "1 hour ago" }
+    ];
+    res.json(feeds);
+});
+
 module.exports = router;

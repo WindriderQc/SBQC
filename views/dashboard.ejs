@@ -2,113 +2,83 @@
 <html lang='en'>
 <head>
   <%- include('partials/mainHead', { title: 'SBQC Server Dashboard' }) %>
-  <%# Any other dashboard-specific head elements would go here %>
 </head>
-<body class="light-grey">
+<body class="bg-light">
 <%- include('partials/miniNav') %> 
 
-<div class="main" style="margin-left:300px;margin-top:43px;">
-
+<div class="main">
    
-    <header class="container" style="padding-top:22px">
-        <h5><b><i class="fa fa-dashboard"></i> My Dashboard</b></h5>
+    <header class="w3-container padding-top-22">
+        <h5 class="fw-bold"><i class="fa fa-dashboard"></i> My Dashboard</h5>
     </header>
 
-    <div class="row-padding margin-bottom">
-        <div class="col col-3">
-            <div class="container green text-black padding-16 card-4">
-                <div class="left"><i class="fa fa-comment xxxlarge"></i></div>
-                <div class="right">
+    <div class="row gx-3 mb-3">
+        <div class="col-3">
+            <div class="w3-container bg-custom-green text-black padding-16 w3-card-4">
+                <div class="float-start"><i class="fa fa-comment fa-xxxlarge"></i></div>
+                <div class="float-end">
                 <h3 id="msgCard"><%- collectionInfo.mews %>  </h3>
                 </div>
-                <div class="clear"></div>
+                <div class="clearfix"></div>
                 <h4>Messages</h4>
             </div>
         </div>
-        <div class="col col-3">
-            <div class="container indigo text-black padding-16 card-4">
-                <div class="left"><i class="fa fa-eye xxxlarge"></i></div>
-                <div class="right">
+        <div class="col-3">
+            <div class="w3-container bg-custom-indigo text-black padding-16 w3-card-4">
+                <div class="float-start"><i class="fa fa-eye fa-xxxlarge"></i></div>
+                <div class="float-end">
                 <h3 id="viewsCard"><%- collectionInfo.userLogs %></h3>
                 </div>
-                <div class="clear"></div>
+                <div class="clearfix"></div>
                 <h4>Views</h4>
             </div>
         </div>
-        <div class="col col-3">
-            <div class="container khaki padding-16 card-4">
-                <div class="left"><i class="fa fa-share-alt xxxlarge"></i></div>
-                <div class="right">
+        <div class="col-3">
+            <div class="w3-container bg-custom-khaki text-black padding-16 w3-card-4">
+                <div class="float-start"><i class="fa fa-share-alt fa-xxxlarge"></i></div>
+                <div class="float-end">
                 <h3 id="devicesCard"><%- collectionInfo.server %></h3>
                 </div>
-                <div class="clear"></div>
+                <div class="clearfix"></div>
                 <h4>Devices</h4>
             </div>
         </div>
-        <div class="col col-3">
-            <div class="container grey padding-16 card-4">
-                <div class="left"><i class="fa fa-users xxxlarge"></i></div>
-                <div class="right">
+        <div class="col-3">
+            <div class="w3-container bg-custom-grey text-black padding-16 w3-card-4">
+                <div class="float-start"><i class="fa fa-users fa-xxxlarge"></i></div>
+                <div class="float-end">
                 <h3 id="usersCard"><%- collectionInfo.users %></h3>
                 </div>
-                <div class="clear"></div>
+                <div class="clearfix"></div>
                 <h4>Users</h4>
             </div>
         </div>
     </div>
 
-    <div class="panel">
-        <div class="row-padding">
+    <div class="w3-panel">
+        <div class="row gx-3">
         
-            <div class="col col-12 col-l6 black card-2" >
-                <h5>World</h5>
+            <div class="col-12 col-lg-6 bg-dark text-white w3-card-2" >
+                <h5 class="fw-bold">World</h5>
                 <!--<img src="/img/region.jpg" style="width:100%" alt="Google Regional Map">-->
                 <canvas id="worldMap" width="800" height="600"></canvas>
             
             </div>
     
         
-            <div class="col col-12 col-l6 ">
-                <h5>Feeds - hitcount:  <%- hitCount %></h5>
-
-        
-
-                <table class="table striped white">
-                    <tr>
-                        <td><i class="fa fa-user text-blue large"></i></td>
-                        <td>New record, over 90 views.</td>
-                        <td><i>10 mins</i></td>
-                    </tr>
-                    <tr>
-                        <td><i class="fa fa-bell text-red large"></i></td>
-                        <td>Database error.</td>
-                        <td><i>15 mins</i></td>
-                    </tr>
-                    <tr>
-                        <td><i class="fa fa-users text-yellow large"></i></td>
-                        <td>New record, over 40 users.</td>
-                        <td><i>17 mins</i></td>
-                    </tr>
-                    <tr>
-                        <td><i class="fa fa-comment text-red large"></i></td>
-                        <td>New comments.</td>
-                        <td><i>25 mins</i></td>
-                    </tr>
-                    <tr>
-                        <td><i class="fa fa-bookmark text-blue large"></i></td>
-                        <td>Check transactions.</td>
-                        <td><i>28 mins</i></td>
-                    </tr>
-                    <tr>
-                        <td><i class="fa fa-laptop text-red large"></i></td>
-                        <td>CPU overload.</td>
-                        <td><i>35 mins</i></td>
-                    </tr>
-                    <tr>
-                        <td><i class="fa fa-share-alt text-green large"></i></td>
-                        <td>New shares.</td>
-                        <td><i>39 mins</i></td>
-                    </tr>
+            <div class="col-12 col-lg-6 ">
+                <h5 class="fw-bold">Feeds - hitcount:  <%- hitCount %></h5>
+                <table class="table table-striped bg-white">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width: 50px;">Icon</th>
+                            <th scope="col">Description</th>
+                            <th scope="col" style="width: 100px;">Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="feeds-table-body">
+                        <%# Feed items will be populated here by JavaScript %>
+                    </tbody>
                 </table>
         </div>
         </div>
@@ -117,8 +87,8 @@
    
     <hr>
 
-    <div class="container">
-        <h5>TimeZone</h5>
+    <div class="w3-container">
+        <h5 class="fw-bold">TimeZone</h5>
         <div id="ip_id"></div>
         <br>
         <div>
@@ -138,39 +108,6 @@
             <img src='img/loading.gif' alt=''>
         </div>
     </div>
-
-
-   
-
-    <div class="row">
-
-              
-
-     </div>
-    
-     <div class="row  mt-2">
-    
-        <div class='col-sm-12'>
-           <div class="card">
-              <div class='card-body'>
-                 <div class="row">
-                   
-                    <div class='col-sm-4'><small><div id='devicesList'></div></small></div>
-                    <div class='col-sm-3'><small><div id='statusList'></div></small></div>
-                 </div>
-              </div>
-           </div>
-        </div>
-     </div>
-    
-    
-
-
-
-
-    <div class="container">
-        <%- include('partials/mqttViewer') %>
-    </div>
   
 <%- include('partials/miniFooter') %>
 </div>
@@ -178,9 +115,5 @@
 
 <script src="/js/tools.js"></script>
 <script src="/js/dashboard.js"></script>
-
-
-
-
 </body>
 </html>
