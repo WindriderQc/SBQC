@@ -48,9 +48,12 @@ function setWorlGraph(data) {
     };
 
     const countryCounts = data.reduce((acc, entry) => {
-        // Correct the country name if it exists in the mapping
-        const correctedCountryName = countryNameCorrections[entry.CountryName] || entry.CountryName;
-        acc[correctedCountryName] = (acc[correctedCountryName] || 0) + 1;
+        // Check if CountryName is valid before processing
+        if (entry.CountryName) {
+            // Correct the country name if it exists in the mapping
+            const correctedCountryName = countryNameCorrections[entry.CountryName] || entry.CountryName;
+            acc[correctedCountryName] = (acc[correctedCountryName] || 0) + 1;
+        }
         return acc;
     }, {});
     //console.log('worldMapData', countryCounts);
@@ -165,21 +168,51 @@ function listAllLogs(source) {
 
 
 
-        // Dynamically generate DataTable columns
-        const columns = Object.keys(result.logs[0]).map((key) => ({
-                title: key.charAt(0).toUpperCase() + key.slice(1), // Capitalize column names
-                data: key,
-                render:
-                    key === 'date' || key === 'created'
-                        ? function (data) {
-                              const date = new Date(data); // Convert to Date object
-                              return date.toLocaleString(); // Format the date
-                          }
-                        : null,
-            }));
+        // Collect all unique keys from all log entries
+        const allKeys = new Set();
+        result.logs.forEach(log => {
+            if (log && typeof log === 'object') { // Ensure log is an object
+                Object.keys(log).forEach(key => allKeys.add(key));
+            }
+        });
 
+        // Normalize the data: ensure all objects have all keys from allKeys
+        const normalizedLogs = result.logs.map(log => {
+            const normalizedLog = {};
+            if (log && typeof log === 'object') { // Process only if log is an object
+                allKeys.forEach(key => {
+                    normalizedLog[key] = log.hasOwnProperty(key) ? log[key] : ""; // Use empty string for missing keys
+                });
+            } else { // If log is not an object (e.g. null, primitive), create an object with empty values for all keys
+                allKeys.forEach(key => {
+                    normalizedLog[key] = "";
+                });
+            }
+            return normalizedLog;
+        });
+
+        const columns = Array.from(allKeys).map((key) => ({
+            title: key.charAt(0).toUpperCase() + key.slice(1), // Capitalize column names
+            data: key,
+            defaultContent: "", // Provide default content for missing keys (good for safety)
+            render:
+                (key === 'date' || key === 'created')
+                    ? function (data, type, row) {
+                          // data will be "" if originally missing due to normalization
+                          if (data === null || data === undefined || data === "") {
+                              return ""; 
+                          }
+                          const dateObj = new Date(data);
+                          // Check if dateObj is valid
+                          if (isNaN(dateObj.getTime())) {
+                              return ""; // Was not a valid date string
+                          }
+                          return dateObj.toLocaleString(); // Format the date
+                      }
+                    : null,
+        }));
    
-        loadDataTable({ data: result.logs,  columns });
+        loadDataTable({ data: normalizedLogs,  columns }); // Use normalizedLogs
         
         loadingElement.style.display = 'none';
     })
@@ -226,6 +259,7 @@ function w3_open() {
 }
 // Close the sidebar with the close button
 function w3_close() {
+    console.log('w3_close called');
   mySidebar.style.display = "none";
   overlayBg.style.display = "none";
 }
