@@ -23,10 +23,10 @@
     let pressureValues = [];
     let tempValues = [];
     let chartTimeLabels = [];
-    let pressureChartInstance;
+    let pressureChartInstance; 
 
     async function fetchPressureData(lat = 46.8139, lon = -71.2082) {
-        let serverResponse;
+        let serverResponse; 
         const cacheKey = `pressureData-${lat}-${lon}`;
         const lastFetchedKey = `lastFetchedPressure-${lat}-${lon}`;
         const cachedData = localStorage.getItem(cacheKey);
@@ -72,7 +72,7 @@
             pressureValues = serverResponse.readings.map(r => r.pressure);
             tempValues = serverResponse.readings.map(r => r.temp);
             chartTimeLabels = serverResponse.readings.map(r => moment.unix(r.dt).toDate());
-
+            
             const nowUnix = moment().unix();
             let closestReading = serverResponse.readings[0];
             for (const reading of serverResponse.readings) {
@@ -82,10 +82,10 @@
                     if (closestReading.dt > nowUnix) {
                         if (reading.dt < closestReading.dt) closestReading = reading;
                     }
-                    break;
+                    break; 
                 }
             }
-            document.getElementById('currentPressure').textContent =
+            document.getElementById('currentPressure').textContent = 
                 `Pressure: ${closestReading.pressure.toFixed(1)} hPa, Temp: ${closestReading.temp.toFixed(1)} °C (at ${moment.unix(closestReading.dt).format('HH:mm')})`;
 
             const ctx = document.getElementById('pressureChart').getContext('2d');
@@ -156,7 +156,7 @@
                                     labelString: 'Temperature (°C)'
                                 },
                                 gridLines: { // Optional: disable grid lines for the second axis if too cluttered
-                                    drawOnChartArea: false,
+                                    drawOnChartArea: false, 
                                 }
                             }
                         ]
@@ -202,7 +202,7 @@
         }
     }
 
-    function displayPressureChartError(message) {
+    function displayPressureChartError(message) { 
         if (pressureChartInstance) {
             pressureChartInstance.destroy();
             pressureChartInstance = null;
@@ -237,7 +237,7 @@
     // Add a small delay to ensure the page is fully loaded and other scripts (if any) have run
     document.addEventListener('DOMContentLoaded', () => {
         // Initial fetch for default values
-        fetchPressureData();
+        fetchPressureData(); 
     });
 
 </script>
