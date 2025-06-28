@@ -154,8 +154,9 @@ function draw() {
     scale(zoomLevel); // Apply zoom
   
     push(); // Main push for all rotating elements
-    rotateY(angleY); // Use dynamic angleY
-    rotateX(angleX); // Use dynamic angleX
+    // Changed rotation order: X rotation first, then Y
+    rotateX(angleX); // Use dynamic angleX (pitch, controlled by vertical drag)
+    rotateY(angleY); // Use dynamic angleY (yaw, controlled by horizontal drag)
 
     // Earth rendering
     push(); // Optional inner push for Earth specific transforms if any, besides rotation
@@ -383,11 +384,8 @@ function mouseDragged() {
     if (mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height) {
         let dx = mouseX - pmouseX;
         let dy = mouseY - pmouseY;
-        // Swapped controls:
-        // Vertical drag (dy) now controls angleY (yaw)
-        // Horizontal drag (dx) now controls angleX (pitch)
-        angleY += dy * 0.01;
-        angleX += dx * 0.01;
+        angleY += dx * 0.01; // dx controls angleY (yaw)
+        angleX += dy * 0.01; // dy controls angleX (pitch)
         angleX = constrain(angleX, -Math.PI/2.1, Math.PI/2.1); // Keep constraint on pitch
         return false; // Prevent default browser drag behaviors ONLY when rotating globe
     }
