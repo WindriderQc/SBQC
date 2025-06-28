@@ -280,4 +280,73 @@ router.get('/tle', async (req, res) => {
     }
 });
 
+// Mock Barometric Pressure API Endpoint
+router.get('/pressure', async (req, res) => {
+    const { lat, lon, days } = req.query;
+
+    if (!lat || !lon || !days) {
+        return res.status(400).json({ error: 'Missing required query parameters: lat, lon, days.' });
+    }
+
+    const numDays = parseInt(days, 10);
+    if (isNaN(numDays) || numDays < 1 || numDays > 7) {
+        return res.status(400).json({ error: 'Invalid "days" parameter. Must be between 1 and 7.' });
+    }
+
+    console.log(`Mock pressure data request for lat: ${lat}, lon: ${lon}, days: ${numDays}`);
+
+    const readings = [];
+    const now = moment();
+    const basePressure = 1012; // hPa
+    const variability = 10; // hPa variability
+
+    // Generate hourly readings for the specified number of days
+    // Data goes from (now - numDays) up to now
+    const startTime = moment(now).subtract(numDays, 'days');
+
+    for (let d = 0; d < numDays; d++) {
+        for (let h = 0; h < 24; h++) {
+            const currentTime = moment(startTime).add(d, 'days').add(h, 'hours');
+            if (currentTime.isAfter(now)) { // Don't generate future data beyond 'now'
+                break;
+            }
+            // Simulate some daily and hourly fluctuation
+            const pressure = basePressure +
+                (Math.sin( ( (d * 24) + h) * 2 * Math.PI / (24 * 2) ) * (variability / 2)) + // Slower overall wave
+                (Math.random() * variability / 2 - variability / 4) + // Random noise
+                (Math.sin(h * 2 * Math.PI / 12) * 2); // Smaller, faster wave (e.g. semi-diurnal)
+
+
+            readings.push({
+                dt: currentTime.unix(), // Unix timestamp in seconds
+                pressure: parseFloat(pressure.toFixed(1)) // Pressure in hPa, 1 decimal place
+            });
+        }
+    }
+
+    // Sort by time just in case, though generation order should be correct
+    readings.sort((a, b) => a.dt - b.dt);
+
+    if (readings.length === 0) {
+        // This case might happen if 'now' is very close to startTime and loop conditions prevent entries
+        // Or if numDays is very small leading to no full hours if code was structured differently.
+        // For this mock, ensuring at least one point if requested.
+        readings.push({
+            dt: now.unix(),
+            pressure: parseFloat(basePressure.toFixed(1))
+        });
+    }
+
+    res.json({
+        message: `Mock pressure data for ${numDays} days at ${lat}, ${lon}`,
+        // Mimic some parts of the tide API structure if needed, or define our own.
+        // For now, a simple object with a 'readings' array.
+        readings: readings,
+        // Could add request parameters back for clarity if desired by client
+        // requestLat: lat,
+        // requestLon: lon,
+        // requestDays: numDays
+    });
+});
+
 module.exports = router;
