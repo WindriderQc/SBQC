@@ -383,9 +383,12 @@ function mouseDragged() {
     if (mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height) {
         let dx = mouseX - pmouseX;
         let dy = mouseY - pmouseY;
-        angleY += dx * 0.01;
-        angleX += dy * 0.01;
-        angleX = constrain(angleX, -Math.PI/2.1, Math.PI/2.1);
+        // Swapped controls:
+        // Vertical drag (dy) now controls angleY (yaw)
+        // Horizontal drag (dx) now controls angleX (pitch)
+        angleY += dy * 0.01;
+        angleX += dx * 0.01;
+        angleX = constrain(angleX, -Math.PI/2.1, Math.PI/2.1); // Keep constraint on pitch
         return false; // Prevent default browser drag behaviors ONLY when rotating globe
     }
 }
@@ -394,15 +397,8 @@ function mouseWheel(event) {
     // Check if the mouse is within the canvas bounds
     // p5.js global variables 'width' and 'height' refer to canvas dimensions
     if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
-        // Original zoom logic (commented out):
-        // zoomLevel -= event.deltaY * 0.001 * zoomLevel;
-        // zoomLevel = constrain(zoomLevel, 0.2, 5.0);
-
-        // New rotation logic: vertical scroll adjusts angleX
-        let rotationSensitivity = 0.005; // Adjust this value to control rotation speed
-        angleX -= event.deltaY * rotationSensitivity; // Subtract to make scrolling up tilt view up, down tilt view down
-        angleX = constrain(angleX, -Math.PI/2.1, Math.PI/2.1); // Keep existing constraint
-
+        zoomLevel -= event.deltaY * 0.001 * zoomLevel;
+        zoomLevel = constrain(zoomLevel, 0.2, 5.0);
         return false; // Prevent default scrolling ONLY if mouse is over canvas
     }
     // If mouse is not over canvas, allow default browser scrolling (do not return false, implicitly returns undefined)
