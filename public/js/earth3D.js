@@ -384,8 +384,8 @@ function mouseDragged() {
     if (mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height) {
         let dx = mouseX - pmouseX;
         let dy = mouseY - pmouseY;
-        angleY += dx * 0.01; // dx controls angleY (yaw)
-        angleX += dy * 0.01; // dy controls angleX (pitch)
+        angleY += dx * 0.01; // dx controls angleY (yaw) - direction remains as is
+        angleX -= dy * 0.01; // dy controls angleX (pitch) - INVERTED direction
         angleX = constrain(angleX, -Math.PI/2.1, Math.PI/2.1); // Keep constraint on pitch
         return false; // Prevent default browser drag behaviors ONLY when rotating globe
     }
