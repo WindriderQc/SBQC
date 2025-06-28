@@ -3,7 +3,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/0.5.7/chartjs-plugin-annotation.min.js"></script>
 
 <h1>Barometric Pressure</h1>
-<p id="currentPressure">Current Pressure: N/A</p>
+ <p id="currentPressure">Current Pressure: N/A<span id="pressureDataSourceMessage" style="font-size: 0.8em; margin-left: 10px;"></span></p>
 <div style="position: relative; width: 1024px; height: 400px; margin-bottom: 20px;">
     <canvas id="pressureChart" style="position: absolute; z-index: 1;" width="1024" height="400"></canvas>
 </div>
@@ -18,87 +18,77 @@
 </div>
 
 <script>
-    let pressureData = [];
-    let pressureTimes = [];
-    let pressureChartInstance; // To store the chart instance for updates
+    // pressureData and tempData will now be arrays of values for the chart
+    // pressureTimes will be the labels (timestamps)
+    let pressureValues = [];
+    let tempValues = [];
+    let chartTimeLabels = [];
+    let pressureChartInstance;
 
-    // Function to fetch data from the backend
-    async function fetchPressureData(lat = 46.8139, lon = -71.2082) { // Removed 'days' parameter
-        let data;
-        // Updated cacheKey to not include days, as the server now determines the range.
-        // However, client-side caching might still be useful for immediate re-renders if lat/lon haven't changed.
-        // For simplicity with server-defined range, we can rely more on browser caching of the API request itself,
-        // or adjust client cache key if we want to keep it distinct per lat/lon.
-        // Let's make the client cache key simpler for now.
+    async function fetchPressureData(lat = 46.8139, lon = -71.2082) {
+        let serverResponse;
         const cacheKey = `pressureData-${lat}-${lon}`;
         const lastFetchedKey = `lastFetchedPressure-${lat}-${lon}`;
-
-        // Try to get cached data
         const cachedData = localStorage.getItem(cacheKey);
         const lastFetched = localStorage.getItem(lastFetchedKey);
 
-        // Cache duration: 30 minutes for pressure data
-        if (cachedData && moment().diff(moment(lastFetched), 'minutes') < 30) { // Client cache still 30 mins
-            data = JSON.parse(cachedData);
-            console.log('Fetching cached pressure data:', data);
+        if (cachedData && moment().diff(moment(lastFetched), 'minutes') < 30) {
+            serverResponse = JSON.parse(cachedData);
+            console.log('Fetching cached pressure/temp data:', serverResponse);
         } else {
-            console.log(`Fetching API pressure data for lat: ${lat}, lon: ${lon}`); // Removed 'days' from log
+            console.log(`Fetching API pressure/temp data for lat: ${lat}, lon: ${lon}`);
             try {
-                const response = await fetch(`/api/pressure?lat=${lat}&lon=${lon}`); // Removed 'days' from URL
+                const response = await fetch(`/api/pressure?lat=${lat}&lon=${lon}`);
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({ error: response.statusText }));
-                    console.error('Error fetching pressure:', errorData.error || response.statusText);
-                    alert(`Error fetching pressure: ${errorData.error || response.statusText}`);
-                    // Display error on chart area
+                    console.error('Error fetching pressure/temp:', errorData.error || response.statusText);
+                    alert(`Error fetching pressure/temp: ${errorData.error || response.statusText}`);
                     displayPressureChartError(`Failed to load data: ${errorData.error || response.statusText}`);
                     return;
                 }
-                data = await response.json();
-
-                // Cache the data
-                localStorage.setItem(cacheKey, JSON.stringify(data));
+                serverResponse = await response.json();
+                localStorage.setItem(cacheKey, JSON.stringify(serverResponse));
                 localStorage.setItem(lastFetchedKey, moment().toISOString());
             } catch (error) {
-                console.error('Network error or JSON parsing error fetching pressure:', error);
-                alert('Failed to fetch pressure data. Please check your network connection.');
-                // Display error on chart area
+                console.error('Network error or JSON parsing error fetching pressure/temp:', error);
+                alert('Failed to fetch pressure/temp data. Please check your network connection.');
                 displayPressureChartError('Network error or server issue.');
                 return;
             }
         }
 
-        if (data && data.readings && data.readings.length > 0) {
-            // Assuming data.readings is an array of objects like { dt: timestamp_sec, pressure: value_hpa }
-            pressureData = data.readings.map(r => r.pressure);
-            pressureTimes = data.readings.map(r => moment.unix(r.dt).toDate());
-
-            if (data.readings.length > 0) {
-                // Update currentPressure display logic
-                const nowUnix = moment().unix();
-                let closestReading = data.readings[0];
-                // Find the most recent reading that is not in the future,
-                // or the first future reading if all are in the future (less likely with historical data)
-                // or the last reading if all are in the past.
-                for (const reading of data.readings) {
-                    if (reading.dt <= nowUnix) {
-                        closestReading = reading; // Keep updating to get the latest past/current
-                    } else {
-                        // If this reading is future, and previous 'closestReading' was past,
-                        // then 'closestReading' is the best one.
-                        // If 'closestReading' is also future (e.g. all data is forecast), pick the earliest future.
-                        if (closestReading.dt > nowUnix) { // current closestReading is already future
-                           if (reading.dt < closestReading.dt) closestReading = reading; // found an earlier future
-                        }
-                        break; // Stop once we are past 'now' and have the latest past/current or earliest future
-                    }
-                }
-                 document.getElementById('currentPressure').textContent = `Pressure: ${closestReading.pressure.toFixed(1)} hPa (at ${moment.unix(closestReading.dt).format('HH:mm')})`;
+        const dataSourceMessageEl = document.getElementById('pressureDataSourceMessage');
+        if (dataSourceMessageEl) { // Create this element if you want to show the message
+            if (serverResponse.data_source === "mock") {
+                dataSourceMessageEl.textContent = " (Warning: Displaying mock data due to API issue)";
+                dataSourceMessageEl.style.color = "orange";
             } else {
-                document.getElementById('currentPressure').textContent = 'Pressure: N/A';
+                dataSourceMessageEl.textContent = "";
             }
+        }
+
+
+        if (serverResponse && serverResponse.readings && serverResponse.readings.length > 0) {
+            pressureValues = serverResponse.readings.map(r => r.pressure);
+            tempValues = serverResponse.readings.map(r => r.temp);
+            chartTimeLabels = serverResponse.readings.map(r => moment.unix(r.dt).toDate());
+
+            const nowUnix = moment().unix();
+            let closestReading = serverResponse.readings[0];
+            for (const reading of serverResponse.readings) {
+                if (reading.dt <= nowUnix) {
+                    closestReading = reading;
+                } else {
+                    if (closestReading.dt > nowUnix) {
+                        if (reading.dt < closestReading.dt) closestReading = reading;
+                    }
+                    break;
+                }
+            }
+            document.getElementById('currentPressure').textContent =
+                `Pressure: ${closestReading.pressure.toFixed(1)} hPa, Temp: ${closestReading.temp.toFixed(1)} °C (at ${moment.unix(closestReading.dt).format('HH:mm')})`;
 
             const ctx = document.getElementById('pressureChart').getContext('2d');
-
             if (pressureChartInstance) {
                 pressureChartInstance.destroy();
             }
@@ -106,30 +96,39 @@
             pressureChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: pressureTimes,
-                    datasets: [{
-                        label: 'Barometric Pressure (hPa)',
-                        data: pressureData,
-                        borderColor: 'blue', // Different color from tides
-                        borderWidth: 2,
-                        pointRadius: 1,
-                        fill: true,
-                        backgroundColor: 'rgba(0, 0, 255, 0.1)'
-                    }]
+                    labels: chartTimeLabels,
+                    datasets: [
+                        {
+                            label: 'Barometric Pressure (hPa)',
+                            data: pressureValues,
+                            borderColor: 'blue',
+                            borderWidth: 2,
+                            pointRadius: 1,
+                            fill: false, // No fill for pressure to see temp line better
+                            yAxisID: 'y-axis-pressure',
+                        },
+                        {
+                            label: 'Temperature (°C)',
+                            data: tempValues,
+                            borderColor: 'red',
+                            borderWidth: 2,
+                            pointRadius: 1,
+                            fill: false,
+                            yAxisID: 'y-axis-temp',
+                        }
+                    ]
                 },
                 options: {
-                    responsive: false,
+                    responsive: false, // Keep as is from original
                     scales: {
                         xAxes: [{
                             type: 'time',
                             time: {
                                 tooltipFormat: 'ddd D MMM HH:mm',
                                 unit: 'hour',
-                                displayFormats: {
-                                    hour: 'HH:mm' // Shorter format for time axis
-                                }
+                                displayFormats: { hour: 'MMM D, HH:mm' }
                             },
-                             ticks: {
+                            ticks: {
                                 callback: function(value, index, values) {
                                     if (values && values[index] && typeof values[index].value === 'number') {
                                         return moment(values[index].value).format('MMM D, HH:mm');
@@ -138,20 +137,53 @@
                                 }
                             }
                         }],
-                        yAxes: [{
-                            scaleLabel: {
-                                display: true,
-                                labelString: 'Pressure (hPa)'
+                        yAxes: [
+                            {
+                                id: 'y-axis-pressure',
+                                type: 'linear',
+                                position: 'left',
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: 'Pressure (hPa)'
+                                }
+                            },
+                            {
+                                id: 'y-axis-temp',
+                                type: 'linear',
+                                position: 'right',
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: 'Temperature (°C)'
+                                },
+                                gridLines: { // Optional: disable grid lines for the second axis if too cluttered
+                                    drawOnChartArea: false,
+                                }
                             }
-                        }]
+                        ]
                     },
-                    annotation: {
+                    tooltips: { // For Chart.js v2.9.4
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(tooltipItem, data) {
+                                let label = data.datasets[tooltipItem.datasetIndex].label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += parseFloat(tooltipItem.value).toFixed(1);
+                                if (tooltipItem.datasetIndex === 0) label += ' hPa';
+                                if (tooltipItem.datasetIndex === 1) label += ' °C';
+                                return label;
+                            }
+                        }
+                    },
+                    annotation: { // Keep existing annotation for "Now" line
                         annotations: [{
                             type: 'line',
                             mode: 'vertical',
-                            scaleID: 'x-axis-0',
+                            scaleID: 'x-axis-0', // Ensure this matches your xAxis ID if specified
                             value: moment().toDate(),
-                            borderColor: 'green', // Different color for "Now" line
+                            borderColor: 'green',
                             borderWidth: 2,
                             label: {
                                 content: 'Now',
@@ -163,10 +195,10 @@
                 }
             });
         } else {
-            console.log('No pressure data to display or error in data structure.');
-            const message = (data && data.message) ? data.message : 'No pressure data available for the selected parameters.';
+            console.log('No pressure/temp data to display or error in data structure.');
+            const message = (serverResponse && serverResponse.message) ? serverResponse.message : 'No pressure/temp data available.';
             displayPressureChartError(message);
-            document.getElementById('currentPressure').textContent = 'Current Pressure: N/A';
+            document.getElementById('currentPressure').textContent = 'Pressure & Temp: N/A';
         }
     }
 
