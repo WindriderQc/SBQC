@@ -34,7 +34,7 @@ router.get('/weather/:latlon', async (req, res) => {
             throw new Error(`Failed to fetch air quality data: ${aq_response.statusText} - ${errorText}`);
         }
         const aq_data = await aq_response.json();
-
+        
         let sensorAQData = null;
         if (aq_data.results && aq_data.results.length > 0) {
             const sortedSensors = aq_data.results.sort((a, b) => new Date(b.datetimeLast) - new Date(a.datetimeLast));
@@ -228,7 +228,7 @@ async function fetchAndCacheWeatherData(url, cacheKey, cacheDuration) {
         return data;
     } catch (error) {
         console.error(`Error in fetchAndCacheWeatherData for URL (${url}):`, error.message);
-        throw error;
+        throw error; 
     }
 }
 
@@ -236,9 +236,9 @@ function generateMockPressureTempData(lat, lon, numDaysHistorical = 2, numDaysFo
     console.log(`Generating mock pressure and temperature data for lat: ${lat}, lon: ${lon}`);
     const readings = [];
     const now = moment.utc();
-    const basePressure = 1012;
+    const basePressure = 1012; 
     const pressureVariability = 10;
-    const baseTemp = 15;
+    const baseTemp = 15; 
     const tempVariability = 5;
 
     const totalDataPoints = (numDaysHistorical + numDaysForecast) * 24; // Hourly data
@@ -272,7 +272,7 @@ function generateMockPressureTempData(lat, lon, numDaysHistorical = 2, numDaysFo
 
 router.get('/pressure', async (req, res) => {
     const { lat, lon } = req.query;
-    let dataSource = "openweathermap";
+    let dataSource = "openweathermap"; 
 
     if (!lat || !lon) {
         return res.status(400).json({ error: 'Missing required query parameters: lat, lon.' });
@@ -292,7 +292,7 @@ router.get('/pressure', async (req, res) => {
         const forecastURL = `https://api.openweathermap.org/data/3.0/onecall?lat=${processedLat}&lon=${processedLon}&exclude=current,minutely,daily,alerts&units=metric&appid=${WEATHER_API_KEY}`;
         const forecastCacheKey = `fore-${processedLat}-${processedLon}`;
         const forecastData = await fetchAndCacheWeatherData(forecastURL, forecastCacheKey, FORECAST_PRESSURE_CACHE_DURATION);
-
+        
         if (forecastData && forecastData.hourly) {
             forecastData.hourly.forEach(hour => {
                 if (hour.dt && typeof hour.pressure !== 'undefined' && typeof hour.temp !== 'undefined') {
@@ -302,11 +302,11 @@ router.get('/pressure', async (req, res) => {
         }
 
         // 2. Fetch Historical Data
-        const today = moment.utc();
-        for (let i = 1; i <= 2; i++) {
+        const today = moment.utc(); 
+        for (let i = 1; i <= 2; i++) { 
             const targetDate = moment(today).subtract(i, 'days');
             const targetTimestamp = targetDate.unix();
-
+            
             const historicalURL = `https://api.openweathermap.org/data/3.0/onecall/timemachine?lat=${processedLat}&lon=${processedLon}&dt=${targetTimestamp}&units=metric&appid=${WEATHER_API_KEY}`;
             const historicalCacheKey = `hist-${processedLat}-${processedLon}-${targetDate.format('YYYYMMDD')}`;
             const historicalData = await fetchAndCacheWeatherData(historicalURL, historicalCacheKey, HISTORICAL_PRESSURE_CACHE_DURATION);
@@ -323,14 +323,14 @@ router.get('/pressure', async (req, res) => {
 
             if (historicalData && historicalData.data && historicalData.data[0] && historicalData.data[0].hourly) {
                 processHourlyData(historicalData.data[0].hourly);
-            } else if (historicalData && historicalData.hourly) {
+            } else if (historicalData && historicalData.hourly) { 
                 processHourlyData(historicalData.hourly);
             }
         }
 
         if (allReadings.length === 0 && dataSource === "openweathermap") {
             console.warn(`No data from OpenWeatherMap for ${processedLat},${processedLon}. Attempting fallback to mock data.`);
-            throw new Error("No data received from OpenWeatherMap");
+            throw new Error("No data received from OpenWeatherMap"); 
         }
 
         const uniqueReadingsMap = new Map();
@@ -347,15 +347,15 @@ router.get('/pressure', async (req, res) => {
         console.error(`Error in /api/pressure route for ${processedLat},${processedLon} (source: ${dataSource}). Message: ${error.message}. Falling back to mock data.`);
         dataSource = "mock";
         allReadings = generateMockPressureTempData(processedLat, processedLon);
-
+        
         if (allReadings.length === 0) {
-            return res.status(500).json({
-                error: 'Failed to generate mock data after API failure.',
+            return res.status(500).json({ 
+                error: 'Failed to generate mock data after API failure.', 
                 details: error.message, // original error
                 data_source: dataSource
             });
         }
-        res.status(200).json({
+        res.status(200).json({ 
             message: `Serving mock pressure and temperature data for lat: ${processedLat}, lon: ${processedLon} due to OpenWeatherMap API error.`,
             readings: allReadings,
             data_source: dataSource,

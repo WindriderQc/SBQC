@@ -154,8 +154,9 @@ function draw() {
     scale(zoomLevel); // Apply zoom
   
     push(); // Main push for all rotating elements
-    rotateY(angleY); // Use dynamic angleY
-    rotateX(angleX); // Use dynamic angleX
+    // Changed rotation order: X rotation first, then Y
+    rotateX(angleX); // Use dynamic angleX (pitch, controlled by vertical drag)
+    rotateY(angleY); // Use dynamic angleY (yaw, controlled by horizontal drag)
 
     // Earth rendering
     push(); // Optional inner push for Earth specific transforms if any, besides rotation
@@ -383,9 +384,9 @@ function mouseDragged() {
     if (mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height) {
         let dx = mouseX - pmouseX;
         let dy = mouseY - pmouseY;
-        angleY += dx * 0.01;
-        angleX += dy * 0.01;
-        angleX = constrain(angleX, -Math.PI/2.1, Math.PI/2.1);
+        angleY += dx * 0.01; // dx controls angleY (yaw)
+        angleX += dy * 0.01; // dy controls angleX (pitch)
+        angleX = constrain(angleX, -Math.PI/2.1, Math.PI/2.1); // Keep constraint on pitch
         return false; // Prevent default browser drag behaviors ONLY when rotating globe
     }
 }
@@ -394,8 +395,8 @@ function mouseWheel(event) {
     // Check if the mouse is within the canvas bounds
     // p5.js global variables 'width' and 'height' refer to canvas dimensions
     if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
-        zoomLevel -= event.deltaY * 0.001 * zoomLevel; 
-        zoomLevel = constrain(zoomLevel, 0.2, 5.0); 
+        zoomLevel -= event.deltaY * 0.001 * zoomLevel;
+        zoomLevel = constrain(zoomLevel, 0.2, 5.0);
         return false; // Prevent default scrolling ONLY if mouse is over canvas
     }
     // If mouse is not over canvas, allow default browser scrolling (do not return false, implicitly returns undefined)
