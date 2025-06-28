@@ -4,10 +4,16 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/0.5.7/chartjs-plugin-annotation.min.js"></script>
 
 
- <h1>Current Tide Level in Quebec</h1>
+ <h1>Current Tide Level</h1>
+  <div id="tideInfo" style="margin-bottom: 10px;">
+    <p>Station: <span id="stationName">N/A</span></p>
+    <p>Requested Coordinates: Lat <span id="requestLat">N/A</span>, Lon <span id="requestLon">N/A</span></p>
+    <p>Station Coordinates: Lat <span id="responseLat">N/A</span>, Lon <span id="responseLon">N/A</span></p>
+    <p>Distance to Station: <span id="distanceToStation">N/A</span> km</p>
+  </div>
   <p id="currentTide"></p>
   <div style="position: relative; width: 1024px; height: 400px; margin-bottom: 20px;">
-   
+
     <canvas id="tideChart" style="position: absolute; z-index: 1;" width="1024" height="400"></canvas>
   </div>
 
@@ -25,6 +31,20 @@
     let tideData = [];
     let tideTimes = [];
     let tideChartInstance; // To store the chart instance for updates
+
+    // Function to calculate distance using Haversine formula
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371; // Radius of the Earth in km
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const distance = R * c;
+      return distance.toFixed(2); // Returns distance in km, rounded to 2 decimal places
+    }
 
     // Function to fetch data from the backend
     async function fetchData(lat = 46.8139, lon = -71.2082, days = 4) {
@@ -62,6 +82,20 @@
         }
 
         if (data && data.heights && data.heights.length > 0) {
+            // Update UI elements with new data
+            document.getElementById('stationName').textContent = data.station || 'N/A';
+            document.getElementById('requestLat').textContent = data.requestLat || 'N/A';
+            document.getElementById('requestLon').textContent = data.requestLon || 'N/A';
+            document.getElementById('responseLat').textContent = data.responseLat || 'N/A';
+            document.getElementById('responseLon').textContent = data.responseLon || 'N/A';
+
+            if (data.requestLat && data.requestLon && data.responseLat && data.responseLon) {
+              const distance = calculateDistance(data.requestLat, data.requestLon, data.responseLat, data.responseLon);
+              document.getElementById('distanceToStation').textContent = `${distance} km`;
+            } else {
+              document.getElementById('distanceToStation').textContent = 'N/A';
+            }
+
             tideData = data.heights.map(h => h.height);
             tideTimes = data.heights.map(h => moment.unix(h.dt).toDate());
 
