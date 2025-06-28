@@ -3,7 +3,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/0.5.7/chartjs-plugin-annotation.min.js"></script>
 
 <h1>Barometric Pressure</h1>
- <p id="currentPressure">Current Pressure: N/A<span id="pressureDataSourceMessage" style="font-size: 0.8em; margin-left: 10px;"></span></p>
+ <p id="currentPressure">
+    <span id="currentReadingsText">Pressure & Temp: N/A</span>
+    <span id="pressureDataSourceMessage" style="font-size: 0.8em; margin-left: 10px; color: orange;"></span>
+ </p>
 <div style="position: relative; width: 1024px; height: 400px; margin-bottom: 20px;">
     <canvas id="pressureChart" style="position: absolute; z-index: 1;" width="1024" height="400"></canvas>
 </div>
@@ -13,10 +16,10 @@
     <input type="number" id="pressureLatitude" name="pressureLatitude" value="46.8139" step="any">
     <label for="pressureLongitude">Longitude:</label>
     <input type="number" id="pressureLongitude" name="pressureLongitude" value="-71.2082" step="any">
-    <button id="refreshPressure">Refresh Pressure</button>
-    <small style="margin-left: 10px;">(Displays ~2 days historical and ~2 days forecast pressure)</small>
+    <button id="refreshPressure">Refresh Data</button>
+    <small style="margin-left: 10px;">(Displays ~2 days historical and ~2 days forecast pressure/temp)</small>
 </div>
-
+<!-- Ensure the pressureDataSourceMessage span is present in the p tag for current readings -->
 <script>
     // pressureData and tempData will now be arrays of values for the chart
     // pressureTimes will be the labels (timestamps)
@@ -85,7 +88,10 @@
                     break; 
                 }
             }
-            document.getElementById('currentPressure').textContent = 
+
+            // Update the specific span for readings text
+            document.getElementById('currentReadingsText').textContent =
+
                 `Pressure: ${closestReading.pressure.toFixed(1)} hPa, Temp: ${closestReading.temp.toFixed(1)} °C (at ${moment.unix(closestReading.dt).format('HH:mm')})`;
 
             const ctx = document.getElementById('pressureChart').getContext('2d');
@@ -198,7 +204,10 @@
             console.log('No pressure/temp data to display or error in data structure.');
             const message = (serverResponse && serverResponse.message) ? serverResponse.message : 'No pressure/temp data available.';
             displayPressureChartError(message);
-            document.getElementById('currentPressure').textContent = 'Pressure & Temp: N/A';
+            // Update specific span and clear data source message
+            document.getElementById('currentReadingsText').textContent = 'Pressure & Temp: N/A';
+            const dsMessageEl = document.getElementById('pressureDataSourceMessage');
+            if (dsMessageEl) dsMessageEl.textContent = '';
         }
     }
 
