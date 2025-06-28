@@ -13,9 +13,8 @@
     <input type="number" id="pressureLatitude" name="pressureLatitude" value="46.8139" step="any">
     <label for="pressureLongitude">Longitude:</label>
     <input type="number" id="pressureLongitude" name="pressureLongitude" value="-71.2082" step="any">
-    <label for="pressureDays">Days:</label>
-    <input type="number" id="pressureDays" name="pressureDays" value="2" min="1" max="7">
     <button id="refreshPressure">Refresh Pressure</button>
+    <small style="margin-left: 10px;">(Displays ~2 days historical and ~2 days forecast pressure)</small>
 </div>
 
 <script>
@@ -24,26 +23,30 @@
     let pressureChartInstance; // To store the chart instance for updates
 
     // Function to fetch data from the backend
-    async function fetchPressureData(lat = 46.8139, lon = -71.2082, days = 2) {
+    async function fetchPressureData(lat = 46.8139, lon = -71.2082) { // Removed 'days' parameter
         let data;
-        const cacheKey = `pressureData-${lat}-${lon}-${days}`;
-        const lastFetchedKey = `lastFetchedPressure-${lat}-${lon}-${days}`;
+        // Updated cacheKey to not include days, as the server now determines the range.
+        // However, client-side caching might still be useful for immediate re-renders if lat/lon haven't changed.
+        // For simplicity with server-defined range, we can rely more on browser caching of the API request itself,
+        // or adjust client cache key if we want to keep it distinct per lat/lon.
+        // Let's make the client cache key simpler for now.
+        const cacheKey = `pressureData-${lat}-${lon}`;
+        const lastFetchedKey = `lastFetchedPressure-${lat}-${lon}`;
 
         // Try to get cached data
         const cachedData = localStorage.getItem(cacheKey);
         const lastFetched = localStorage.getItem(lastFetchedKey);
 
         // Cache duration: 30 minutes for pressure data
-        if (cachedData && moment().diff(moment(lastFetched), 'minutes') < 30) {
+        if (cachedData && moment().diff(moment(lastFetched), 'minutes') < 30) { // Client cache still 30 mins
             data = JSON.parse(cachedData);
             console.log('Fetching cached pressure data:', data);
         } else {
-            console.log(`Fetching API pressure data for lat: ${lat}, lon: ${lon}, days: ${days}`);
+            console.log(`Fetching API pressure data for lat: ${lat}, lon: ${lon}`); // Removed 'days' from log
             try {
-                // TODO: Update to the correct API endpoint when available
-                const response = await fetch(`/api/pressure?lat=${lat}&lon=${lon}&days=${days}`);
+                const response = await fetch(`/api/pressure?lat=${lat}&lon=${lon}`); // Removed 'days' from URL
                 if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ error: response.statusText })); // Handle non-JSON error responses
+                    const errorData = await response.json().catch(() => ({ error: response.statusText }));
                     console.error('Error fetching pressure:', errorData.error || response.statusText);
                     alert(`Error fetching pressure: ${errorData.error || response.statusText}`);
                     // Display error on chart area
@@ -70,10 +73,29 @@
             pressureTimes = data.readings.map(r => moment.unix(r.dt).toDate());
 
             if (data.readings.length > 0) {
-                const latestPressure = data.readings[data.readings.length - 1].pressure;
-                document.getElementById('currentPressure').textContent = `Current Pressure: ${latestPressure.toFixed(1)} hPa`;
+                // Update currentPressure display logic
+                const nowUnix = moment().unix();
+                let closestReading = data.readings[0];
+                // Find the most recent reading that is not in the future,
+                // or the first future reading if all are in the future (less likely with historical data)
+                // or the last reading if all are in the past.
+                for (const reading of data.readings) {
+                    if (reading.dt <= nowUnix) {
+                        closestReading = reading; // Keep updating to get the latest past/current
+                    } else {
+                        // If this reading is future, and previous 'closestReading' was past,
+                        // then 'closestReading' is the best one.
+                        // If 'closestReading' is also future (e.g. all data is forecast), pick the earliest future.
+                        if (closestReading.dt > nowUnix) { // current closestReading is already future
+                           if (reading.dt < closestReading.dt) closestReading = reading; // found an earlier future
+                        }
+                        break; // Stop once we are past 'now' and have the latest past/current or earliest future
+                    }
+                }
+                 document.getElementById('currentPressure').textContent = `Pressure: ${closestReading.pressure.toFixed(1)} hPa (at ${moment.unix(closestReading.dt).format('HH:mm')})`;
+            } else {
+                document.getElementById('currentPressure').textContent = 'Pressure: N/A';
             }
-
 
             const ctx = document.getElementById('pressureChart').getContext('2d');
 
@@ -166,17 +188,17 @@
     document.getElementById('refreshPressure').addEventListener('click', () => {
         const lat = parseFloat(document.getElementById('pressureLatitude').value);
         const lon = parseFloat(document.getElementById('pressureLongitude').value);
-        const days = parseInt(document.getElementById('pressureDays').value, 10);
+        // const days = parseInt(document.getElementById('pressureDays').value, 10); // Days input removed
 
-        if (isNaN(lat) || isNaN(lon) || isNaN(days)) {
-            alert('Please enter valid numbers for latitude, longitude, and days for pressure.');
+        if (isNaN(lat) || isNaN(lon)) { // Removed days check
+            alert('Please enter valid numbers for latitude and longitude for pressure.');
             return;
         }
-        if (days < 1 || days > 7) {
-            alert('Please enter a value between 1 and 7 for days for pressure.');
-            return;
-        }
-        fetchPressureData(lat, lon, days);
+        // if (days < 1 || days > 7) { // Days input removed
+        //     alert('Please enter a value between 1 and 7 for days for pressure.');
+        //     return;
+        // }
+        fetchPressureData(lat, lon); // Removed 'days' from call
     });
 
     // Initial data fetch on page load

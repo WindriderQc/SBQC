@@ -280,73 +280,130 @@ router.get('/tle', async (req, res) => {
     }
 });
 
-// Mock Barometric Pressure API Endpoint
+// --- Barometric Pressure API Endpoint with Caching ---
+
+const pressureAPIResponseCache = {};
+const HISTORICAL_PRESSURE_CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours
+const FORECAST_PRESSURE_CACHE_DURATION = 1 * 60 * 60 * 1000;   // 1 hour
+const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
+
+async function fetchAndCacheWeatherData(url, cacheKey, cacheDuration) {
+    const cachedEntry = pressureAPIResponseCache[cacheKey];
+    if (cachedEntry && (Date.now() - cachedEntry.timestamp < cacheDuration)) {
+        console.log(`[Cache HIT] Serving pressure data for key: ${cacheKey}`);
+        return cachedEntry.data;
+    }
+
+    console.log(`[Cache MISS] Fetching pressure data for key: ${cacheKey} from URL: ${url}`);
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Failed to fetch weather data from OpenWeatherMap (${url}): ${response.status} - ${errorText}`);
+            // Optionally, return stale cache if available and preferred
+            // if (cachedEntry) { return cachedEntry.data; }
+            throw new Error(`OpenWeatherMap API error: ${response.status} - ${errorText}`);
+        }
+        const data = await response.json();
+        pressureAPIResponseCache[cacheKey] = {
+            data: data,
+            timestamp: Date.now(),
+            duration: cacheDuration
+        };
+        console.log(`[Cache STORE] Stored pressure data for key: ${cacheKey}`);
+        return data;
+    } catch (error) {
+        console.error(`Error fetching or processing weather data (${url}):`, error);
+        // Optionally, return stale cache on error
+        // if (cachedEntry) { return cachedEntry.data; }
+        throw error; // Re-throw to be handled by the route
+    }
+}
+
 router.get('/pressure', async (req, res) => {
-    const { lat, lon, days } = req.query;
+    const { lat, lon } = req.query;
 
-    if (!lat || !lon || !days) {
-        return res.status(400).json({ error: 'Missing required query parameters: lat, lon, days.' });
+    if (!WEATHER_API_KEY) {
+        console.error('WEATHER_API_KEY is not set in environment variables.');
+        return res.status(500).json({ error: 'Server configuration error: Missing Weather API key.' });
     }
 
-    const numDays = parseInt(days, 10);
-    if (isNaN(numDays) || numDays < 1 || numDays > 7) {
-        return res.status(400).json({ error: 'Invalid "days" parameter. Must be between 1 and 7.' });
+    if (!lat || !lon) {
+        return res.status(400).json({ error: 'Missing required query parameters: lat, lon.' });
     }
 
-    console.log(`Mock pressure data request for lat: ${lat}, lon: ${lon}, days: ${numDays}`);
+    const processedLat = parseFloat(lat).toFixed(2); // Standardize for cache key
+    const processedLon = parseFloat(lon).toFixed(2); // Standardize for cache key
 
-    const readings = [];
-    const now = moment();
-    const basePressure = 1012; // hPa
-    const variability = 10; // hPa variability
+    let allPressureReadings = [];
 
-    // Generate hourly readings for the specified number of days
-    // Data goes from (now - numDays) up to now
-    const startTime = moment(now).subtract(numDays, 'days');
+    try {
+        // 1. Fetch Forecast Data (next ~48 hours, hourly)
+        const forecastURL = `https://api.openweathermap.org/data/3.0/onecall?lat=${processedLat}&lon=${processedLon}&exclude=current,minutely,daily,alerts&units=metric&appid=${WEATHER_API_KEY}`;
+        const forecastCacheKey = `fore-${processedLat}-${processedLon}`;
+        const forecastData = await fetchAndCacheWeatherData(forecastURL, forecastCacheKey, FORECAST_PRESSURE_CACHE_DURATION);
 
-    for (let d = 0; d < numDays; d++) {
-        for (let h = 0; h < 24; h++) {
-            const currentTime = moment(startTime).add(d, 'days').add(h, 'hours');
-            if (currentTime.isAfter(now)) { // Don't generate future data beyond 'now'
-                break;
-            }
-            // Simulate some daily and hourly fluctuation
-            const pressure = basePressure +
-                (Math.sin( ( (d * 24) + h) * 2 * Math.PI / (24 * 2) ) * (variability / 2)) + // Slower overall wave
-                (Math.random() * variability / 2 - variability / 4) + // Random noise
-                (Math.sin(h * 2 * Math.PI / 12) * 2); // Smaller, faster wave (e.g. semi-diurnal)
-
-
-            readings.push({
-                dt: currentTime.unix(), // Unix timestamp in seconds
-                pressure: parseFloat(pressure.toFixed(1)) // Pressure in hPa, 1 decimal place
+        if (forecastData && forecastData.hourly) {
+            forecastData.hourly.forEach(hour => {
+                if (hour.dt && typeof hour.pressure !== 'undefined') {
+                    allPressureReadings.push({ dt: hour.dt, pressure: hour.pressure });
+                }
             });
         }
-    }
 
-    // Sort by time just in case, though generation order should be correct
-    readings.sort((a, b) => a.dt - b.dt);
+        // 2. Fetch Historical Data (last 2 days, hourly)
+        const today = moment.utc(); // Use UTC for OpenWeatherMap dt compatibility
+        for (let i = 1; i <= 2; i++) { // Fetch for yesterday and the day before
+            const targetDate = moment(today).subtract(i, 'days');
+            const targetTimestamp = targetDate.unix(); // Needs to be a specific timestamp within that day for timemachine
 
-    if (readings.length === 0) {
-        // This case might happen if 'now' is very close to startTime and loop conditions prevent entries
-        // Or if numDays is very small leading to no full hours if code was structured differently.
-        // For this mock, ensuring at least one point if requested.
-        readings.push({
-            dt: now.unix(),
-            pressure: parseFloat(basePressure.toFixed(1))
+            // Timemachine provides data for the full day of the given timestamp.
+            // We need a timestamp for each day we want to fetch.
+            const historicalURL = `https://api.openweathermap.org/data/3.0/onecall/timemachine?lat=${processedLat}&lon=${processedLon}&dt=${targetTimestamp}&units=metric&appid=${WEATHER_API_KEY}`;
+            const historicalCacheKey = `hist-${processedLat}-${processedLon}-${targetDate.format('YYYYMMDD')}`;
+            const historicalData = await fetchAndCacheWeatherData(historicalURL, historicalCacheKey, HISTORICAL_PRESSURE_CACHE_DURATION);
+
+            // The 'timemachine' endpoint returns data under a 'data' array (usually one element)
+            // which then contains 'hourly'. Or sometimes just 'hourly' directly at the root of the day's object.
+            // The structure seems to be: { lat, lon, timezone, timezone_offset, data: [ {dt, sunrise, sunset, temp, ..., pressure, hourly: [ {dt, temp, pressure...} ] } ] }
+            // We are interested in the `hourly` array within the first element of `data`.
+            if (historicalData && historicalData.data && historicalData.data[0] && historicalData.data[0].hourly) {
+                 historicalData.data[0].hourly.forEach(hour => {
+                    if (hour.dt && typeof hour.pressure !== 'undefined') {
+                        allPressureReadings.push({ dt: hour.dt, pressure: hour.pressure });
+                    }
+                });
+            } else if (historicalData && historicalData.hourly) { // Fallback if structure is flatter
+                 historicalData.hourly.forEach(hour => {
+                    if (hour.dt && typeof hour.pressure !== 'undefined') {
+                        allPressureReadings.push({ dt: hour.dt, pressure: hour.pressure });
+                    }
+                });
+            }
+        }
+
+        // Remove duplicates (e.g. if historical and forecast overlap for current hour)
+        // and sort chronologically
+        const uniqueReadings = Array.from(new Map(allPressureReadings.map(item => [item.dt, item])).values());
+        uniqueReadings.sort((a, b) => a.dt - b.dt);
+
+        allPressureReadings = uniqueReadings;
+
+        if (allPressureReadings.length === 0) {
+             console.warn(`No pressure data compiled for lat:${processedLat}, lon:${processedLon}`);
+            return res.status(404).json({ message: 'No pressure data available for the location or period.', readings: [] });
+        }
+
+        res.json({
+            message: `Aggregated pressure data for lat: ${processedLat}, lon: ${processedLon}`,
+            readings: allPressureReadings,
+            source: 'OpenWeatherMap OneCall API 3.0'
         });
-    }
 
-    res.json({
-        message: `Mock pressure data for ${numDays} days at ${lat}, ${lon}`,
-        // Mimic some parts of the tide API structure if needed, or define our own.
-        // For now, a simple object with a 'readings' array.
-        readings: readings,
-        // Could add request parameters back for clarity if desired by client
-        // requestLat: lat,
-        // requestLon: lon,
-        // requestDays: numDays
-    });
+    } catch (error) {
+        console.error(`Error in /api/pressure route for ${processedLat},${processedLon}:`, error.message);
+        res.status(500).json({ error: 'Failed to retrieve or process pressure data.', details: error.message });
+    }
 });
 
 module.exports = router;
