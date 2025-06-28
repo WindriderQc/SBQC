@@ -313,70 +313,147 @@ async function fetchAndCacheWeatherData(url, cacheKey, cacheDuration) {
         console.log(`[Cache STORE] Stored pressure data for key: ${cacheKey}`);
         return data;
     } catch (error) {
-        console.error(`Error fetching or processing weather data (${url}):`, error);
-        // Optionally, return stale cache on error
-        // if (cachedEntry) { return cachedEntry.data; }
-        throw error; // Re-throw to be handled by the route
+        console.error(`Error in fetchAndCacheWeatherData for URL (${url}):`, error.message);
+        // Do not return stale cache here, let the main handler decide on mock fallback
+        throw error;
     }
+}
+
+function generateMockPressureTempData(lat, lon, numDaysHistorical = 2, numDaysForecast = 2) {
+    console.log(`Generating mock pressure and temperature data for lat: ${lat}, lon: ${lon}`);
+    const readings = [];
+    const now = moment.utc(); // Use UTC for consistency
+    const basePressure = 1012; // hPa
+    const pressureVariability = 10; // hPa
+    const baseTemp = 15; // Celsius
+    const tempVariability = 5; // Celsius
+
+    const totalDays = numDaysHistorical + numDaysForecast;
+    const startTime = moment(now).subtract(numDaysHistorical, 'days');
+
+    for (let d = 0; d < totalDays; d++) {
+        for (let h = 0; h < 24; h++) {
+            const currentTime = moment(startTime).add(d, 'days').add(h, 'hours');
+            // Simulate some daily and hourly fluctuation
+            const pressure = basePressure +
+                (Math.sin(((d * 24) + h) * 2 * Math.PI / 48) * (pressureVariability / 2)) + // Slower overall wave for pressure
+                (Math.random() * pressureVariability / 2 - pressureVariability / 4) +
+                (Math.sin(h * 2 * Math.PI / 12) * 2);
+
+            const temp = baseTemp +
+                (Math.sin(((d * 24) + h) * 2 * Math.PI / 24) * tempVariability) + // Daily temp wave
+                (Math.random() * tempVariability / 2 - tempVariability / 4);
+
+            readings.push({
+                dt: currentTime.unix(),
+                pressure: parseFloat(pressure.toFixed(1)),
+                temp: parseFloat(temp.toFixed(1))
+            });
+        }
+    }
+    readings.sort((a, b) => a.dt - b.dt);
+    // Ensure we only return data up to numDaysForecast into the future from "now"
+    const forecastEndTime = moment(now).add(numDaysForecast, 'days').endOf('day').unix();
+    return readings.filter(r => r.dt <= forecastEndTime);
 }
 
 router.get('/pressure', async (req, res) => {
     const { lat, lon } = req.query;
-
-    if (!WEATHER_API_KEY) {
-        console.error('WEATHER_API_KEY is not set in environment variables.');
-        return res.status(500).json({ error: 'Server configuration error: Missing Weather API key.' });
-    }
+    let dataSource = "openweathermap"; // Assume success initially
 
     if (!lat || !lon) {
         return res.status(400).json({ error: 'Missing required query parameters: lat, lon.' });
     }
 
-    const processedLat = parseFloat(lat).toFixed(2); // Standardize for cache key
-    const processedLon = parseFloat(lon).toFixed(2); // Standardize for cache key
-
-    let allPressureReadings = [];
+    const processedLat = parseFloat(lat).toFixed(2);
+    const processedLon = parseFloat(lon).toFixed(2);
+    let allReadings = [];
 
     try {
-        // 1. Fetch Forecast Data (next ~48 hours, hourly)
+        if (!WEATHER_API_KEY) {
+            console.warn('WEATHER_API_KEY is not set. Falling back to mock data for /api/pressure.');
+            throw new Error('Missing Weather API key'); // Trigger fallback
+        }
+
+        // 1. Fetch Forecast Data
         const forecastURL = `https://api.openweathermap.org/data/3.0/onecall?lat=${processedLat}&lon=${processedLon}&exclude=current,minutely,daily,alerts&units=metric&appid=${WEATHER_API_KEY}`;
         const forecastCacheKey = `fore-${processedLat}-${processedLon}`;
         const forecastData = await fetchAndCacheWeatherData(forecastURL, forecastCacheKey, FORECAST_PRESSURE_CACHE_DURATION);
 
         if (forecastData && forecastData.hourly) {
             forecastData.hourly.forEach(hour => {
-                if (hour.dt && typeof hour.pressure !== 'undefined') {
-                    allPressureReadings.push({ dt: hour.dt, pressure: hour.pressure });
+                if (hour.dt && typeof hour.pressure !== 'undefined' && typeof hour.temp !== 'undefined') {
+                    allReadings.push({ dt: hour.dt, pressure: hour.pressure, temp: hour.temp });
                 }
             });
         }
 
-        // 2. Fetch Historical Data (last 2 days, hourly)
-        const today = moment.utc(); // Use UTC for OpenWeatherMap dt compatibility
-        for (let i = 1; i <= 2; i++) { // Fetch for yesterday and the day before
+        // 2. Fetch Historical Data
+        const today = moment.utc();
+        for (let i = 1; i <= 2; i++) {
             const targetDate = moment(today).subtract(i, 'days');
-            const targetTimestamp = targetDate.unix(); // Needs to be a specific timestamp within that day for timemachine
+            const targetTimestamp = targetDate.unix();
 
-            // Timemachine provides data for the full day of the given timestamp.
-            // We need a timestamp for each day we want to fetch.
             const historicalURL = `https://api.openweathermap.org/data/3.0/onecall/timemachine?lat=${processedLat}&lon=${processedLon}&dt=${targetTimestamp}&units=metric&appid=${WEATHER_API_KEY}`;
             const historicalCacheKey = `hist-${processedLat}-${processedLon}-${targetDate.format('YYYYMMDD')}`;
             const historicalData = await fetchAndCacheWeatherData(historicalURL, historicalCacheKey, HISTORICAL_PRESSURE_CACHE_DURATION);
 
-            // The 'timemachine' endpoint returns data under a 'data' array (usually one element)
-            // which then contains 'hourly'. Or sometimes just 'hourly' directly at the root of the day's object.
-            // The structure seems to be: { lat, lon, timezone, timezone_offset, data: [ {dt, sunrise, sunset, temp, ..., pressure, hourly: [ {dt, temp, pressure...} ] } ] }
-            // We are interested in the `hourly` array within the first element of `data`.
+            const processHourlyData = (hourlyArr) => {
+                if (hourlyArr) {
+                    hourlyArr.forEach(hour => {
+                        if (hour.dt && typeof hour.pressure !== 'undefined' && typeof hour.temp !== 'undefined') {
+                            allReadings.push({ dt: hour.dt, pressure: hour.pressure, temp: hour.temp });
+                        }
+                    });
+                }
+            };
+
             if (historicalData && historicalData.data && historicalData.data[0] && historicalData.data[0].hourly) {
-                 historicalData.data[0].hourly.forEach(hour => {
-                    if (hour.dt && typeof hour.pressure !== 'undefined') {
-                        allPressureReadings.push({ dt: hour.dt, pressure: hour.pressure });
-                    }
-                });
-            } else if (historicalData && historicalData.hourly) { // Fallback if structure is flatter
-                 historicalData.hourly.forEach(hour => {
-                    if (hour.dt && typeof hour.pressure !== 'undefined') {
-                        allPressureReadings.push({ dt: hour.dt, pressure: hour.pressure });
+                processHourlyData(historicalData.data[0].hourly);
+            } else if (historicalData && historicalData.hourly) { // Fallback for potentially flatter structure from cache or direct response
+                processHourlyData(historicalData.hourly);
+            }
+        }
+
+        if (allReadings.length === 0 && dataSource === "openweathermap") {
+            // If we intended to get data from OpenWeatherMap but got none (e.g. API returned empty or unexpected structure for all calls)
+            console.warn(`No data from OpenWeatherMap for ${processedLat},${processedLon}. Attempting fallback to mock data.`);
+            throw new Error("No data received from OpenWeatherMap"); // This will trigger the mock data fallback
+        }
+
+        // Remove duplicates and sort
+        const uniqueReadings = Array.from(new Map(allReadings.map(item => [item.dt, item])).values());
+        uniqueReadings.sort((a, b) => a.dt - b.dt);
+        allReadings = uniqueReadings;
+
+        res.json({
+            message: `Aggregated pressure and temperature data for lat: ${processedLat}, lon: ${processedLon}`,
+            readings: allReadings,
+            data_source: dataSource
+        });
+
+    } catch (error) {
+        console.error(`Error in /api/pressure route for ${processedLat},${processedLon} (source: ${dataSource}): ${error.message}. Falling back to mock data.`);
+        dataSource = "mock";
+        allReadings = generateMockPressureTempData(processedLat, processedLon);
+        if (allReadings.length === 0) {
+            // Should not happen with mock generation logic, but as a safeguard:
+            return res.status(500).json({
+                error: 'Failed to generate mock data.',
+                details: error.message,
+                data_source: dataSource
+            });
+        }
+        res.status(200).json({ // Send 200 for mock data, but indicate it's mock
+            message: `Serving mock pressure and temperature data for lat: ${processedLat}, lon: ${processedLon} due to previous error.`,
+            readings: allReadings,
+            data_source: dataSource,
+            original_error: error.message
+        });
+    }
+});
+
+module.exports = router;
                     }
                 });
             }
