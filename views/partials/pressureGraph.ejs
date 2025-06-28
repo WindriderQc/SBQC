@@ -16,8 +16,16 @@
     <input type="number" id="pressureLatitude" name="pressureLatitude" value="46.8139" step="any">
     <label for="pressureLongitude">Longitude:</label>
     <input type="number" id="pressureLongitude" name="pressureLongitude" value="-71.2082" step="any">
-    <button id="refreshPressure">Refresh Data</button>
-    <small style="margin-left: 10px;">(Displays ~2 days historical and ~2 days forecast pressure/temp)</small>
+    <label for="pressureDays" style="margin-left: 10px;">Historical Days:</label>
+    <select id="pressureDays" name="pressureDays">
+        <option value="1">1 Day</option>
+        <option value="2" selected>2 Days (48h)</option>
+        <option value="3">3 Days</option>
+        <option value="4">4 Days</option>
+        <option value="5">5 Days</option>
+    </select>
+    <button id="refreshPressure" style="margin-left: 10px;">Refresh Data</button>
+    <small id="pressureDataRangeMessage" style="margin-left: 10px;">(Displays historical and ~2 days forecast pressure/temp)</small>
 </div>
 <!-- Ensure the pressureDataSourceMessage span is present in the p tag for current readings -->
 <script>
@@ -28,20 +36,27 @@
     let chartTimeLabels = [];
     let pressureChartInstance; 
 
-    async function fetchPressureData(lat = 46.8139, lon = -71.2082) {
+    async function fetchPressureData(lat = 46.8139, lon = -71.2082, days = 2) { // Added days parameter, default 2
         let serverResponse; 
-        const cacheKey = `pressureData-${lat}-${lon}`;
-        const lastFetchedKey = `lastFetchedPressure-${lat}-${lon}`;
+        // Add days to cacheKey to ensure different day ranges are cached separately
+        const cacheKey = `pressureData-${lat}-${lon}-${days}`;
+        const lastFetchedKey = `lastFetchedPressure-${lat}-${lon}-${days}`;
         const cachedData = localStorage.getItem(cacheKey);
         const lastFetched = localStorage.getItem(lastFetchedKey);
 
+        // Update data range message
+        const rangeMessageEl = document.getElementById('pressureDataRangeMessage');
+        if (rangeMessageEl) {
+            rangeMessageEl.textContent = `(Displays ${days} day(s) historical and ~2 days forecast pressure/temp)`;
+        }
+
         if (cachedData && moment().diff(moment(lastFetched), 'minutes') < 30) {
             serverResponse = JSON.parse(cachedData);
-            console.log('Fetching cached pressure/temp data:', serverResponse);
+            console.log(`Fetching cached pressure/temp data for ${days} days:`, serverResponse);
         } else {
-            console.log(`Fetching API pressure/temp data for lat: ${lat}, lon: ${lon}`);
+            console.log(`Fetching API pressure/temp data for lat: ${lat}, lon: ${lon}, days: ${days}`);
             try {
-                const response = await fetch(`/api/pressure?lat=${lat}&lon=${lon}`);
+                const response = await fetch(`/api/pressure?lat=${lat}&lon=${lon}&days=${days}`); // Added days to API call
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({ error: response.statusText }));
                     console.error('Error fetching pressure/temp:', errorData.error || response.statusText);
@@ -229,24 +244,26 @@
     document.getElementById('refreshPressure').addEventListener('click', () => {
         const lat = parseFloat(document.getElementById('pressureLatitude').value);
         const lon = parseFloat(document.getElementById('pressureLongitude').value);
-        // const days = parseInt(document.getElementById('pressureDays').value, 10); // Days input removed
+        const days = parseInt(document.getElementById('pressureDays').value, 10);
 
-        if (isNaN(lat) || isNaN(lon)) { // Removed days check
-            alert('Please enter valid numbers for latitude and longitude for pressure.');
+        if (isNaN(lat) || isNaN(lon) || isNaN(days)) {
+            alert('Please enter valid numbers for latitude, longitude, and select a valid number of days for pressure.');
             return;
         }
-        // if (days < 1 || days > 7) { // Days input removed
-        //     alert('Please enter a value between 1 and 7 for days for pressure.');
-        //     return;
-        // }
-        fetchPressureData(lat, lon); // Removed 'days' from call
+        if (days < 1 || days > 5) { // Max 5 days as per OpenWeatherMap free tier for historical
+            alert('Please select a value between 1 and 5 for historical days for pressure.');
+            return;
+        }
+        fetchPressureData(lat, lon, days);
     });
 
     // Initial data fetch on page load
-    // Add a small delay to ensure the page is fully loaded and other scripts (if any) have run
     document.addEventListener('DOMContentLoaded', () => {
-        // Initial fetch for default values
-        fetchPressureData(); 
+        const initialDays = parseInt(document.getElementById('pressureDays').value, 10);
+        // Initial fetch for default values (lat, lon from inputs, days from select)
+        const initialLat = parseFloat(document.getElementById('pressureLatitude').value);
+        const initialLon = parseFloat(document.getElementById('pressureLongitude').value);
+        fetchPressureData(initialLat, initialLon, initialDays);
     });
 
 </script>

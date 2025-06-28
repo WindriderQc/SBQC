@@ -233,7 +233,7 @@ async function fetchAndCacheWeatherData(url, cacheKey, cacheDuration) {
 }
 
 function generateMockPressureTempData(lat, lon, numDaysHistorical = 2, numDaysForecast = 2) {
-    console.log(`Generating mock pressure and temperature data for lat: ${lat}, lon: ${lon}`);
+    console.log(`Generating mock pressure and temperature data for lat: ${lat}, lon: ${lon}, historicalDays: ${numDaysHistorical}, forecastDays: ${numDaysForecast}`);
     const readings = [];
     const now = moment.utc();
     const basePressure = 1012; 
@@ -271,11 +271,23 @@ function generateMockPressureTempData(lat, lon, numDaysHistorical = 2, numDaysFo
 }
 
 router.get('/pressure', async (req, res) => {
-    const { lat, lon } = req.query;
-    let dataSource = "openweathermap"; 
+    const { lat, lon, days: daysStr } = req.query; // Added daysStr
+    let dataSource = "openweathermap";
 
     if (!lat || !lon) {
         return res.status(400).json({ error: 'Missing required query parameters: lat, lon.' });
+    }
+
+    // Validate and set default for days
+    let numDaysHistorical = 2; // Default to 2 days
+    if (daysStr) {
+        const parsedDays = parseInt(daysStr, 10);
+        if (!isNaN(parsedDays) && parsedDays >= 1 && parsedDays <= 5) {
+            numDaysHistorical = parsedDays;
+        } else {
+            // Optional: return a 400 error if days is present but invalid, or just use default
+            console.warn(`Invalid 'days' parameter: ${daysStr}. Defaulting to ${numDaysHistorical} days.`);
+        }
     }
 
     const processedLat = parseFloat(lat).toFixed(2);
@@ -288,8 +300,10 @@ router.get('/pressure', async (req, res) => {
             throw new Error('Server misconfiguration: Missing Weather API key');
         }
 
-        // 1. Fetch Forecast Data
+        // 1. Fetch Forecast Data (remains the same, typically provides a few days of forecast)
+        // The forecast part of One Call API (hourly) usually gives 48 hours.
         const forecastURL = `https://api.openweathermap.org/data/3.0/onecall?lat=${processedLat}&lon=${processedLon}&exclude=current,minutely,daily,alerts&units=metric&appid=${WEATHER_API_KEY}`;
+        // Cache key for forecast can remain the same as it's independent of historical days requested
         const forecastCacheKey = `fore-${processedLat}-${processedLon}`;
         const forecastData = await fetchAndCacheWeatherData(forecastURL, forecastCacheKey, FORECAST_PRESSURE_CACHE_DURATION);
         
@@ -301,13 +315,15 @@ router.get('/pressure', async (req, res) => {
             });
         }
 
-        // 2. Fetch Historical Data
+        // 2. Fetch Historical Data based on numDaysHistorical
         const today = moment.utc(); 
-        for (let i = 1; i <= 2; i++) { 
+        for (let i = 1; i <= numDaysHistorical; i++) {
             const targetDate = moment(today).subtract(i, 'days');
             const targetTimestamp = targetDate.unix();
             
             const historicalURL = `https://api.openweathermap.org/data/3.0/onecall/timemachine?lat=${processedLat}&lon=${processedLon}&dt=${targetTimestamp}&units=metric&appid=${WEATHER_API_KEY}`;
+            // IMPORTANT: Add numDaysHistorical or targetDate to cache key if different day ranges affect historical data points for a given day (they shouldn't for OpenWeatherMap's timemachine)
+            // For timemachine, each day is distinct, so the date in the key is sufficient.
             const historicalCacheKey = `hist-${processedLat}-${processedLon}-${targetDate.format('YYYYMMDD')}`;
             const historicalData = await fetchAndCacheWeatherData(historicalURL, historicalCacheKey, HISTORICAL_PRESSURE_CACHE_DURATION);
 
@@ -315,21 +331,28 @@ router.get('/pressure', async (req, res) => {
                 if (hourlyArr) {
                     hourlyArr.forEach(hour => {
                         if (hour.dt && typeof hour.pressure !== 'undefined' && typeof hour.temp !== 'undefined') {
-                            allReadings.push({ dt: hour.dt, pressure: hour.pressure, temp: hour.temp });
+                            // Ensure we don't add duplicate historical points if API returns overlapping data for some reason
+                            if (!allReadings.some(ar => ar.dt === hour.dt)) {
+                                allReadings.push({ dt: hour.dt, pressure: hour.pressure, temp: hour.temp });
+                            }
                         }
                     });
                 }
             };
 
+            // OWM timemachine for a specific dt returns data for that entire day (00:00 to 23:59 UTC)
+            // The structure is usually { "lat": ..., "lon": ..., "timezone": ..., "timezone_offset": ..., "data": [{ "dt": ..., "hourly": [...] }] }
+            // Or sometimes directly { "lat": ..., "hourly": [...] } if the API version/call is slightly different or for very recent past.
+            // The provided code checks for `historicalData.data[0].hourly` and `historicalData.hourly`.
             if (historicalData && historicalData.data && historicalData.data[0] && historicalData.data[0].hourly) {
                 processHourlyData(historicalData.data[0].hourly);
-            } else if (historicalData && historicalData.hourly) { 
+            } else if (historicalData && historicalData.hourly) { // Common for direct hourly array
                 processHourlyData(historicalData.hourly);
             }
         }
 
         if (allReadings.length === 0 && dataSource === "openweathermap") {
-            console.warn(`No data from OpenWeatherMap for ${processedLat},${processedLon}. Attempting fallback to mock data.`);
+            console.warn(`No data from OpenWeatherMap for ${processedLat},${processedLon} with ${numDaysHistorical} historical days. Attempting fallback to mock data.`);
             throw new Error("No data received from OpenWeatherMap"); 
         }
 
@@ -337,29 +360,42 @@ router.get('/pressure', async (req, res) => {
         allReadings.forEach(item => uniqueReadingsMap.set(item.dt, item));
         allReadings = Array.from(uniqueReadingsMap.values()).sort((a, b) => a.dt - b.dt);
 
+        // Filter readings to ensure they are within the expected range (numDaysHistorical + forecast duration)
+        // Forecast is typically 48 hours. Historical is numDaysHistorical.
+        const filterStartDate = moment().subtract(numDaysHistorical, 'days').startOf('day').unix();
+        // Forecast data from OneCall is usually 48 hours.
+        const filterEndDate = moment().add(2, 'days').endOf('day').unix();
+
+        allReadings = allReadings.filter(r => r.dt >= filterStartDate && r.dt <= filterEndDate);
+
+
         res.json({
-            message: `Aggregated pressure and temperature data for lat: ${processedLat}, lon: ${processedLon}`,
+            message: `Aggregated pressure and temperature data for lat: ${processedLat}, lon: ${processedLon} (Historical: ${numDaysHistorical} days)`,
             readings: allReadings,
-            data_source: dataSource
+            data_source: dataSource,
+            requested_historical_days: numDaysHistorical
         });
 
     } catch (error) {
-        console.error(`Error in /api/pressure route for ${processedLat},${processedLon} (source: ${dataSource}). Message: ${error.message}. Falling back to mock data.`);
+        console.error(`Error in /api/pressure route for ${processedLat},${processedLon} (source: ${dataSource}, days: ${numDaysHistorical}). Message: ${error.message}. Falling back to mock data.`);
         dataSource = "mock";
-        allReadings = generateMockPressureTempData(processedLat, processedLon);
+        // Pass numDaysHistorical to mock data generation
+        allReadings = generateMockPressureTempData(processedLat, processedLon, numDaysHistorical);
         
         if (allReadings.length === 0) {
             return res.status(500).json({ 
                 error: 'Failed to generate mock data after API failure.', 
-                details: error.message, // original error
-                data_source: dataSource
+                details: error.message,
+                data_source: dataSource,
+                requested_historical_days: numDaysHistorical
             });
         }
         res.status(200).json({ 
-            message: `Serving mock pressure and temperature data for lat: ${processedLat}, lon: ${processedLon} due to OpenWeatherMap API error.`,
+            message: `Serving mock pressure and temperature data for lat: ${processedLat}, lon: ${processedLon} (Historical: ${numDaysHistorical} days) due to OpenWeatherMap API error.`,
             readings: allReadings,
             data_source: dataSource,
-            original_error_message: error.message // Send original error message for context
+            original_error_message: error.message,
+            requested_historical_days: numDaysHistorical
         });
     }
 });
