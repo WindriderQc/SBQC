@@ -17,7 +17,7 @@
 
   <h1>Current Tide Level in Quebec</h1>
   <p id="currentTide"></p>
-  <div style="position: relative; width: 1024px; height: 320px;">
+  <div style="position: relative; width: 1024px; height: 320px; margin-bottom: 20px;">
     <div style="
         position: absolute;
         top: 32px;  
@@ -121,22 +121,9 @@
                             },
                             ticks: {
                                 callback: function(value, index, values) {
-                                    // Check if the value is a Date object before formatting
-                                    if (values[index] && values[index].time instanceof Date) {
-                                         return moment(values[index].time).format('ddd D MMM HH:mm');
-                                    }
-                                    // It might be a string or number during initial ticks calculation by Chart.js
-                                    // Or if directly providing string labels (not the case here with time scale)
-                                    if (typeof value === 'string' || typeof value === 'number') {
-                                        // Attempt to parse if it's a timestamp number, otherwise return as is for safety
-                                        const date = moment(value);
-                                        if(date.isValid()){
-                                            //return date.format('ddd D MMM HH:mm');
-                                        }
-                                    }
-                                    // Fallback for other cases or directly return the formatted string if `value` is already a label
-                                    // This part needs careful handling based on what `value` is in different stages
-                                    return moment(value).format('ddd D MMM HH:mm'); ;
+                                    // 'value' for a time scale is typically the millisecond timestamp
+                                    // Moment.js can directly handle this numeric value.
+                                    return moment(value).format('ddd D MMM HH:mm');
                                 }
                             }
                         }]
