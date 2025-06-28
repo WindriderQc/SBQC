@@ -4,6 +4,10 @@
 <head>
     <%- include('partials/mainHead', { title: 'SBQC ISS Tracker' }) %>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.0.0/satellite.min.js"></script>
+
+  
+
+       
 </head>
 
 <body class="fixed-nav sticky-footer bg-light sidenav-toggled" id="page-top">
@@ -16,20 +20,23 @@
 
     <div class="card mb-3">
         <div class="card-body">
-            <div class="row">
+            <div class="row mb-4">
                 <div class="col">
                     <div>Wind Speed: <span id="wind-speed">N/A</span> m/s</div>
                     <div>Wind Gust: <span id="wind-gust">N/A</span> m/s</div>
+                        <p>
+                            At location: <span id="summary">N/A</span> with a temperature of <span id="temp">N/A</span>&deg; C. <br>
+                            Air Quality (<span id="aq_parameter">N/A</span>): <span id="aq_value">N/A</span> <span id="aq_units"></span>
+                            <small>(Last read on <span id="aq_date">N/A</span>)</small>
+                        </p>
                 </div>
+            </div>
+            <div class="row">
+                <%- include('partials/tides') %>
             </div>
         </div>
     </div>
 
-    <p>
-        At location: <span id="summary">N/A</span> with a temperature of <span id="temp">N/A</span>&deg; C. <br>
-        Air Quality (<span id="aq_parameter">N/A</span>): <span id="aq_value">N/A</span> <span id="aq_units"></span>
-        <small>(Last read on <span id="aq_date">N/A</span>)</small>
-    </p>
 
     <div class="card mb-3">
         <div class="card-body">

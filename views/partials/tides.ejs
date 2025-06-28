@@ -1,0 +1,165 @@
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/0.5.7/chartjs-plugin-annotation.min.js"></script>
+
+
+ <h1>Current Tide Level in Quebec</h1>
+  <p id="currentTide"></p>
+  <div style="position: relative; width: 1024px; height: 400px; margin-bottom: 20px;">
+   
+    <canvas id="tideChart" style="position: absolute; z-index: 1;" width="1024" height="400"></canvas>
+  </div>
+
+  <div id="tideControls" style="margin-top: 20px;">
+    <label for="latitude">Latitude:</label>
+    <input type="number" id="latitude" name="latitude" value="46.8139" step="any">
+    <label for="longitude">Longitude:</label>
+    <input type="number" id="longitude" name="longitude" value="-71.2082" step="any">
+    <label for="days">Days:</label>
+    <input type="number" id="days" name="days" value="4" min="1" max="7">
+    <button id="refreshTides">Refresh</button>
+  </div>
+
+  <script>
+    let tideData = [];
+    let tideTimes = [];
+    let tideChartInstance; // To store the chart instance for updates
+
+    // Function to fetch data from the backend
+    async function fetchData(lat = 46.8139, lon = -71.2082, days = 4) {
+        let data;
+        const cacheKey = `tideData-${lat}-${lon}-${days}`;
+        const lastFetchedKey = `lastFetched-${lat}-${lon}-${days}`;
+
+        // Try to get cached data
+        const cachedData = localStorage.getItem(cacheKey);
+        const lastFetched = localStorage.getItem(lastFetchedKey);
+
+        if (cachedData && moment().diff(moment(lastFetched), 'minutes') < 60) {
+            data = JSON.parse(cachedData);
+            console.log('Fetching cached data:', data);
+        } else {
+            console.log(`Fetching API data for lat: ${lat}, lon: ${lon}, days: ${days}`);
+            try {
+                const response = await fetch(`/api/tides?lat=${lat}&lon=${lon}&days=${days}`);
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Error fetching tides:', errorData.error || response.statusText);
+                    alert(`Error fetching tides: ${errorData.error || response.statusText}`);
+                    return; // Stop execution if there's an error
+                }
+                data = await response.json();
+
+                // Cache the data
+                localStorage.setItem(cacheKey, JSON.stringify(data));
+                localStorage.setItem(lastFetchedKey, moment().toISOString());
+            } catch (error) {
+                console.error('Network error or JSON parsing error:', error);
+                alert('Failed to fetch tide data. Please check your network connection.');
+                return; // Stop execution
+            }
+        }
+
+        if (data && data.heights && data.heights.length > 0) {
+            tideData = data.heights.map(h => h.height);
+            tideTimes = data.heights.map(h => moment.unix(h.dt).toDate());
+
+            const ctx = document.getElementById('tideChart').getContext('2d');
+
+            if (tideChartInstance) {
+                tideChartInstance.destroy(); // Destroy the old chart instance before creating a new one
+            }
+
+            tideChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: tideTimes,
+                    datasets: [{
+                        label: 'Tide Height (m)',
+                        data: tideData,
+                        borderColor: 'black',
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    scales: {
+                        xAxes: [{
+                            type: 'time',
+                            time: {
+                                tooltipFormat: 'ddd D MMM HH:mm',
+                                unit: 'hour',
+                                displayFormats: {
+                                    hour: 'ddd D MMM HH:mm'
+                                }
+                            },
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    // console.log('Chart tick callback value:', value, 'values[index]:', values[index]);
+                                    // For Chart.js time scales, values[index].value often holds the timestamp.
+                                    if (values && values[index] && typeof values[index].value === 'number') {
+                                        return moment(values[index].value).format('ddd D MMM HH:mm');
+                                    }
+                                    // Fallback if the structure is different, though this might still cause warnings if 'value' is a problematic string.
+                                    // The console.log above should help identify the correct structure if this fallback is hit.
+                                    return moment(value).format('ddd D MMM HH:mm');
+                                }
+                            }
+                        }]
+                    },
+                    annotation: {
+                        annotations: [{
+                            type: 'line',
+                            mode: 'vertical',
+                            scaleID: 'x-axis-0',
+                            value: moment().toDate(),
+                            borderColor: 'red',
+                            borderWidth: 2,
+                            label: {
+                                content: 'Now',
+                                enabled: true,
+                                position: 'top'
+                            }
+                        }]
+                    }
+                }
+            });
+        } else {
+            console.log('No tide data to display or error in data structure.');
+            // Optionally clear the chart or display a message if data is empty or malformed
+             if (tideChartInstance) {
+                tideChartInstance.destroy();
+                tideChartInstance = null; // Ensure it's cleared
+            }
+            const ctx = document.getElementById('tideChart').getContext('2d');
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // Clear canvas
+            ctx.font = "16px Arial";
+            ctx.fillStyle = "black";
+            ctx.textAlign = "center";
+            ctx.fillText("No tide data available for the selected parameters.", ctx.canvas.width / 2, ctx.canvas.height / 2);
+        }
+    }
+
+    // Event listener for the refresh button
+    document.getElementById('refreshTides').addEventListener('click', () => {
+        const lat = parseFloat(document.getElementById('latitude').value);
+        const lon = parseFloat(document.getElementById('longitude').value);
+        const days = parseInt(document.getElementById('days').value, 10);
+
+        if (isNaN(lat) || isNaN(lon) || isNaN(days)) {
+            alert('Please enter valid numbers for latitude, longitude, and days.');
+            return;
+        }
+        if (days < 1 || days > 7) {
+            alert('Please enter a value between 1 and 7 for days.');
+            return;
+        }
+        fetchData(lat, lon, days);
+    });
+
+    // Initial data fetch on page load
+    fetchData();
+  </script>
