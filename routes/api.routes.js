@@ -73,6 +73,36 @@ router.get('/weather/:latlon', async (req, res) => {
     }
 });
 
+router.get('/tides', async (req, res) => {
+    const { lat, lon, days } = req.query;
+    const apiKey = process.env.API_TIDES_KEY;
+
+    if (!apiKey) {
+        console.error('API_TIDES_KEY is not set in environment variables.');
+        return res.status(500).json({ error: 'Server configuration error: Missing API key.' });
+    }
+
+    if (!lat || !lon || !days) {
+        return res.status(400).json({ error: 'Missing required query parameters: lat, lon, days.' });
+    }
+
+    const worldTidesURL = `https://www.worldtides.info/api/v3?heights&extremes&key=${apiKey}&lat=${lat}&lon=${lon}&days=${days}`;
+
+    try {
+        const response = await fetch(worldTidesURL);
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Failed to fetch tide data from worldtides.info: ${response.status} - ${errorText}`);
+            return res.status(response.status).json({ error: 'Failed to fetch tide data', details: errorText });
+        }
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error('Error fetching tide data:', error);
+        res.status(500).json({ error: 'Server error while fetching tide data' });
+    }
+});
+
 router.get('/proxy-location', async (req, res) => {
     const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     //const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
