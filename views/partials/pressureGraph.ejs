@@ -43,20 +43,18 @@
     let chartTimeLabels = [];
     let pressureChartInstance; 
 
-    async function fetchPressureData(lat = 46.8139, lon = -71.2082, days = 2, forecastHours = 48) { // Added forecastHours
+    async function fetchPressureData(lat, lon, days, forecastHours) { // Removed default values
+        // Update data range message at the beginning of the function
+        const rangeMessageEl = document.getElementById('pressureDataRangeMessage');
+        if (rangeMessageEl) {
+            rangeMessageEl.textContent = `(Displays ${days} day(s) historical and ${forecastHours} hours forecast pressure/temp)`;
+        }
+
         let serverResponse; 
-        // Cache key could include forecastHours if we strictly cache the exact view.
-        // However, since forecast data from API is usually fixed (e.g. 48h),
-        // and we filter *after* fetch, caching primarily on `days` is reasonable.
-        // If users frequently change forecastHours for the *same* day range,
-        // then adding forecastHours to cacheKey would be better. For now, keep it simple.
         const cacheKey = `pressureData-${lat}-${lon}-${days}`;
         const lastFetchedKey = `lastFetchedPressure-${lat}-${lon}-${days}`;
         const cachedData = localStorage.getItem(cacheKey);
         const lastFetched = localStorage.getItem(lastFetchedKey);
-
-        // Update data range message - will be done in event handlers or after data processing
-        // to ensure it reflects actual data used.
 
         if (cachedData && moment().diff(moment(lastFetched), 'minutes') < 30) {
             serverResponse = JSON.parse(cachedData);
@@ -172,20 +170,19 @@
                     scales: {
                         xAxes: [{
                             type: 'time',
-                            time: {
+                            time: { // Time configuration options still live here
                                 tooltipFormat: 'ddd D MMM HH:mm',
-                                unit: 'hour', // Chart.js will attempt to find a sensible unit
-                                displayFormats: { hour: 'MMM D, HH:mm' },
-                                min: chartTimeLabels.length > 0 ? chartTimeLabels[0] : moment().subtract(days, 'days').toDate(),
-                                max: chartTimeLabels.length > 0 ? chartTimeLabels[chartTimeLabels.length - 1] : moment().add(forecastHours, 'hours').toDate(),
+                                unit: 'hour',
+                                displayFormats: { hour: 'MMM D, HH:mm' }
                             },
-                            ticks: {
+                            ticks: { // Min, max, callback, autoSkip, etc. go into ticks configuration
+                                min: chartTimeLabels.length > 0 ? chartTimeLabels[0] : new Date(), // Fallback, will be empty if no data
+                                max: chartTimeLabels.length > 0 ? chartTimeLabels[chartTimeLabels.length - 1] : new Date(), // Fallback
                                 callback: function(value, index, values) {
-                                    // Ensure value is a moment object or can be converted
                                     return moment(value).format('MMM D, HH:mm');
                                 },
-                                autoSkip: true, // Enable autoSkip
-                                maxTicksLimit: 20 // Adjust as needed for density
+                                autoSkip: true,
+                                maxTicksLimit: 20
                             }
                         }],
                         yAxes: [
@@ -290,12 +287,7 @@
             return;
         }
 
-        // Update data range message immediately on click
-        const rangeMessageEl = document.getElementById('pressureDataRangeMessage');
-        if (rangeMessageEl) {
-            rangeMessageEl.textContent = `(Displays ${days} day(s) historical and ${forecastHours} hours forecast pressure/temp)`;
-        }
-
+        // The range message is now updated inside fetchPressureData
         fetchPressureData(lat, lon, days, forecastHours);
     });
 
@@ -306,12 +298,7 @@
         const initialDays = parseInt(document.getElementById('pressureDays').value, 10);
         const initialForecastHours = parseInt(document.getElementById('pressureForecastHours').value, 10);
 
-        // Update data range message on initial load
-        const rangeMessageEl = document.getElementById('pressureDataRangeMessage');
-        if (rangeMessageEl) {
-            rangeMessageEl.textContent = `(Displays ${initialDays} day(s) historical and ${initialForecastHours} hours forecast pressure/temp)`;
-        }
-
+        // The range message is now updated inside fetchPressureData
         fetchPressureData(initialLat, initialLon, initialDays, initialForecastHours);
     });
 
