@@ -113,6 +113,7 @@ app
   .use('/data',     require('./routes/data.routes'))
   .use('/meows',    require("./routes/meows.routes"))
   .use('/login',    require('./routes/login.routes'))
+  .use('/ec-data',  require('./routes/ecWeather.routes')) // Environment Canada Data Endpoint
   .use('/Projects', serveIndex(path.resolve(__dirname, 'public/Projects'), {  'icons': true,  'stylesheet': 'public/css/indexStyles.css' }))// use serve index to nav folder  (Attention si utiliser sur le public folder, la racine (/) du site sera index au lieu de html
 
 
