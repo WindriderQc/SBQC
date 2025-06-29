@@ -341,13 +341,26 @@ router.get('/pressure', async (req, res) => {
             };
 
             // OWM timemachine for a specific dt returns data for that entire day (00:00 to 23:59 UTC)
-            // The structure is usually { "lat": ..., "lon": ..., "timezone": ..., "timezone_offset": ..., "data": [{ "dt": ..., "hourly": [...] }] }
-            // Or sometimes directly { "lat": ..., "hourly": [...] } if the API version/call is slightly different or for very recent past.
+            // The structure is usually { "lat": ..., "lon": ..., "timezone": ..., "timezone_offset": ..., "data": [{ "dt": ..., "hourly": [...] }] } (when hourly data for a whole day is returned)
+            // OR, when a specific 'dt' is used in the timemachine call, it returns the data for that specific hour directly within historicalData.data[0]
             // The provided code checks for `historicalData.data[0].hourly` and `historicalData.hourly`.
-            if (historicalData && historicalData.data && historicalData.data[0] && historicalData.data[0].hourly) {
-                processHourlyData(historicalData.data[0].hourly);
-            } else if (historicalData && historicalData.hourly) { // Common for direct hourly array
+
+            if (historicalData && historicalData.data && Array.isArray(historicalData.data) && historicalData.data.length > 0) {
+                // If historicalData.data[0].hourly exists, it means we got a full day's hourly array (less likely for specific dt query)
+                if (historicalData.data[0].hourly) {
+                    console.log(`[History ${targetDate.format('YYYY-MM-DD')}] Processing nested hourly data.`);
+                    processHourlyData(historicalData.data[0].hourly);
+                } else {
+                    // This is the expected case for a timemachine call with a specific 'dt'.
+                    // The historicalData.data array itself contains the single "hourly" record.
+                    console.log(`[History ${targetDate.format('YYYY-MM-DD')}] Processing direct historical data object(s) as hourly.`);
+                    processHourlyData(historicalData.data);
+                }
+            } else if (historicalData && historicalData.hourly) { // Fallback for structure { "lat": ..., "hourly": [...] }
+                console.log(`[History ${targetDate.format('YYYY-MM-DD')}] Processing top-level hourly data.`);
                 processHourlyData(historicalData.hourly);
+            } else {
+                console.log(`[History ${targetDate.format('YYYY-MM-DD')}] No hourly data found in expected structures. Raw data:`, JSON.stringify(historicalData));
             }
         }
 
