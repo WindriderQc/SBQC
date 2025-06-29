@@ -24,8 +24,15 @@
         <option value="4">4 Days</option>
         <option value="5">5 Days</option>
     </select>
+    <label for="pressureForecastHours" style="margin-left: 10px;">Forecast Hours:</label>
+    <select id="pressureForecastHours" name="pressureForecastHours">
+        <option value="12">12 Hours</option>
+        <option value="24">24 Hours</option>
+        <option value="36">36 Hours</option>
+        <option value="48" selected>48 Hours</option>
+    </select>
     <button id="refreshPressure" style="margin-left: 10px;">Refresh Data</button>
-    <small id="pressureDataRangeMessage" style="margin-left: 10px;">(Displays historical and ~2 days forecast pressure/temp)</small>
+    <small id="pressureDataRangeMessage" style="margin-left: 10px;">(Displays historical and forecast pressure/temp)</small>
 </div>
 <!-- Ensure the pressureDataSourceMessage span is present in the p tag for current readings -->
 <script>
@@ -36,27 +43,28 @@
     let chartTimeLabels = [];
     let pressureChartInstance; 
 
-    async function fetchPressureData(lat = 46.8139, lon = -71.2082, days = 2) { // Added days parameter, default 2
+    async function fetchPressureData(lat = 46.8139, lon = -71.2082, days = 2, forecastHours = 48) { // Added forecastHours
         let serverResponse; 
-        // Add days to cacheKey to ensure different day ranges are cached separately
+        // Cache key could include forecastHours if we strictly cache the exact view.
+        // However, since forecast data from API is usually fixed (e.g. 48h),
+        // and we filter *after* fetch, caching primarily on `days` is reasonable.
+        // If users frequently change forecastHours for the *same* day range,
+        // then adding forecastHours to cacheKey would be better. For now, keep it simple.
         const cacheKey = `pressureData-${lat}-${lon}-${days}`;
         const lastFetchedKey = `lastFetchedPressure-${lat}-${lon}-${days}`;
         const cachedData = localStorage.getItem(cacheKey);
         const lastFetched = localStorage.getItem(lastFetchedKey);
 
-        // Update data range message
-        const rangeMessageEl = document.getElementById('pressureDataRangeMessage');
-        if (rangeMessageEl) {
-            rangeMessageEl.textContent = `(Displays ${days} day(s) historical and ~2 days forecast pressure/temp)`;
-        }
+        // Update data range message - will be done in event handlers or after data processing
+        // to ensure it reflects actual data used.
 
         if (cachedData && moment().diff(moment(lastFetched), 'minutes') < 30) {
             serverResponse = JSON.parse(cachedData);
-            console.log(`Fetching cached pressure/temp data for ${days} days:`, serverResponse);
+            console.log(`Fetching cached pressure/temp data for ${days} days (raw):`, serverResponse);
         } else {
             console.log(`Fetching API pressure/temp data for lat: ${lat}, lon: ${lon}, days: ${days}`);
             try {
-                const response = await fetch(`/api/pressure?lat=${lat}&lon=${lon}&days=${days}`); // Added days to API call
+                const response = await fetch(`/api/pressure?lat=${lat}&lon=${lon}&days=${days}`);
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({ error: response.statusText }));
                     console.error('Error fetching pressure/temp:', errorData.error || response.statusText);
@@ -65,7 +73,7 @@
                     return;
                 }
                 serverResponse = await response.json();
-                localStorage.setItem(cacheKey, JSON.stringify(serverResponse));
+                localStorage.setItem(cacheKey, JSON.stringify(serverResponse)); // Cache the full response
                 localStorage.setItem(lastFetchedKey, moment().toISOString());
             } catch (error) {
                 console.error('Network error or JSON parsing error fetching pressure/temp:', error);
@@ -76,7 +84,7 @@
         }
 
         const dataSourceMessageEl = document.getElementById('pressureDataSourceMessage');
-        if (dataSourceMessageEl) { // Create this element if you want to show the message
+        if (dataSourceMessageEl) {
             if (serverResponse.data_source === "mock") {
                 dataSourceMessageEl.textContent = " (Warning: Displaying mock data due to API issue)";
                 dataSourceMessageEl.style.color = "orange";
@@ -85,14 +93,34 @@
             }
         }
 
-
         if (serverResponse && serverResponse.readings && serverResponse.readings.length > 0) {
-            pressureValues = serverResponse.readings.map(r => r.pressure);
-            tempValues = serverResponse.readings.map(r => r.temp);
-            chartTimeLabels = serverResponse.readings.map(r => moment.unix(r.dt).toDate());
-            
             const nowUnix = moment().unix();
-            let closestReading = serverResponse.readings[0];
+            const forecastEndTimeUnix = nowUnix + (forecastHours * 60 * 60);
+
+            // Filter readings based on forecastHours
+            const filteredReadings = serverResponse.readings.filter(r => {
+                if (r.dt <= nowUnix) {
+                    return true; // Keep all historical data
+                } else {
+                    return r.dt <= forecastEndTimeUnix; // Keep forecast data within the selected window
+                }
+            });
+
+            if (filteredReadings.length === 0) {
+                console.log('No data after filtering for forecast hours.');
+                displayPressureChartError('No data available for the selected time range.');
+                document.getElementById('currentReadingsText').textContent = 'Pressure & Temp: N/A';
+                if (dataSourceMessageEl) dataSourceMessageEl.textContent = ''; // Clear warning if it was set
+                return;
+            }
+
+            pressureValues = filteredReadings.map(r => r.pressure);
+            tempValues = filteredReadings.map(r => r.temp);
+            chartTimeLabels = filteredReadings.map(r => moment.unix(r.dt).toDate());
+
+            // Update current readings based on the original (or filtered, if it makes sense) serverResponse
+            // For simplicity, using the first point of filteredReadings or a point closest to 'now' from filteredReadings
+            let closestReading = filteredReadings[0];
             for (const reading of serverResponse.readings) {
                 if (reading.dt <= nowUnix) {
                     closestReading = reading;
@@ -146,16 +174,18 @@
                             type: 'time',
                             time: {
                                 tooltipFormat: 'ddd D MMM HH:mm',
-                                unit: 'hour',
-                                displayFormats: { hour: 'MMM D, HH:mm' }
+                                unit: 'hour', // Chart.js will attempt to find a sensible unit
+                                displayFormats: { hour: 'MMM D, HH:mm' },
+                                min: chartTimeLabels.length > 0 ? chartTimeLabels[0] : moment().subtract(days, 'days').toDate(),
+                                max: chartTimeLabels.length > 0 ? chartTimeLabels[chartTimeLabels.length - 1] : moment().add(forecastHours, 'hours').toDate(),
                             },
                             ticks: {
                                 callback: function(value, index, values) {
-                                    if (values && values[index] && typeof values[index].value === 'number') {
-                                        return moment(values[index].value).format('MMM D, HH:mm');
-                                    }
+                                    // Ensure value is a moment object or can be converted
                                     return moment(value).format('MMM D, HH:mm');
-                                }
+                                },
+                                autoSkip: true, // Enable autoSkip
+                                maxTicksLimit: 20 // Adjust as needed for density
                             }
                         }],
                         yAxes: [
@@ -245,25 +275,44 @@
         const lat = parseFloat(document.getElementById('pressureLatitude').value);
         const lon = parseFloat(document.getElementById('pressureLongitude').value);
         const days = parseInt(document.getElementById('pressureDays').value, 10);
+        const forecastHours = parseInt(document.getElementById('pressureForecastHours').value, 10);
 
-        if (isNaN(lat) || isNaN(lon) || isNaN(days)) {
-            alert('Please enter valid numbers for latitude, longitude, and select a valid number of days for pressure.');
+        if (isNaN(lat) || isNaN(lon) || isNaN(days) || isNaN(forecastHours)) {
+            alert('Please enter valid numbers for latitude, longitude, and select valid historical days and forecast hours.');
             return;
         }
-        if (days < 1 || days > 5) { // Max 5 days as per OpenWeatherMap free tier for historical
+        if (days < 1 || days > 5) {
             alert('Please select a value between 1 and 5 for historical days for pressure.');
             return;
         }
-        fetchPressureData(lat, lon, days);
+        if (forecastHours < 1 || forecastHours > 48) { // Assuming 48 is max, adjust if options change
+            alert('Please select a valid forecast duration (e.g., 12 to 48 hours).');
+            return;
+        }
+
+        // Update data range message immediately on click
+        const rangeMessageEl = document.getElementById('pressureDataRangeMessage');
+        if (rangeMessageEl) {
+            rangeMessageEl.textContent = `(Displays ${days} day(s) historical and ${forecastHours} hours forecast pressure/temp)`;
+        }
+
+        fetchPressureData(lat, lon, days, forecastHours);
     });
 
     // Initial data fetch on page load
     document.addEventListener('DOMContentLoaded', () => {
-        const initialDays = parseInt(document.getElementById('pressureDays').value, 10);
-        // Initial fetch for default values (lat, lon from inputs, days from select)
         const initialLat = parseFloat(document.getElementById('pressureLatitude').value);
         const initialLon = parseFloat(document.getElementById('pressureLongitude').value);
-        fetchPressureData(initialLat, initialLon, initialDays);
+        const initialDays = parseInt(document.getElementById('pressureDays').value, 10);
+        const initialForecastHours = parseInt(document.getElementById('pressureForecastHours').value, 10);
+
+        // Update data range message on initial load
+        const rangeMessageEl = document.getElementById('pressureDataRangeMessage');
+        if (rangeMessageEl) {
+            rangeMessageEl.textContent = `(Displays ${initialDays} day(s) historical and ${initialForecastHours} hours forecast pressure/temp)`;
+        }
+
+        fetchPressureData(initialLat, initialLon, initialDays, initialForecastHours);
     });
 
 </script>
