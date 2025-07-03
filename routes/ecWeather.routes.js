@@ -30,51 +30,95 @@ function guessStation(lat, lon) {
   // This is a common pattern for EC station IDs like "s0000430" (Quebec City/Jean Lesage Intl AP)
   // The XML citypage URLs use different IDs (like YQB_e.xml or s0000430_e.xml - needs checking)
   // For dd.weather.gc.ca/citypage_weather/xml/QC/
-  // It seems to use codes like 's0000430' (Quebec City) rather than 3-letter airport codes.
-  // Let's use a known one for Quebec City for dd.weather.gc.ca
+  // The city codes like 'qc-133' for Quebec City are commonly used.
   if (Math.abs(lat - 46.81) < 0.1 && Math.abs(lon - (-71.20)) < 0.1) {
-    return 's0000430'; // Quebec City (Jean Lesage Airport)
+    return 'qc-133'; // Quebec City site code
   }
-  // Default or throw error if no match
-  return 's0000430'; // Fallback for now
+  // Default or throw error if no match - using Quebec City as default for now
+  return 'qc-133'; // Fallback for now
 }
 
-// Fetch current and forecast from EC XML
-async function fetchCurrentAndForecast(stationId) {
-  // Corrected URL structure for station s0000430
-  const url = `https://dd.weather.gc.ca/citypage_weather/xml/QC/${stationId}_e.xml`;
-  console.log(`Fetching current and forecast from EC XML: ${url}`);
-  const data = await getXML(url);
+// Fetch current conditions from GeoMet SWOB and forecast from EC XML (forecast part will likely still fail)
+async function fetchCurrentAndForecast(siteCode, lat, lon) {
+  let currentConditionsData = null;
+  let forecastData = null;
 
-  const current = data.siteData.currentConditions?.[0];
-  const forecastGroup = data.siteData.forecastGroup?.[0];
+  // 1. Fetch Current Conditions from GeoMet SWOB
+  try {
+    const lonMin = (lon - 0.1).toFixed(4);
+    const latMin = (lat - 0.1).toFixed(4);
+    const lonMax = (lon + 0.1).toFixed(4);
+    const latMax = (lat + 0.1).toFixed(4);
+    // Get data for the last few hours and sort by time to get the latest reliable one.
+    // datetime=PT2H gets data from the last 2 hours. Or use a limit and sort.
+    // For simplicity, let's try to get the latest single observation within a small bbox.
+    // Removed sortby due to "bad sort property" error. Will rely on limit=1 and tight bbox for now.
+    const swobUrl = `https://api.weather.gc.ca/collections/swob-realtime/items?bbox=${lonMin},${latMin},${lonMax},${latMax}&limit=1&f=json`;
+    console.log(`Fetching current conditions from GeoMet SWOB (no sortby): ${swobUrl}`);
+    const swobResult = await getJSON(swobUrl);
+    if (swobResult.features && swobResult.features.length > 0) {
+      const latestObs = swobResult.features[0].properties;
+      currentConditionsData = {
+        station: latestObs['stn_nam-value'] || latestObs.STATION_NAME, // Prefer specific, fallback to general
+        datetime: latestObs['obs_date_tm'] || latestObs.OBSERVATION_DATE_TIME_UTC, // This is UTC
+        temperature: latestObs['air_temp-value'],
+        units_temperature: latestObs['air_temp-uom'],
+        condition: latestObs['weather-value'] || latestObs.WEATHER_EN, // Check for 'weather-value' or 'WEATHER_EN'
+        // humidity: latestObs['rel_hum-value'], // Example
+        // wind_speed: latestObs['avg_wnd_spd_10m_pst1mt-value'], // Example for 1-min avg wind speed
+        // pressure: latestObs.MEAN_SEA_LEVEL_PRES_HPA, // Example, verify field
+        raw_swob_properties: latestObs // Include all props for now for inspection by user
+      };
+    } else {
+      console.log("No SWOB current conditions features found for the location.");
+      currentConditionsData = { error: "No SWOB current conditions features found." };
+    }
+  } catch (e) {
+    console.error("Error fetching SWOB current conditions:", e.message);
+    currentConditionsData = { error: `Failed to fetch SWOB current conditions: ${e.message}` };
+  }
+
+  // 2. Attempt to Fetch Forecast from XML (will likely still fail, but keep for now)
+  try {
+    const xmlUrl = `https://dd.meteo.gc.ca/citypage_weather/xml/QC/${siteCode}_e.xml`;
+    console.log(`NEW_LOG_V3: Fetching current and forecast from EC XML (dd.meteo.gc.ca): ${xmlUrl}`);
+    const xmlData = await getXML(xmlUrl);
+    const forecastGroup = xmlData.siteData.forecastGroup?.[0];
+    forecastData = forecastGroup?.forecast?.map(f => ({
+        period: f.period?.[0]?.$?.textForecastName,
+        textSummary: f.textSummary?.[0],
+        iconCode: f.abbreviatedForecast?.[0]?.iconCode?.[0]?._,
+        temperatures: f.temperatures?.[0],
+        precipitation: f.precipitation?.[0],
+        winds: f.winds?.[0],
+      }));
+    // If current conditions were not available from SWOB, try to get them from XML as a fallback (if XML worked)
+    if (!currentConditionsData || currentConditionsData.error) {
+        const currentFromXml = xmlData.siteData.currentConditions?.[0];
+        if (currentFromXml) {
+            currentConditionsData = {
+                station: currentFromXml?.station?.[0]?._,
+                datetime: currentFromXml?.dateTime?.find(dt => dt.$.name === 'observation')?.text?.[0],
+                temperature: currentFromXml?.temperature?.[0]?.['_'],
+                units_temperature: currentFromXml?.temperature?.[0]?.$?.units,
+                condition: currentFromXml?.condition?.[0],
+                // ... map other fields ...
+            };
+        }
+    }
+
+  } catch (e) {
+    console.error("Error fetching XML forecast:", e.message);
+    if (!forecastData) forecastData = { error: `Failed to fetch XML forecast: ${e.message}` };
+    // If current conditions from SWOB also failed, and XML failed, this will be the error for current too.
+    if (!currentConditionsData || currentConditionsData.error) {
+        currentConditionsData = { error: `Failed to fetch current conditions from XML: ${e.message}` };
+    }
+  }
 
   return {
-    current: {
-      station: current?.station?.[0]?._,
-      datetime: current?.dateTime?.find(dt => dt.$.name === 'observation')?.text?.[0],
-      temperature: current?.temperature?.[0]?.['_'],
-      units_temperature: current?.temperature?.[0]?.$?.units,
-      condition: current?.condition?.[0],
-      iconCode: current?.iconCode?.[0]?._,
-      humidity: current?.relativeHumidity?.[0]?._,
-      wind_speed: current?.wind?.[0]?.speed?.[0]?._,
-      wind_speed_units: current?.wind?.[0]?.speed?.[0]?.$?.units,
-      wind_direction: current?.wind?.[0]?.direction?.[0]?._,
-      pressure: current?.pressure?.[0]?.['_'],
-      pressure_units: current?.pressure?.[0]?.$?.units,
-      pressure_tendency: current?.pressure?.[0]?.$?.tendency,
-      visibility: current?.visibility?.[0]?._,
-      visibility_units: current?.visibility?.[0]?.$?.units,
-    },
-    forecast: forecastGroup?.forecast?.map(f => ({
-      period: f.period?.[0]?.$?.textForecastName,
-      textSummary: f.textSummary?.[0],
-      iconCode: f.abbreviatedForecast?.[0]?.iconCode?.[0]?._,
-      temperatures: f.temperatures?.[0], // Keep full temp object if needed
-      precipitation: f.precipitation?.[0],
-      winds: f.winds?.[0], // Keep full wind object
-    }))
+    current: currentConditionsData,
+    forecast: forecastData
   };
 }
 
@@ -94,7 +138,7 @@ async function fetchHistorical(lat, lon, days = 3) {
   const lonMax = (lon + 0.1).toFixed(4);
   const latMax = (lat + 0.1).toFixed(4);
 
-  const url = `https://api.weather.gc.ca/collections/climate-hourly-observations/items?datetime=${isoStart}/${isoEnd}&bbox=${lonMin},${latMin},${lonMax},${latMax}&limit=1000&f=json`;
+  const url = `https://api.weather.gc.ca/collections/climate-hourly/items?datetime=${isoStart}/${isoEnd}&bbox=${lonMin},${latMin},${lonMax},${latMax}&limit=1000&f=json`;
   console.log(`Fetching historical from GeoMet: ${url}`);
   const data = await getJSON(url);
   return data.features?.map(f => f.properties) || [];
@@ -106,7 +150,7 @@ async function fetchAQHI(lat, lon) {
   const latMin = (lat - 0.1).toFixed(4);
   const lonMax = (lon + 0.1).toFixed(4);
   const latMax = (lat + 0.1).toFixed(4);
-  const url = `https://api.weather.gc.ca/collections/air-quality-health-index-observations/items?bbox=${lonMin},${latMin},${lonMax},${latMax}&limit=1&f=json`;
+  const url = `https://api.weather.gc.ca/collections/aqhi-observations-realtime/items?bbox=${lonMin},${latMin},${lonMax},${latMax}&limit=1&f=json`;
   console.log(`Fetching AQHI from GeoMet: ${url}`);
   try {
     const data = await getJSON(url);
