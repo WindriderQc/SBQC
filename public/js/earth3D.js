@@ -18,6 +18,11 @@ let cloudyEarth;
 let earthquakes;
 let issGif;
 
+// Quake visualization parameters
+let quakeFromColor;
+let quakeToColor;
+let quakeMagFactor = 1.0; // Default magnitude factor
+
 // New marker variables
 let closestApproachMarker = {
     visible: false,
@@ -59,6 +64,10 @@ function setup() {
     var canvas = createCanvas(1280, 720, WEBGL);
     canvas.parent('sketch-holder');
     controlsOverlayElement = document.getElementById('controls-overlay');
+
+    // Initialize quake colors
+    quakeFromColor = color(0, 255, 0, 150); // Default fromColor (green)
+    quakeToColor = color(255, 0, 0, 150); // Default toColor (red)
 }
 
 function keyPressed() {
@@ -357,9 +366,10 @@ function show3DQuakes() {
         if (isNaN(lat) || isNaN(lon) || isNaN(mag)) continue;
         let pos = Tools.p5.getSphereCoord(earthSize, lat, lon);
         var h = pow(10, mag); var maxh = pow(10, 8);
-        h = map(h, 0, maxh, 1, Math.min(mag * 5, 100));
-        let fromColor = color(0, 255, 0, 150); let toColor = color(255, 0, 0, 150);
-        let quakeColor = lerpColor(fromColor, toColor, map(mag, 0, 8, 0, 1));
+        // Apply quakeMagFactor to the size calculation
+        h = map(h, 0, maxh, 1, Math.min(mag * 5 * quakeMagFactor, 100 * quakeMagFactor));
+        // Use global quakeFromColor and quakeToColor
+        let quakeColor = lerpColor(quakeFromColor, quakeToColor, map(mag, 0, 8, 0, 1));
         push(); translate(pos.x, pos.y, pos.z); fill(quakeColor); noStroke(); sphere(Math.max(1, h / 10)); pop();
     }
 }
