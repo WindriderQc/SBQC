@@ -648,27 +648,24 @@ window.ISSOrbitPredictor = (function () {
 
         if (showIssHistoricalPathCheckbox) {
             showIssHistoricalPathCheckbox.addEventListener('change', function() {
-                if (typeof showIssHistoricalPath !== 'undefined') {
-                    showIssHistoricalPath = this.checked;
-                    if (typeof redraw === 'function') redraw();
+                if (window.earth3DSketch && typeof window.earth3DSketch.setShowIssHistoricalPath === 'function') {
+                    window.earth3DSketch.setShowIssHistoricalPath(this.checked);
                 }
             });
         }
 
         if (showIssPredictedPathCheckbox) {
             showIssPredictedPathCheckbox.addEventListener('change', function() {
-                if (typeof showIssPredictedPath !== 'undefined') {
-                    showIssPredictedPath = this.checked;
-                    if (typeof redraw === 'function') redraw();
+                if (window.earth3DSketch && typeof window.earth3DSketch.setShowIssPredictedPath === 'function') {
+                    window.earth3DSketch.setShowIssPredictedPath(this.checked);
                 }
             });
         }
 
         if (showQuakesCheckbox) {
             showQuakesCheckbox.addEventListener('change', function() {
-                if (typeof showQuakes !== 'undefined') {
-                    showQuakes = this.checked;
-                    if (typeof redraw === 'function') redraw();
+                if (window.earth3DSketch && typeof window.earth3DSketch.setShowQuakes === 'function') {
+                    window.earth3DSketch.setShowQuakes(this.checked);
                 }
             });
         }
