@@ -39,7 +39,7 @@ function guessStation(lat, lon) {
 }
 
 // Fetch current conditions from GeoMet SWOB and forecast from EC XML (forecast part will likely still fail)
-async function fetchCurrentAndForecast(siteCode, lat, lon) {
+async function fetchCurrentAndForecast(siteCode, lat, lon) { 
   let currentConditionsData = null;
   let forecastData = null;
 
@@ -61,7 +61,7 @@ async function fetchCurrentAndForecast(siteCode, lat, lon) {
       currentConditionsData = {
         station: latestObs['stn_nam-value'] || latestObs.STATION_NAME, // Prefer specific, fallback to general
         datetime: latestObs['obs_date_tm'] || latestObs.OBSERVATION_DATE_TIME_UTC, // This is UTC
-        temperature: latestObs['air_temp-value'],
+        temperature: latestObs['air_temp-value'], 
         units_temperature: latestObs['air_temp-uom'],
         condition: latestObs['weather-value'] || latestObs.WEATHER_EN, // Check for 'weather-value' or 'WEATHER_EN'
         // humidity: latestObs['rel_hum-value'], // Example
@@ -187,7 +187,7 @@ router.get('/api/ec-weather', async (req, res) => {
   try {
     // Execute all fetches in parallel
     const [realtimeData, historicalData, aqhiData] = await Promise.all([
-      fetchCurrentAndForecast(stationId).catch(e => { console.error("Error fetching current/forecast:", e.message); return { error: e.message }; }),
+      fetchCurrentAndForecast(stationId, lat, lon).catch(e => { console.error("Error fetching current/forecast:", e.message); return { error: e.message }; }), // Pass lat, lon
       fetchHistorical(lat, lon, days).catch(e => { console.error("Error fetching historical:", e.message); return { error: e.message }; }),
       fetchAQHI(lat, lon) // Already has internal catch
     ]);
