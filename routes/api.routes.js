@@ -3,6 +3,7 @@ const fetch = require('node-fetch');
 const moment = require('moment');
 const getMqtt = require('../scripts/mqttServer').getClient;
 const mailman = require('../public/js/mailman');
+const { fetchHistorical: fetchECHistorical } = require('../scripts/weatherUtils'); // Import EC historical fetcher
 
 // TLE Cache
 let tleCache = { data: null, timestamp: 0 };
@@ -290,87 +291,149 @@ router.get('/pressure', async (req, res) => {
         }
     }
 
-    const processedLat = parseFloat(lat).toFixed(2);
+    const processedLat = parseFloat(lat).toFixed(2); // Keep precision for API calls
     const processedLon = parseFloat(lon).toFixed(2);
     let allReadings = [];
+    let historicalDataSource = "Environment Canada"; // Default for new historical source
+    let forecastDataSource = "OpenWeatherMap";
 
     try {
         if (!WEATHER_API_KEY) {
-            console.warn('WEATHER_API_KEY is not set. Falling back to mock data for /api/pressure.');
-            throw new Error('Server misconfiguration: Missing Weather API key');
+            console.warn('WEATHER_API_KEY is not set for OpenWeatherMap. Forecasts might fail or fallback to mock.');
+            // Depending on desired behavior, could throw or just try to proceed with EC historical
         }
 
-        // 1. Fetch Forecast Data (remains the same, typically provides a few days of forecast)
-        // The forecast part of One Call API (hourly) usually gives 48 hours.
-        const forecastURL = `https://api.openweathermap.org/data/3.0/onecall?lat=${processedLat}&lon=${processedLon}&exclude=current,minutely,daily,alerts&units=metric&appid=${WEATHER_API_KEY}`;
-        // Cache key for forecast can remain the same as it's independent of historical days requested
-        const forecastCacheKey = `fore-${processedLat}-${processedLon}`;
-        const forecastData = await fetchAndCacheWeatherData(forecastURL, forecastCacheKey, FORECAST_PRESSURE_CACHE_DURATION);
-        
-        if (forecastData && forecastData.hourly) {
-            forecastData.hourly.forEach(hour => {
-                if (hour.dt && typeof hour.pressure !== 'undefined' && typeof hour.temp !== 'undefined') {
-                    allReadings.push({ dt: hour.dt, pressure: hour.pressure, temp: hour.temp });
-                }
-            });
-        }
+        // 1. Fetch Forecast Data from OpenWeatherMap (remains the same)
+        try {
+            if (WEATHER_API_KEY) {
+                const forecastURL = `https://api.openweathermap.org/data/3.0/onecall?lat=${processedLat}&lon=${processedLon}&exclude=current,minutely,daily,alerts&units=metric&appid=${WEATHER_API_KEY}`;
+                const forecastCacheKey = `fore-${processedLat}-${processedLon}`;
+                const forecastData = await fetchAndCacheWeatherData(forecastURL, forecastCacheKey, FORECAST_PRESSURE_CACHE_DURATION);
 
-        // 2. Fetch Historical Data based on numDaysHistorical
-        const today = moment.utc(); 
-        for (let i = 1; i <= numDaysHistorical; i++) {
-            const targetDate = moment(today).subtract(i, 'days');
-            const targetTimestamp = targetDate.unix();
-            
-            const historicalURL = `https://api.openweathermap.org/data/3.0/onecall/timemachine?lat=${processedLat}&lon=${processedLon}&dt=${targetTimestamp}&units=metric&appid=${WEATHER_API_KEY}`;
-            // IMPORTANT: Add numDaysHistorical or targetDate to cache key if different day ranges affect historical data points for a given day (they shouldn't for OpenWeatherMap's timemachine)
-            // For timemachine, each day is distinct, so the date in the key is sufficient.
-            const historicalCacheKey = `hist-${processedLat}-${processedLon}-${targetDate.format('YYYYMMDD')}`;
-            const historicalData = await fetchAndCacheWeatherData(historicalURL, historicalCacheKey, HISTORICAL_PRESSURE_CACHE_DURATION);
-
-            const processHourlyData = (hourlyArr) => {
-                if (hourlyArr) {
-                    hourlyArr.forEach(hour => {
+                if (forecastData && forecastData.hourly) {
+                    forecastData.hourly.forEach(hour => {
                         if (hour.dt && typeof hour.pressure !== 'undefined' && typeof hour.temp !== 'undefined') {
-                            // Ensure we don't add duplicate historical points if API returns overlapping data for some reason
-                            if (!allReadings.some(ar => ar.dt === hour.dt)) {
-                                allReadings.push({ dt: hour.dt, pressure: hour.pressure, temp: hour.temp });
-                            }
+                            allReadings.push({ dt: hour.dt, pressure: hour.pressure, temp: hour.temp, source: 'owm-forecast' });
                         }
                     });
                 }
-            };
-
-            // OWM timemachine for a specific dt returns data for that entire day (00:00 to 23:59 UTC)
-            // The structure is usually { "lat": ..., "lon": ..., "timezone": ..., "timezone_offset": ..., "data": [{ "dt": ..., "hourly": [...] }] } (when hourly data for a whole day is returned)
-            // OR, when a specific 'dt' is used in the timemachine call, it returns the data for that specific hour directly within historicalData.data[0]
-            // The provided code checks for `historicalData.data[0].hourly` and `historicalData.hourly`.
-
-            if (historicalData && historicalData.data && Array.isArray(historicalData.data) && historicalData.data.length > 0) {
-                // If historicalData.data[0].hourly exists, it means we got a full day's hourly array (less likely for specific dt query)
-                if (historicalData.data[0].hourly) {
-                    console.log(`[History ${targetDate.format('YYYY-MM-DD')}] Processing nested hourly data.`);
-                    processHourlyData(historicalData.data[0].hourly);
-                } else {
-                    // This is the expected case for a timemachine call with a specific 'dt'.
-                    // The historicalData.data array itself contains the single "hourly" record.
-                    console.log(`[History ${targetDate.format('YYYY-MM-DD')}] Processing direct historical data object(s) as hourly.`);
-                    processHourlyData(historicalData.data);
-                }
-            } else if (historicalData && historicalData.hourly) { // Fallback for structure { "lat": ..., "hourly": [...] }
-                console.log(`[History ${targetDate.format('YYYY-MM-DD')}] Processing top-level hourly data.`);
-                processHourlyData(historicalData.hourly);
             } else {
-                console.log(`[History ${targetDate.format('YYYY-MM-DD')}] No hourly data found in expected structures. Raw data:`, JSON.stringify(historicalData));
+                console.log("Skipping OWM forecast due to missing API key.");
+            }
+        } catch (owmForecastError) {
+            console.error(`Error fetching OpenWeatherMap forecast for ${processedLat},${processedLon}: ${owmForecastError.message}`);
+            // Continue to try fetching historical data
+        }
+
+        // 2. Fetch Historical Data from Environment Canada using fetchECHistorical
+        try {
+            const ecHistoricalData = await fetchECHistorical(parseFloat(lat), parseFloat(lon), numDaysHistorical);
+            if (ecHistoricalData && ecHistoricalData.length > 0) {
+                ecHistoricalData.forEach(record => {
+                    // Extract and transform data
+                    // EC's `LOCAL_DATE` is like "YYYY-MM-DD HH:MM:SS" but without timezone. Assume it's local to the station.
+                    // `CLIMATE_IDENTIFIER` can tell us more, but for now, `UTC_DATE` or `LOCAL_DATE` + `LOCAL_HOUR` is safer.
+                    // `UTC_DATE` is "YYYY-MM-DDTHH:mm:ssZ"
+                    let record_dt;
+                    if (record.UTC_DATE) {
+                        record_dt = moment.utc(record.UTC_DATE).unix();
+                    } else if (record.LOCAL_DATE) { // Fallback if UTC_DATE is not present
+                        record_dt = moment(record.LOCAL_DATE).unix(); // This assumes server's local time if no TZ info
+                    }
+
+                    const temp = record.TEMP;
+                    // EC pressure is typically in kPa (kilopascals). OpenWeatherMap is in hPa (hectopascals/millibars).
+                    // 1 kPa = 10 hPa.
+                    const pressureHPa = record.STATION_PRESSURE ? parseFloat(record.STATION_PRESSURE) * 10 : undefined;
+
+                    if (record_dt && typeof temp !== 'undefined' && typeof pressureHPa !== 'undefined') {
+                         // Ensure we don't add duplicate historical points if any overlap logic is added later
+                        if (!allReadings.some(ar => ar.dt === record_dt)) {
+                            allReadings.push({ dt: record_dt, temp: parseFloat(temp), pressure: pressureHPa, source: 'ec-historical' });
+                        }
+                    }
+                });
+                 console.log(`Successfully processed ${ecHistoricalData.length} historical records from Environment Canada.`);
+            } else {
+                console.log(`No historical data returned from Environment Canada for lat: ${lat}, lon: ${lon}`);
+                historicalDataSource = "OpenWeatherMap (fallback attempt)"; // Indicate fallback if EC fails
+                // Fallback to OpenWeatherMap historical if EC data is empty (original behavior)
+                if (WEATHER_API_KEY) {
+                    const today = moment.utc();
+                    for (let i = 1; i <= numDaysHistorical; i++) {
+                        const targetDate = moment(today).subtract(i, 'days');
+                        const targetTimestamp = targetDate.unix();
+                        const historicalURL = `https://api.openweathermap.org/data/3.0/onecall/timemachine?lat=${processedLat}&lon=${processedLon}&dt=${targetTimestamp}&units=metric&appid=${WEATHER_API_KEY}`;
+                        const historicalCacheKey = `hist-owm-${processedLat}-${processedLon}-${targetDate.format('YYYYMMDD')}`;
+                        const historicalDataOWM = await fetchAndCacheWeatherData(historicalURL, historicalCacheKey, HISTORICAL_PRESSURE_CACHE_DURATION);
+
+                        const processOWMHourly = (hourlyArr) => {
+                             if (hourlyArr) {
+                                hourlyArr.forEach(hour => {
+                                    if (hour.dt && typeof hour.pressure !== 'undefined' && typeof hour.temp !== 'undefined') {
+                                        if (!allReadings.some(ar => ar.dt === hour.dt)) {
+                                            allReadings.push({ dt: hour.dt, pressure: hour.pressure, temp: hour.temp, source: 'owm-historical' });
+                                        }
+                                    }
+                                });
+                            }
+                        };
+                        if (historicalDataOWM && historicalDataOWM.data && Array.isArray(historicalDataOWM.data) && historicalDataOWM.data.length > 0) {
+                            processOWMHourly(historicalDataOWM.data); // OWM timemachine data structure
+                        } else if (historicalDataOWM && historicalDataOWM.hourly) {
+                            processOWMHourly(historicalDataOWM.hourly);
+                        }
+                    }
+                } else {
+                     console.log("Skipping OWM historical fallback due to missing API key.");
+                }
+            }
+        } catch (ecError) {
+            console.error(`Error fetching or processing Environment Canada historical data: ${ecError.message}. Mock data might be used if OWM also fails.`);
+            historicalDataSource = "OpenWeatherMap (fallback due to EC error)"; // Indicate fallback
+             // Fallback to OpenWeatherMap historical if EC data fails (original behavior)
+            if (WEATHER_API_KEY) {
+                const today = moment.utc();
+                for (let i = 1; i <= numDaysHistorical; i++) {
+                    // ... (OWM historical fetch as above) ...
+                     const targetDate = moment(today).subtract(i, 'days');
+                        const targetTimestamp = targetDate.unix();
+                        const historicalURL = `https://api.openweathermap.org/data/3.0/onecall/timemachine?lat=${processedLat}&lon=${processedLon}&dt=${targetTimestamp}&units=metric&appid=${WEATHER_API_KEY}`;
+                        const historicalCacheKey = `hist-owm-${processedLat}-${processedLon}-${targetDate.format('YYYYMMDD')}`;
+                        const historicalDataOWM = await fetchAndCacheWeatherData(historicalURL, historicalCacheKey, HISTORICAL_PRESSURE_CACHE_DURATION);
+                        const processOWMHourly = (hourlyArr) => {
+                             if (hourlyArr) {
+                                hourlyArr.forEach(hour => {
+                                    if (hour.dt && typeof hour.pressure !== 'undefined' && typeof hour.temp !== 'undefined') {
+                                        if (!allReadings.some(ar => ar.dt === hour.dt)) {
+                                            allReadings.push({ dt: hour.dt, pressure: hour.pressure, temp: hour.temp, source: 'owm-historical' });
+                                        }
+                                    }
+                                });
+                            }
+                        };
+                        if (historicalDataOWM && historicalDataOWM.data && Array.isArray(historicalDataOWM.data) && historicalDataOWM.data.length > 0) {
+                            processOWMHourly(historicalDataOWM.data);
+                        } else if (historicalDataOWM && historicalDataOWM.hourly) {
+                            processOWMHourly(historicalDataOWM.hourly);
+                        }
+                }
+            } else {
+                console.log("Skipping OWM historical fallback due to missing API key (after EC error).");
             }
         }
 
-        if (allReadings.length === 0 && dataSource === "openweathermap") {
-            console.warn(`No data from OpenWeatherMap for ${processedLat},${processedLon} with ${numDaysHistorical} historical days. Attempting fallback to mock data.`);
-            throw new Error("No data received from OpenWeatherMap"); 
+        if (allReadings.length === 0) {
+            console.warn(`No data from any source for ${processedLat},${processedLon} with ${numDaysHistorical} historical days. Attempting fallback to mock data.`);
+            throw new Error("No data received from any source");
         }
 
-        const uniqueReadingsMap = new Map();
-        allReadings.forEach(item => uniqueReadingsMap.set(item.dt, item));
+        const uniqueReadingsMap = new Map(); // Ensure historical from EC and forecast from OWM don't have timestamp collisions
+        allReadings.forEach(item => {
+            if (!uniqueReadingsMap.has(item.dt)) { // Prioritize first entry for a given timestamp (e.g. EC historical if it comes first)
+                uniqueReadingsMap.set(item.dt, item);
+            }
+        });
         allReadings = Array.from(uniqueReadingsMap.values()).sort((a, b) => a.dt - b.dt);
 
         // Filter readings to ensure they are within the expected range (numDaysHistorical + forecast duration)
