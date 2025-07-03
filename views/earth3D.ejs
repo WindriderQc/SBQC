@@ -68,6 +68,21 @@
                         <label for="passByRadiusSlider" style="font-size: 0.85em; display: block; margin-bottom: 2px;">Detect Radius: <span id="passByRadiusValue">1500</span> km</label>
                         <input type="range" id="passByRadiusSlider" min="250" max="3000" step="50" value="1500" style="width: 100%; margin-top: -2px;">
                     </div>
+                    <hr style="border-top: 1px solid rgba(255,255,255,0.2); margin-top: 8px; margin-bottom: 8px;">
+                    <div style="font-size: 0.85em;">
+                        <div style="margin-bottom: 4px;">
+                            <input type="checkbox" id="showIssHistoricalPath" checked>
+                            <label for="showIssHistoricalPath" style="margin-left: 4px;">Show Hist. Path</label>
+                        </div>
+                        <div style="margin-bottom: 4px;">
+                            <input type="checkbox" id="showIssPredictedPath" checked>
+                            <label for="showIssPredictedPath" style="margin-left: 4px;">Show Pred. Path</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="showQuakes" checked>
+                            <label for="showQuakes" style="margin-left: 4px;">Show Quakes</label>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -101,9 +116,6 @@
                 <div style="margin-top: 5px;">
                     <span style="background-color: green; display: inline-block; width: 7px; height: 7px; margin-right: 5px; border: 1px solid #555; border-radius: 50%;"></span> End of Predicted Path
                 </div>
-                <div style="margin-top: 5px;">
-                    <span style="background-color: #00FF00; display: inline-block; width: 10px; height: 10px; margin-right: 5px; border: 1px solid #555; border-radius: 50%;"></span> Earthquake (Low Magnitude - Color transitions based on magnitude, size affected by Mag. Factor)
-                </div>
             </div>
 
             <div style="padding: 10px; text-align: left; border-top: 1px solid #eee;">
@@ -120,6 +132,9 @@
                     <label for="quakeMagFactor">Magnitude Factor: <span id="quakeMagFactorValue">1.0</span></label>
                     <input type="range" id="quakeMagFactor" min="0.1" max="5" step="0.1" value="1.0" style="width: 100%;">
                 </div>
+                <small style="display: block; margin-top: 8px;">
+                    Note: Quake color transitions from 'From Color' to 'To Color' based on magnitude. 'Magnitude Factor' affects the size of the quake spheres.
+                </small>
             </div>
 
             <div style="padding: 10px; text-align: left; border-top: 1px solid #eee;">
@@ -622,6 +637,38 @@ window.ISSOrbitPredictor = (function () {
                 if (window.earth3DSketch && typeof quakeMagFactor !== 'undefined') {
                     quakeMagFactor = parseFloat(this.value); // Update global in earth3D.js
                     if (typeof redraw === 'function') redraw(); // Redraw sketch
+                }
+            });
+        }
+
+        // Visibility checkbox handlers
+        const showIssHistoricalPathCheckbox = document.getElementById('showIssHistoricalPath');
+        const showIssPredictedPathCheckbox = document.getElementById('showIssPredictedPath');
+        const showQuakesCheckbox = document.getElementById('showQuakes');
+
+        if (showIssHistoricalPathCheckbox) {
+            showIssHistoricalPathCheckbox.addEventListener('change', function() {
+                if (typeof showIssHistoricalPath !== 'undefined') {
+                    showIssHistoricalPath = this.checked;
+                    if (typeof redraw === 'function') redraw();
+                }
+            });
+        }
+
+        if (showIssPredictedPathCheckbox) {
+            showIssPredictedPathCheckbox.addEventListener('change', function() {
+                if (typeof showIssPredictedPath !== 'undefined') {
+                    showIssPredictedPath = this.checked;
+                    if (typeof redraw === 'function') redraw();
+                }
+            });
+        }
+
+        if (showQuakesCheckbox) {
+            showQuakesCheckbox.addEventListener('change', function() {
+                if (typeof showQuakes !== 'undefined') {
+                    showQuakes = this.checked;
+                    if (typeof redraw === 'function') redraw();
                 }
             });
         }

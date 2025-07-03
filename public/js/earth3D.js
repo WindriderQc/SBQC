@@ -23,6 +23,11 @@ let quakeFromColor;
 let quakeToColor;
 let quakeMagFactor = 1.0; // Default magnitude factor
 
+// Visibility toggles
+let showIssHistoricalPath = true;
+let showIssPredictedPath = true;
+let showQuakes = true;
+
 // New marker variables
 let closestApproachMarker = {
     visible: false,
@@ -215,7 +220,7 @@ function draw() {
         pop();
     }
 
-    if (internalIssPathHistory && internalIssPathHistory.length > 0) {
+    if (showIssHistoricalPath && internalIssPathHistory && internalIssPathHistory.length > 0) {
         push();
         noStroke();
         fill(255, 165, 0, 150);
@@ -229,7 +234,7 @@ function draw() {
         pop();
     }
 
-    if (internalPredictedPath && internalPredictedPath.length > 1) {
+    if (showIssPredictedPath && internalPredictedPath && internalPredictedPath.length > 1) {
         push();
         stroke(0, 200, 0, 180);
         strokeWeight(1.5);
@@ -332,7 +337,9 @@ function draw() {
         pop();
     }
 
-    show3DQuakes();
+    if (showQuakes) {
+        show3DQuakes();
+    }
 
     // Note: The pop(); that was here, which matched the second rotateY group, is removed.
     // All elements are now part of the single main rotation group.
