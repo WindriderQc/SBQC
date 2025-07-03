@@ -386,7 +386,19 @@ window.earth3DSketch = {
     updatePredictedPath: update3DPredictedPath,
     getInternalIssPathHistory: () => internalIssPathHistory,
     getMaxHistoryPoints: () => MAX_HISTORY_POINTS,
-    setSketchPassByRadiusKM: setSketchPassByRadiusKM
+    setSketchPassByRadiusKM: setSketchPassByRadiusKM,
+    setShowIssHistoricalPath: function(value) {
+        showIssHistoricalPath = !!value; // Ensure boolean
+        if (typeof redraw === 'function') redraw();
+    },
+    setShowIssPredictedPath: function(value) {
+        showIssPredictedPath = !!value; // Ensure boolean
+        if (typeof redraw === 'function') redraw();
+    },
+    setShowQuakes: function(value) {
+        showQuakes = !!value; // Ensure boolean
+        if (typeof redraw === 'function') redraw();
+    }
 };
 
 function mouseDragged() {
