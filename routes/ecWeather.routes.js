@@ -1,15 +1,19 @@
 const router = require('express').Router();
-// const fetch = require('node-fetch'); // No longer needed directly here if getJSON is moved
-// const { parseStringPromise } = require('xml2js'); // No longer needed if getXML is removed
+const fetch = require('node-fetch'); // Assuming node-fetch is already a dependency from api.routes.js
+const { parseStringPromise } = require('xml2js');
 
-// Helper to fetch and parse JSON - MOVED to scripts/weatherUtils.js
-// const getJSON = async (url) => { ... };
+// Helper to fetch and parse JSON
+const getJSON = async (url) => {
+    const response = await fetch(url);
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to fetch JSON from ${url}. Status: ${response.status}, Body: ${errorText}`);
+    }
+    return response.json();
+};
 
-// Helper to fetch and parse XML - Kept for now if any other part of this file uses it, but likely can be removed.
-// If fetchCurrentAndForecast is removed, this is not needed.
+// Helper to fetch and parse XML
 const getXML = async (url) => {
-    const fetch = require('node-fetch'); // Add fetch require if it's the only consumer now
-    const { parseStringPromise } = require('xml2js');
     const response = await fetch(url);
     if (!response.ok) {
         const errorText = await response.text();
@@ -19,27 +23,23 @@ const getXML = async (url) => {
     return parseStringPromise(text);
 };
 
-// Get station ID for Environment Canada's citypage_weather service.
-// This function might still be useful if other parts of ecWeather route are used,
-// or it could be moved/deprecated if this route is fully simplified.
+// Get 3-letter station ID (e.g., "QCH" for Quebec City)
+// For now, this will be very basic. It should be improved later.
 function guessStation(lat, lon) {
-  // Hardcoded example for Quebec City.
-  // The citypage_weather service uses 'sXXXXXXX' site codes.
-  // Found 's0000620' for Québec City from https://dd.weather.gc.ca/citypage_weather/docs/site_list_en.csv
-  // Other codes like 'qc-133' or airport codes (e.g., 'YQB') might be for different EC services or older systems.
+  // Hardcoded example for Quebec City — expand this with mapping if needed
+  // This is a common pattern for EC station IDs like "s0000430" (Quebec City/Jean Lesage Intl AP)
+  // The XML citypage URLs use different IDs (like YQB_e.xml or s0000430_e.xml - needs checking)
+  // For dd.weather.gc.ca/citypage_weather/xml/QC/
+  // The city codes like 'qc-133' for Quebec City are commonly used.
   if (Math.abs(lat - 46.81) < 0.1 && Math.abs(lon - (-71.20)) < 0.1) {
-    return 's0000620'; // Quebec City site code for citypage_weather
+    return 'qc-133'; // Quebec City site code
   }
-  // Default or throw error if no match - using Quebec City's s-code as default for now.
-  // This fallback will likely not work for other locations without a proper lookup.
-  return 's0000620'; // Fallback for now
+  // Default or throw error if no match - using Quebec City as default for now
+  return 'qc-133'; // Fallback for now
 }
 
-// Fetch current conditions from GeoMet SWOB and forecast from EC XML
-// This function is being deprecated in favor of OpenWeatherMap for current/forecast
-// and weatherUtils.fetchHistorical for historical EC data.
-/*
-async function fetchCurrentAndForecast(siteCode, lat, lon) {
+// Fetch current conditions from GeoMet SWOB and forecast from EC XML (forecast part will likely still fail)
+async function fetchCurrentAndForecast(siteCode, lat, lon) { 
   let currentConditionsData = null;
   let forecastData = null;
 
@@ -49,24 +49,68 @@ async function fetchCurrentAndForecast(siteCode, lat, lon) {
     const latMin = (lat - 0.1).toFixed(4);
     const lonMax = (lon + 0.1).toFixed(4);
     const latMax = (lat + 0.1).toFixed(4);
+    // Get data for the last few hours and sort by time to get the latest reliable one.
+    // datetime=PT2H gets data from the last 2 hours. Or use a limit and sort.
+    // For simplicity, let's try to get the latest single observation within a small bbox.
+    // Removed sortby due to "bad sort property" error. Will rely on limit=1 and tight bbox for now.
     const swobUrl = `https://api.weather.gc.ca/collections/swob-realtime/items?bbox=${lonMin},${latMin},${lonMax},${latMax}&limit=1&f=json`;
     console.log(`Fetching current conditions from GeoMet SWOB (no sortby): ${swobUrl}`);
-    // const swobResult = await getJSON(swobUrl); // getJSON was moved
-    // ... rest of SWOB logic
+    const swobResult = await getJSON(swobUrl);
+    if (swobResult.features && swobResult.features.length > 0) {
+      const latestObs = swobResult.features[0].properties;
+      currentConditionsData = {
+        station: latestObs['stn_nam-value'] || latestObs.STATION_NAME, // Prefer specific, fallback to general
+        datetime: latestObs['obs_date_tm'] || latestObs.OBSERVATION_DATE_TIME_UTC, // This is UTC
+        temperature: latestObs['air_temp-value'], 
+        units_temperature: latestObs['air_temp-uom'],
+        condition: latestObs['weather-value'] || latestObs.WEATHER_EN, // Check for 'weather-value' or 'WEATHER_EN'
+        // humidity: latestObs['rel_hum-value'], // Example
+        // wind_speed: latestObs['avg_wnd_spd_10m_pst1mt-value'], // Example for 1-min avg wind speed
+        // pressure: latestObs.MEAN_SEA_LEVEL_PRES_HPA, // Example, verify field
+        raw_swob_properties: latestObs // Include all props for now for inspection by user
+      };
+    } else {
+      console.log("No SWOB current conditions features found for the location.");
+      currentConditionsData = { error: "No SWOB current conditions features found." };
+    }
   } catch (e) {
     console.error("Error fetching SWOB current conditions:", e.message);
     currentConditionsData = { error: `Failed to fetch SWOB current conditions: ${e.message}` };
   }
 
-  // 2. Attempt to Fetch Forecast from XML
+  // 2. Attempt to Fetch Forecast from XML (will likely still fail, but keep for now)
   try {
-    const xmlUrl = `https://dd.weather.gc.ca/citypage_weather/QC/${siteCode}_e.xml`;
+    const xmlUrl = `https://dd.meteo.gc.ca/citypage_weather/xml/QC/${siteCode}_e.xml`;
     console.log(`NEW_LOG_V3: Fetching current and forecast from EC XML (dd.meteo.gc.ca): ${xmlUrl}`);
     const xmlData = await getXML(xmlUrl);
-    // ... rest of XML forecast logic
+    const forecastGroup = xmlData.siteData.forecastGroup?.[0];
+    forecastData = forecastGroup?.forecast?.map(f => ({
+        period: f.period?.[0]?.$?.textForecastName,
+        textSummary: f.textSummary?.[0],
+        iconCode: f.abbreviatedForecast?.[0]?.iconCode?.[0]?._,
+        temperatures: f.temperatures?.[0],
+        precipitation: f.precipitation?.[0],
+        winds: f.winds?.[0],
+      }));
+    // If current conditions were not available from SWOB, try to get them from XML as a fallback (if XML worked)
+    if (!currentConditionsData || currentConditionsData.error) {
+        const currentFromXml = xmlData.siteData.currentConditions?.[0];
+        if (currentFromXml) {
+            currentConditionsData = {
+                station: currentFromXml?.station?.[0]?._,
+                datetime: currentFromXml?.dateTime?.find(dt => dt.$.name === 'observation')?.text?.[0],
+                temperature: currentFromXml?.temperature?.[0]?.['_'],
+                units_temperature: currentFromXml?.temperature?.[0]?.$?.units,
+                condition: currentFromXml?.condition?.[0],
+                // ... map other fields ...
+            };
+        }
+    }
+
   } catch (e) {
     console.error("Error fetching XML forecast:", e.message);
     if (!forecastData) forecastData = { error: `Failed to fetch XML forecast: ${e.message}` };
+    // If current conditions from SWOB also failed, and XML failed, this will be the error for current too.
     if (!currentConditionsData || currentConditionsData.error) {
         currentConditionsData = { error: `Failed to fetch current conditions from XML: ${e.message}` };
     }
@@ -77,27 +121,31 @@ async function fetchCurrentAndForecast(siteCode, lat, lon) {
     forecast: forecastData
   };
 }
-*/
 
-// Fetch historical data via GeoMet - MOVED to scripts/weatherUtils.js
-// async function fetchHistorical(lat, lon, days = 3) { ... }
+// Fetch historical data via GeoMet
+async function fetchHistorical(lat, lon, days = 3) {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(end.getDate() - days);
 
+  // Format dates as YYYY-MM-DDTHH:MM:SSZ
+  const isoStart = start.toISOString().split('.')[0] + "Z";
+  const isoEnd = end.toISOString().split('.')[0] + "Z";
 
-// Optional: Air Quality Health Index (AQHI) - Kept for now, uses getJSON (which was moved)
-// If this route is simplified, this might need adjustment or removal.
-// For now, to avoid breaking it if it's somehow used, we'd need getJSON back or make it use weatherUtils.
-/*
+  // GeoMet expects lon,lat,lon,lat for bbox
+  const lonMin = (lon - 0.1).toFixed(4);
+  const latMin = (lat - 0.1).toFixed(4);
+  const lonMax = (lon + 0.1).toFixed(4);
+  const latMax = (lat + 0.1).toFixed(4);
+
+  const url = `https://api.weather.gc.ca/collections/climate-hourly/items?datetime=${isoStart}/${isoEnd}&bbox=${lonMin},${latMin},${lonMax},${latMax}&limit=1000&f=json`;
+  console.log(`Fetching historical from GeoMet: ${url}`);
+  const data = await getJSON(url);
+  return data.features?.map(f => f.properties) || [];
+}
+
+// Optional: Air Quality Health Index (AQHI)
 async function fetchAQHI(lat, lon) {
-  const fetch = require('node-fetch'); // local require if getJSON is not available
-  const getJSON_local = async (url) => { // temp local definition
-    const response = await fetch(url);
-    if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to fetch JSON from ${url}. Status: ${response.status}, Body: ${errorText}`);
-    }
-    return response.json();
-  };
-
   const lonMin = (lon - 0.1).toFixed(4);
   const latMin = (lat - 0.1).toFixed(4);
   const lonMax = (lon + 0.1).toFixed(4);
@@ -105,16 +153,15 @@ async function fetchAQHI(lat, lon) {
   const url = `https://api.weather.gc.ca/collections/aqhi-observations-realtime/items?bbox=${lonMin},${latMin},${lonMax},${latMax}&limit=1&f=json`;
   console.log(`Fetching AQHI from GeoMet: ${url}`);
   try {
-    const data = await getJSON_local(url); // Use local or imported getJSON
+    const data = await getJSON(url);
     return data.features?.[0]?.properties || null;
   } catch (error) {
     console.error("AQHI fetch error:", error.message);
     return { error: "Failed to fetch AQHI data", details: error.message };
   }
 }
-*/
 
-// Optional: Radar metadata reference - This is a simple function, can be kept.
+// Optional: Radar metadata reference
 function radarLayerInfo(lat, lon) {
   // Example BBOX for Quebec City area. This should be dynamically adjusted if possible.
   const qcLatMin = 46.0;
@@ -123,13 +170,11 @@ function radarLayerInfo(lat, lon) {
   const qcLonMax = -70.5;
   return {
     note: "Radar imagery available via GeoMet WMS endpoint. BBOX needs to be adjusted for actual location.",
-    wms_example: `https://geo.weather.gc.ca/geomet?service=WMS&version=1.3.0&request=GetMap&layers=RADAR_1KM_RRAI&bbox=${qcLonMin},${qcLatMin},${qcLonMax},${latMax}&width=600&height=400&crs=EPSG:4326&format=image/png`
+    wms_example: `https://geo.weather.gc.ca/geomet?service=WMS&version=1.3.0&request=GetMap&layers=RADAR_1KM_RRAI&bbox=${qcLonMin},${qcLatMin},${qcLonMax},${qcLatMax}&width=600&height=400&crs=EPSG:4326&format=image/png`
   };
 }
 
-// Main API route - This route's primary purpose is now under review.
-// Commenting out its main logic as fetchCurrentAndForecast and fetchHistorical are being refactored/moved.
-/*
+// Main API route
 router.get('/api/ec-weather', async (req, res) => {
   const lat = parseFloat(req.query.lat || '46.8139'); // Default to Quebec City area
   const lon = parseFloat(req.query.lon || '-71.208');
@@ -137,43 +182,36 @@ router.get('/api/ec-weather', async (req, res) => {
 
   console.log(`EC Weather request for lat: ${lat}, lon: ${lon}, days: ${days}`);
 
-  const stationId = guessStation(lat, lon); // Still uses local guessStation
+  const stationId = guessStation(lat, lon);
 
   try {
-    // const { fetchHistorical: ecFetchHistorical } = require('../scripts/weatherUtils'); // Example if importing
-
     // Execute all fetches in parallel
-    // const [realtimeData, historicalData, aqhiData] = await Promise.all([
-    //   fetchCurrentAndForecast(stationId, lat, lon).catch(e => { console.error("Error fetching current/forecast:", e.message); return { error: e.message }; }),
-    //   ecFetchHistorical(lat, lon, days).catch(e => { console.error("Error fetching historical:", e.message); return { error: e.message }; }), // Use imported
-    //   fetchAQHI(lat, lon) // AQHI might need its getJSON source resolved
-    // ]);
+    const [realtimeData, historicalData, aqhiData] = await Promise.all([
+      fetchCurrentAndForecast(stationId, lat, lon).catch(e => { console.error("Error fetching current/forecast:", e.message); return { error: e.message }; }), // Pass lat, lon
+      fetchHistorical(lat, lon, days).catch(e => { console.error("Error fetching historical:", e.message); return { error: e.message }; }),
+      fetchAQHI(lat, lon) // Already has internal catch
+    ]);
 
-    // const output = {
-    //   metadata: {
-    //     location: { lat, lon },
-    //     stationId_used_for_current_forecast: stationId,
-    //     historical_bbox: `${(lon - 0.1).toFixed(4)},${(lat - 0.1).toFixed(4)},${(lon + 0.1).toFixed(4)},${(lat + 0.1).toFixed(4)}`,
-    //     aqhi_bbox: `${(lon - 0.1).toFixed(4)},${(lat - 0.1).toFixed(4)},${(lon + 0.1).toFixed(4)},${(lat + 0.1).toFixed(4)}`,
-    //     fetched_at: new Date().toISOString()
-    //   },
-    //   current_conditions: realtimeData.current || realtimeData,
-    //   forecasts: realtimeData.forecast || null,
-    //   historical_observations: historicalData,
-    //   air_quality_health_index: aqhiData,
-    //   radar_info: radarLayerInfo(lat, lon)
-    // };
+    const output = {
+      metadata: {
+        location: { lat, lon },
+        stationId_used_for_current_forecast: stationId,
+        historical_bbox: `${(lon - 0.1).toFixed(4)},${(lat - 0.1).toFixed(4)},${(lon + 0.1).toFixed(4)},${(lat + 0.1).toFixed(4)}`,
+        aqhi_bbox: `${(lon - 0.1).toFixed(4)},${(lat - 0.1).toFixed(4)},${(lon + 0.1).toFixed(4)},${(lat + 0.1).toFixed(4)}`,
+        fetched_at: new Date().toISOString()
+      },
+      current_conditions: realtimeData.current || realtimeData, // if error, realtimeData is {error: ...}
+      forecasts: realtimeData.forecast || null,
+      historical_observations: historicalData,
+      air_quality_health_index: aqhiData,
+      radar_info: radarLayerInfo(lat, lon)
+    };
 
-    // res.json(output);
-    res.status(501).json({ message: "This EC Weather endpoint is currently under refactoring. Please use other specific endpoints." });
-
+    res.json(output);
   } catch (err) {
     console.error('Main EC weather processing error:', err);
     res.status(500).json({ error: 'Failed to fetch Environment Canada weather data', details: err.message });
   }
 });
-*/
 
-// If this route file becomes mostly empty, it could be removed or repurposed.
-// For now, just exporting the router.
 module.exports = router;
