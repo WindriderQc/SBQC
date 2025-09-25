@@ -15,9 +15,7 @@ console.log("SysInfo: ", sysmon.getinfo().data)
 console.log("CPU: ", sysmon.getinfo().cpus.length)
 
 const apiUrl =process.env.DATA_API_URL + (process.env.DATA_API_PORT ? ":" + process.env.DATA_API_PORT : "") //let dAPIUrl = "https://data.specialblend.ca"
-//const apiUrl = "http://" + process.env.DATA_API_IP + ":" + process.env.DATA_API_PORT
-//const mqttUrl = "ws://" + process.env.DATA_API_URL + ":" + process.env.MQTT_PORT
-const mqttWSUrl = process.env.MQTT_SERVER_WS
+const mqttWSUrl = process.env.MQTT_SERVER_WS //const mqttUrl = "ws://" + process.env.DATA_API_URL + ":" + process.env.MQTT_PORT
 const mqttinfo = JSON.stringify({url: mqttWSUrl, user: process.env.USER, pass: process.env.PASS })
 
 
@@ -248,7 +246,7 @@ router.get('/device',  async (req, res) =>
             selectedDevice = req.query.deviceID ? req.query.deviceID : selectedDevice // selection from query superceed saved session
             console.log('Fetching Alarms for: ' + selectedDevice)
 
-            const response2 = await fetch(apiUrl + "/alarms")
+            const response2 = await fetch(apiUrl + "api/v1/alarms")
             const alarmList = await response2.json()
 
             let selDevice
@@ -296,7 +294,7 @@ router.post('/selectDevice', async (req, res) =>
 
 router.get('/database',  async (req, res) =>
  {
-    const response = await fetch(apiUrl+'/db/collectionList')
+    const response = await fetch(apiUrl+'api/v1/db/collectionList')
     const list = await response.json()
     console.log('Sending collection list to client: ', list)
     res.render('database', {collectionList: JSON.stringify(list), apiUrl: apiUrl })
@@ -321,7 +319,7 @@ const hasSessionID = (req, res, next) =>
 
 router.get('/settings',  hasSessionID,  async (req, res) =>
 {
-    const response = await fetch(apiUrl + "/users")
+    const response = await fetch(apiUrl + "/api/v1/users")
     const result = await response.json()
     const users = result.data
 
@@ -329,7 +327,7 @@ router.get('/settings',  hasSessionID,  async (req, res) =>
     const result2 = await response2.json()
     const devices = result2.data
 
-    const response3 = await fetch(apiUrl + "/alarms")
+    const response3 = await fetch(apiUrl + "/api/v1/alarms")
     const result3 = await response3.json()
     const alarms = result3.data
 
@@ -372,7 +370,7 @@ router.route('/alarms/setAlarm').post(async (req, res) =>
         body: JSON.stringify(als)
     }
     try {
-        const response = await fetch( apiUrl + "/alarms", option)
+        const response = await fetch( apiUrl + "/api/v1/alarms", option)
         const data = await response.json()
 
         if (Tools.isObjEmpty(data)) {
