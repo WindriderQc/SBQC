@@ -128,7 +128,7 @@ const esp32 = {
     {    
 
         try {  
-            const rawResponse = await fetch(dataAPIUrl + '/devices'); 
+            const rawResponse = await fetch(dataAPIUrl + '/api/v1/devices'); 
             const r = await rawResponse.json() // const r = await rawResponse.text()
            
             if(r.status === 'success')  {} 

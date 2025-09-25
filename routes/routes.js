@@ -266,7 +266,7 @@ router.get('/device',  async (req, res) =>
 
 router.get('/graphs',  async (req, res) =>
 {
-    const response = await fetch(apiUrl + "/devices")
+    const response = await fetch(apiUrl + "/api/v1/devices")
     const result = await response.json()
     const list = result.data
     let selectedDevice = req.session.selectedDevice ? req.session.selectedDevice : list[0].id  // req.query.deviceID ? req.query.deviceID : list[0]
@@ -325,7 +325,7 @@ router.get('/settings',  hasSessionID,  async (req, res) =>
     const result = await response.json()
     const users = result.data
 
-    const response2 = await fetch(apiUrl + "/devices")
+    const response2 = await fetch(apiUrl + "/api/v1/devices")
     const result2 = await response2.json()
     const devices = result2.data
 
