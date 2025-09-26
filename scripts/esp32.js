@@ -25,6 +25,8 @@ let lastComm = []
 let lastSaveTime = []; 
 let connectedDevices = []
 let registered = []
+let deviceCache = { data: null, timestamp: 0 };
+const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 const DB_SAVE_RATIO = 60
 const BUFF_MAXSIZE = 125
 const DISCONNECT_TIMOUT = 3
@@ -115,7 +117,7 @@ const esp32 = {
             //const profile = await devProfile.json()
             console.log("Get registered profile:\n", r.data)
 
-            registered = await esp32.getRegistered()  //  actualize registered global variable
+            registered = await esp32.getRegistered(true)  //  actualize registered global variable
             //console.log('Registered', registered, '\n')
 
            
@@ -124,21 +126,36 @@ const esp32 = {
     },
 
 
-    getRegistered: async () =>
-    {    
-
-        try {  
-            const rawResponse = await fetch(dataAPIUrl + '/api/v1/devices'); 
-            const r = await rawResponse.json() // const r = await rawResponse.text()
-           
-            if(r.status === 'success')  {} 
-            else                        console.log("error", r.status, r.message) 
-            
-            registered = r.data
-
-            return registered
+    getRegistered: async (forceRefresh = false) =>
+    {
+        const now = Date.now();
+        if (!forceRefresh && deviceCache.data && (now - deviceCache.timestamp < CACHE_DURATION_MS)) {
+            // console.log('Serving registered devices from cache.');
+            return deviceCache.data;
         }
-        catch (err) { console.log('Error fetching registered esp32. Is Data API online?', err); }
+
+        // console.log('Fetching new registered devices data from API.');
+        try {
+            const rawResponse = await fetch(dataAPIUrl + '/api/v1/devices');
+            if (!rawResponse.ok) {
+                throw new Error(`API call failed with status: ${rawResponse.status}`);
+            }
+            const r = await rawResponse.json();
+
+            if (r.status === 'success') {
+                deviceCache.data = r.data;
+                deviceCache.timestamp = now;
+                registered = r.data; // Keep the global 'registered' variable updated
+                return r.data;
+            } else {
+                console.log("error fetching devices:", r.status, r.message);
+                return deviceCache.data || null; // Return stale cache if available
+            }
+        }
+        catch (err) {
+            console.log('Error fetching registered esp32. Is Data API online?', err.message);
+            return deviceCache.data || null; // Return stale cache if available
+        }
     },
 
 
@@ -180,9 +197,13 @@ const esp32 = {
 
     validConnected: async () => 
     {
-        await esp32.getRegistered() 
+        const currentRegistered = await esp32.getRegistered();
+        if (!currentRegistered) {
+            console.log('Could not retrieve device list for validation, skipping check.');
+            return;
+        }
 
-        registered.forEach((device) => {
+        currentRegistered.forEach((device) => {
             if(lastComm[device.id]) {   
                 
                 const last = moment(lastComm[device.id].time).format('YYYY-MM-DD HH:mm:ss');

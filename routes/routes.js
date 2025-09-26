@@ -264,15 +264,16 @@ router.get('/device',  async (req, res) =>
 
 router.get('/graphs',  async (req, res) =>
 {
-    const response = await fetch(apiUrl + "/api/v1/devices")
-    const result = await response.json()
-    const list = result.data
+    const list = await esp32.getRegistered()
+    if (!list || list.length === 0) {
+        console.log('Could not fetch devices list for /graphs or no devices registered.');
+        return res.redirect('/iot');
+    }
+
     let selectedDevice = req.session.selectedDevice ? req.session.selectedDevice : list[0].id  // req.query.deviceID ? req.query.deviceID : list[0]
     console.log('loading graf: ', selectedDevice )
 
-
-    const registered = await esp32.getRegistered()
-    const devices = { list, registered }
+    const devices = { list, registered: list }
 
     res.render('graphs',{ mqttinfo: mqttinfo, devices: devices, selected: selectedDevice, apiUrl: apiUrl })
 })
@@ -319,19 +320,27 @@ const hasSessionID = (req, res, next) =>
 
 router.get('/settings',  hasSessionID,  async (req, res) =>
 {
-    const response = await fetch(apiUrl + "/api/v1/users")
-    const result = await response.json()
-    const users = result.data
+    try {
+        const usersResponse = await fetch(apiUrl + "/api/v1/users");
+        const usersResult = await usersResponse.json();
+        const users = usersResult.data;
 
-    const response2 = await fetch(apiUrl + "/api/v1/devices")
-    const result2 = await response2.json()
-    const devices = result2.data
+        const devices = await esp32.getRegistered();
+        if (!devices) {
+            console.log('Could not fetch devices list for /settings.');
+            // Handle error appropriately, maybe render an error page or redirect
+            return res.status(500).send("Could not load device data.");
+        }
 
-    const response3 = await fetch(apiUrl + "/api/v1/alarms")
-    const result3 = await response3.json()
-    const alarms = result3.data
+        const alarmsResponse = await fetch(apiUrl + "/api/v1/alarms");
+        const alarmsResult = await alarmsResponse.json();
+        const alarms = alarmsResult.data;
 
-    res.render('settings', {users: users, devices: devices, alarms: alarms})
+        res.render('settings', {users: users, devices: devices, alarms: alarms});
+    } catch (error) {
+        console.error("Error loading /settings page:", error);
+        res.status(500).send("An error occurred while loading settings.");
+    }
 })
 
 // API routes are now in routes/api.routes.js (This comment replaces the old TODO and the routes themselves)
