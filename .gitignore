@@ -25,6 +25,9 @@ node_modules/
 
 visitCounter.txt
 
+# Ignore project directories because driven by syncRepos.js
+public/Projects
+
 *.code-workspace
 *.srt
 *.key

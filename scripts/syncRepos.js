@@ -11,7 +11,7 @@ const repos = [
   "https://github.com/WindriderQc/Tides.git",
 ];
 
-const baseDir = path.join(__dirname, "..", "public", "projects");
+const baseDir = path.join(__dirname, "..", "public", "Projects");
 
 if (!fs.existsSync(baseDir)) {
   fs.mkdirSync(baseDir, { recursive: true });
