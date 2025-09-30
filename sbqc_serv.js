@@ -16,6 +16,12 @@ const PORT = process.env.PORT  || 3001
 const IN_PROD = process.env.NODE_ENV === 'production'  // for https channel...  IN_PROD will be true if in production environment    If true while on http connection, session cookie will not work
 
 
+// Run repo sync in the background (non-blocking)
+setImmediate(() => {
+  console.log("Starting repo sync in background...");
+  syncRepos();
+});
+
 
 //  MQTT API to communication with ESP32 and other devices
 const mqtt = require('./scripts/mqttServer')
@@ -134,3 +140,5 @@ const io = socketio.init(server)     //  TODO  required?  or just use io from so
 
 //console.log('Launching automation scripts')
 //require('./scripts/serverScripts.js')  // generate infos/index.html
+
+
