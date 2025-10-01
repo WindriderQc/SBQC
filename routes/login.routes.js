@@ -18,7 +18,7 @@ router.get("/register", (req, res) => {
 })
 
 
-router.post("/register", registerValidationRules(), async (req, res) => {
+router.post("/register", registerValidationRules(), async (req, res, next) => {
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -71,8 +71,7 @@ router.post("/register", registerValidationRules(), async (req, res) => {
         res.redirect('../')
     }
     catch (err) { 
-        console.log('Error in post register: ', result, err)
-        res.redirect('/login/register')   
+        return next(err);
     }
             
 })
@@ -82,7 +81,7 @@ router.get('/', (req, res) => {
     res.render('partials/login/login') 
 })
 
-router.post('/', loginValidationRules(), async (req, res) => {
+router.post('/', loginValidationRules(), async (req, res, next) => {
     
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -144,8 +143,7 @@ router.post('/', loginValidationRules(), async (req, res) => {
             if(r.status === 'success')  {  console.log(r.message)  } else console.log(r.status, r.message ) 
         }
         catch (err) { 
-            console.log('Error in updating user: ',  err)
-            res.redirect('../')   
+            return next(err);
         }
 
     
@@ -160,15 +158,14 @@ router.post('/', loginValidationRules(), async (req, res) => {
                 await req.session.save();
                 res.header('credentials', 'include').redirect(LOGIN_SUCCESS_REDIRECT_PATH)    //res.header("auth-token", result.token).render('fundev', { name: req.session.email });      // TODO : /settings hardcoded here...   hmmm   nah! :S
             } catch (err) {
-                console.log('error saving session' , err); 
-                res.status(500).send('Error saving session');  
+                return next(err);
             }
              
         }
         else res.render('partials/login/loginnomatch', { alertMsg: 'Sorry, something wrong with authentification. Please contact your admin.'})
     }
     catch (err) {
-        console.log('Error in post login', err)
+        return next(err);
     }
 
 })

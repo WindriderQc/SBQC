@@ -4,7 +4,8 @@ const express = require('express'),
     MongoDBStore = require('connect-mongodb-session')(session),
     serveIndex = require('serve-index'),
     path = require('path'),
-    cors = require('cors')
+    cors = require('cors'),
+    { GeneralError } = require('./utils/errors')
     //rateLimit = require('express-rate-limit'),
     //mongoose = require('mongoose'),
 
@@ -124,7 +125,24 @@ app
   .use('/ec-data',  require('./routes/ecWeather.routes')) // Environment Canada Data Endpoint
   .use('/Projects', serveIndex(path.resolve(__dirname, 'public/Projects'), {  'icons': true,  'stylesheet': 'public/css/indexStyles.css' }))// use serve index to nav folder  (Attention si utiliser sur le public folder, la racine (/) du site sera index au lieu de html
 
+// Global error handler should be last
+app.use((err, req, res, next) => {
+    if (res.headersSent) {
+        return next(err);
+    }
 
+    if (err instanceof GeneralError) {
+        const responseJson = { status: 'error', message: err.message };
+        if (err.errors) {
+            responseJson.errors = err.errors;
+        }
+        return res.status(err.getCode()).json(responseJson);
+    }
+
+    console.error(err.stack);
+
+    return res.status(500).json({ status: 'error', message: 'An internal server error occurred.' });
+});
 
 
 const server = app.listen(PORT, () =>{
