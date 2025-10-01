@@ -4,8 +4,9 @@ const router = require('express').Router(),
  moment = require('moment'),
  bcrypt = require('bcryptjs'),
  jwt = require('jsonwebtoken'),
+ { body, validationResult } = require('express-validator'),
  verify = require('./verifyToken'),
- { registerValidation, loginValidation } = require('./validation')
+ { registerValidationRules, loginValidationRules } = require('./validation')
 
 const LOGIN_SUCCESS_REDIRECT_PATH = '../settings';
 
@@ -17,7 +18,17 @@ router.get("/register", (req, res) => {
 })
 
 
-router.post("/register", async (req, res) => {
+router.post("/register", registerValidationRules(), async (req, res) => {
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorMessages = errors.array().map(error => error.msg).join(' ');
+      return res.status(400).render('partials/login/register', {
+        error: errorMessages,
+        name: req.body.name,
+        email: req.body.email
+      });
+    }
 
      const result = {
         user: req.body.name,
@@ -25,20 +36,7 @@ router.post("/register", async (req, res) => {
         message: ""
     }
 
-    //  Validate entry form before user creation
-    const { error } = registerValidation(req.body)
-   
-    if (error) {
-        result.message = error.details[0].message
-        // return res.status(400).send(result)
-        return res.status(400).render('partials/login/register', {
-            error: result.message,
-            name: req.body.name, // To repopulate the form
-            email: req.body.email // To repopulate the form
-        });
-    }
-
-    const response2 = await fetch(apiUrl + "/users/fromEmail/" + req.body.email)
+    const response2 = await fetch(apiUrl + "/api/v1/users?email=" + req.body.email)
     const respJson = await response2.json()
     const emailExist = respJson.data[0]
     console.log('existing user entry: ', emailExist, '\n')
@@ -67,7 +65,7 @@ router.post("/register", async (req, res) => {
 
     
     try {
-        const rawResponse = await fetch(apiUrl + '/users', { method: 'POST', headers: { "Content-type": "application/json" }, body: JSON.stringify(user)    }); 
+        const rawResponse = await fetch(apiUrl + '/api/v1/users', { method: 'POST', headers: { "Content-type": "application/json" }, body: JSON.stringify(user)    });
         const r = await rawResponse.json()
         if(r.status === 'success')  {  console.log(r.message, r.data)  } else console.log(r.status, r.message ) 
         res.redirect('../')
@@ -84,8 +82,14 @@ router.get('/', (req, res) => {
     res.render('partials/login/login') 
 })
 
-router.post('/', async (req, res) => {  
+router.post('/', loginValidationRules(), async (req, res) => {
     
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorMessages = errors.array().map(error => error.msg).join(' ');
+      return res.render('partials/login/loginnomatch', { alertMsg: "Oups: " + errorMessages });
+    }
+
     console.log('login request: ', req.body.email)
 
     try {
@@ -94,20 +98,11 @@ router.post('/', async (req, res) => {
             message: "",
             token: ""
         }
-  
-        //  Validate entry form before login
-        const { error } = loginValidation(req.body)
-        if (error) {
-            result.message = error.details[0].message
-            console.log('login validation error: ', result.message)
-            //return res.status(400).send(result)
-            return res.render('partials/login/loginnomatch', {alertMsg: "Oups: " + result.message})
-        }
     
         // Check if user exist
         //const user = await User.findOne({ email: req.body.email })
         
-        const response2 = await fetch(apiUrl + "/users/fromEmail/" + req.body.email)
+        const response2 = await fetch(apiUrl + "/api/v1/users?email=" + req.body.email)
         const emailExist = await response2.json()
         const user = emailExist.data[0]
             
@@ -143,7 +138,7 @@ router.post('/', async (req, res) => {
             console.log('updating user last connect -  id: ', user.email, user.lastConnectDate)
             user.lastConnectDate = moment().format('YYYY-MM-DDTHH:mm:ss.SSS')
               console.log(user.lastConnectDate)
-            const rawResponse = await fetch(apiUrl + '/user/:  ' + user._id, { method: 'PATCH', headers: { "Content-type": "application/json" }, body: JSON.stringify(user) }); 
+            const rawResponse = await fetch(apiUrl + '/api/v1/users/' + user._id, { method: 'PATCH', headers: { "Content-type": "application/json" }, body: JSON.stringify(user) });
             
             const r = await rawResponse.json()
             if(r.status === 'success')  {  console.log(r.message)  } else console.log(r.status, r.message ) 

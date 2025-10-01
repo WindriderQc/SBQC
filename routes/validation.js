@@ -1,35 +1,36 @@
-const Joi = require('@hapi/joi')
+const { body, validationResult } = require('express-validator');
 
-const registerValidation =  (data) => {
-    const schema = Joi.object({
-        name: Joi.string()
-            .min(2)
-            .required(),
-        email: Joi.string()
-            .required()
-            .email(),
-        password: Joi.string()
-            .min(6)
-            .required()
-    })
+const registerValidationRules = () => {
+  return [
+    body('name').isLength({ min: 2 }).withMessage('Name must be at least 2 characters long.'),
+    body('email').isEmail().withMessage('Please enter a valid email address.'),
+    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long.'),
+  ];
+};
 
-    // Validation before user creation
-    return schema.validate(data)
-}
+const loginValidationRules = () => {
+  return [
+    body('email').isEmail().withMessage('Please enter a valid email address.'),
+    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long.'),
+  ];
+};
 
-const loginValidation = (data) => {
-    const schema = Joi.object({
-        email: Joi.string()
-            .required()
-            .email(),
-        password: Joi.string()
-            .min(6)
-            .required()
-    })
+const validate = (req, res, next) => {
+  const errors = validationResult(req);
+  if (errors.isEmpty()) {
+    return next();
+  }
 
-    // Validation before user login
-    return schema.validate(data)
-}
+  const extractedErrors = [];
+  errors.array().map(err => extractedErrors.push({ [err.param]: err.msg }));
 
-module.exports.registerValidation = registerValidation
-module.exports.loginValidation = loginValidation
+  return res.status(422).json({
+    errors: extractedErrors,
+  });
+};
+
+module.exports = {
+  registerValidationRules,
+  loginValidationRules,
+  validate,
+};
