@@ -119,7 +119,6 @@ app
   .use('/api',      require('./routes/api.routes')) // New API routes
   .use('/',         require('./routes/routes'))
   .use('/checkins', require('./routes/checkins.routes'))
-  .use('/data',     require('./routes/data.routes'))
   .use('/meows',    require("./routes/meows.routes"))
   .use('/login',    require('./routes/login.routes'))
   .use('/ec-data',  require('./routes/ecWeather.routes')) // Environment Canada Data Endpoint
