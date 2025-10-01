@@ -7,13 +7,13 @@
   <link rel='stylesheet' href='css/rockPaperScissor.css'>
 </head>
 
-<body>
+<body data-request-log='<%- JSON.stringify(requestLog) %>' data-is-welcome-page="<%= isWelcomePage %>">
 <%- include('partials/nav') %>
-       
+
 
     <div class="background-container d-flex justify-content-center align-items-center" style="height: 100vh">
         <div class="text-center">
-         
+
             <div class='col sm-8 topZ' id="welcomeSquare">
                 <img class="mb-4" src="img/favicon.ico" style="width: 250px; "  />
 
@@ -21,27 +21,27 @@
                     <br>
                     <h3> Welcome to Special Blend Production</h3>
                     <br>
-                    <h3> A mix of visuals, data gathering and games mini-projects using node.js with express, mosquitto mqtt, p5.js and WebGL. </h3> 
+                    <h3> A mix of visuals, data gathering and games mini-projects using node.js with express, mosquitto mqtt, p5.js and WebGL. </h3>
                     <br>
                     <br>
                     <br>
                     <button type="button" class="btn btn-outline-success" data-mdb-ripple-init data-mdb-ripple-color="dark" onclick="engageInteractiveExperience()">Engage interactive eXperience</button>
-     
-                    
-                </div> 
-            </div>  
-       
+
+
+                </div>
+            </div>
+
         </div>
     </div>
 
-      
+
 
 
 <div id='page-top' class=' content-wrapper bg-transparent'>
-<div class='container-fluid text-center '>  
-<!-- Begin Container  -->  
+<div class='container-fluid text-center '>
+<!-- Begin Container  -->
 <div id='speech'></div>
-  
+
 
 
     <div class="row px-5" id="projectsDiv">
@@ -50,63 +50,63 @@
             <div class='card bg-transparent h-100 my-5'>
                 <div class='card-header '> <h1>Earth Explorer</h1> </div>
                 <a href="/earth" class="navbar-left"> <img src='img/earth3d.png' class="card-img-top p-4" alt='' > </a>
-                <h5 class="card-title pt-2 px-2">2D & 3D visualisations of ISS, earthquakes, temperature and localisation</h5> 
-            </div> 
+                <h5 class="card-title pt-2 px-2">2D & 3D visualisations of ISS, earthquakes, temperature and localisation</h5>
+            </div>
         </div>
-        
+
         <div class="col-sm-6 mt-4 ">
             <div class='card  bg-transparent h-100 my-5'>
                 <div class='card-header '> <h1>Nature of Code</h1> </div>
-                <a href="/Projects/Nature of Code/sAll" class="navbar-left"> <img src='img/flocking.png' class="card-img-top p-4" alt='' > </a> 
+                <a href="/Projects/Nature of Code/sAll" class="navbar-left"> <img src='img/flocking.png' class="card-img-top p-4" alt='' > </a>
                 <h5 class="card-title pt-2 px-2">Flocking Simulation via forces and behavior</h5>
-            </div> 
+            </div>
         </div>
 
         <div class="col-sm-6 mt-4 ">
             <div class='card bg-transparent h-100 my-5'>
                 <div class='card-header '> <h1>Shared Canvas</h1> </div>
-                <a href="/Projects/DrawTogether" class="navbar-left"> <img src='img/canvas.png' class="card-img-top p-4" alt='' > </a> 
+                <a href="/Projects/DrawTogether" class="navbar-left"> <img src='img/canvas.png' class="card-img-top p-4" alt='' > </a>
                 <h5 class="card-title pt-2 px-2">p5.js drawing canvas shared via MQTT</h5>
-            </div> 
+            </div>
         </div>
 
         <div class="col-sm-6 mt-4 ">
             <div class='card bg-transparent h-100 my-5'>
-                <div class='card-header '> <h1>Nature of Code</h1> </div>   
-                <a href="/Projects/Nature of Code/s5" class="navbar-left"> <img src='img/NoC.Evolve.png' class="card-img-top p-4" alt='' > </a> 
+                <div class='card-header '> <h1>Nature of Code</h1> </div>
+                <a href="/Projects/Nature of Code/s5" class="navbar-left"> <img src='img/NoC.Evolve.png' class="card-img-top p-4" alt='' > </a>
                 <h5 class="card-title pt-2 px-2">DNA concept & leaf color evolution</h5>
-            </div> 
+            </div>
         </div>
 
         <div class="col-sm-6 mt-4 ">
             <div class='card bg-transparent h-100 my-5'>
-                <div class='card-header '> <h1>P5 Randoms</h1> </div>   
-              
-                <div id='canvasDiv'></div> 
-            </div> 
+                <div class='card-header '> <h1>P5 Randoms</h1> </div>
+
+                <div id='canvasDiv'></div>
+            </div>
         </div>
 
         <!-- Game                    TODO: a mettre dans un .ejs a part    -->
-        <div class="col-sm-6 mt-4 ">   
+        <div class="col-sm-6 mt-4 ">
             <div class='card bg-transparent h-100 my-5'>
                 <div class='card-header '> <h1>Rock Paper Scissors</h1> </div>
-            
+
                 <div class='score-board'>
                     <div id='user-label' class='badge'>user</div>
                     <div id='computer-label' class='badge'>comp</div>
                     <span id='user-score'>0</span>:<span id='computer-score'>0</span>
                 </div>
-        
+
                 <div class='result'> <p></p> </div>
-            
+
                 <div class='choices'>
                     <div class='choice' id='r'> <img src='img/rock.png' alt=''> </div>
                     <div class='choice' id='p'> <img src='img/paper.png' alt=''> </div>
                     <div class='choice' id='s'> <img src='img/scissors.png' alt=''> </div>
                 </div>
-            
+
                 <p id='action-message'>Why not play with me? </p>
-            </div>  
+            </div>
         </div>
 
 
@@ -116,13 +116,13 @@
 
 
 
- <!--     Visitor Book   -->   
+ <!--     Visitor Book   -->
     <div class='row mt-5'>
-        <div class='col sm-11'></div>  
+        <div class='col sm-11'></div>
         <div class='col sm-1 text-right'>
-            <div class='h6 text-muted small'>  HitCount: <%- hitCount %>  </div> 
-        </div>     
-    </div>  
+            <div class='h6 text-muted small'>  HitCount: <%- hitCount %>  </div>
+        </div>
+    </div>
 
     <div>
         <hr />
@@ -147,16 +147,16 @@
 
 
 
-            
-    <div class="card text-left">  
-        <p id='ip_id'></p> 
+
+    <div class="card text-left">
+        <p id='ip_id'></p>
        <!--  <img src="" id='rainbow' width ="480" />    -->
 </div>
 
 
 
 
-<%- include('partials/footer') %> 
+<%- include('partials/footer') %>
 
 
  <!-- End Container  -->
@@ -172,324 +172,9 @@
 <script type='text/javascript' src='js/walker.js'></script>
 <script type='text/javascript' src='js/particle.js'></script>
 <script type='text/javascript' src='js/rockPaperScissor.js'></script>
-
-
-<script>
-
-let particles = [];
-let particles2 = [];
-let particles3 = [];
-let walker, walker2, walker3;
-
-
-function setup() 
-{
-    //  WALKER  
-    let canvas = createCanvas(windowWidth, windowHeight)
-    canvas.parent('canvasDiv')
-    //create walker
-    walker = new Walker()
-    walker2 = new Walker() 
-    walker3 = new Walker() 
-
-   
-}
- 
-
-
-function draw() 
-{
-   // background(239,222,205);
-    clear();
- 
-    walker.update();
-    walker2.update();
-    walker3.update();
-    for (let i = 0; i < 2; i++) {
-        let p = new Particle(walker.pos.x, walker.pos.y);
-        particles.push(p);
-    }
-    for (let i = particles.length - 1; i >= 0; i--) {
-        particles[i].update();
-        particles[i].show();
-        if (particles[i].isFinished()) {
-            particles.splice(i, 1);
-        }
-    }  
-    for (let i = 0; i < 2; i++) {
-        let p2 = new Particle(walker2.pos.x, walker2.pos.y);
-        particles2.push(p2);
-    }
-    for (let i = particles2.length - 1; i >= 0; i--) {
-        particles2[i].update();
-        particles2[i].show2(walker2.pos.x, walker2.pos.y);
-        if (particles2[i].isFinished()) {
-            particles2.splice(i, 1);
-        }
-    }
-    for (let i = 0; i < 2; i++) {
-        let p3 = new Particle(walker3.pos.x, walker3.pos.y);
-        particles3.push(p3);
-    }
-    for (let i = particles3.length - 1; i >= 0; i--) {
-        particles3[i].update();
-        particles3[i].show1(walker3.pos.y, walker3.pos.x);
-        if (particles3[i].isFinished()) {
-            particles3.splice(i, 1);
-        }
-    }
-   
-}
-
-function windowResized() {
-    resizeCanvas(windowWidth, windowHeight);
-}
-
-
-
-
-
-const form = document.querySelector('form'); 
-const errorElement = document.querySelector('.error-message');
-const loadingElement = document.querySelector('.loading');
-const mewsElement = document.querySelector('.mews');
-const loadMoreElement = document.querySelector('#loadMore');
-
-
-
-//const API_URL = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') ? 'http://localhost:3001/meows/v2/mews' : 'https://meower-api.now.sh/v2/mews';
-const mewsUrl =  '/meows/v2/mews' 
-
-
-let skip = 0;
-let limit = 20;  //   TODO:  si le limit est plus petit que window et y apas de scroll....   le scroll event launch pas
-let loading = false;
-let finished = false;
-
-errorElement.style.display = 'none';
-
-document.addEventListener('scroll', () => {
-  const rect = loadMoreElement.getBoundingClientRect();
-  if (rect.top < window.innerHeight && !loading && !finished) {
-    loadMore();
-  }
-});
-
-listAllMews();
-
-form.addEventListener('submit', (event) => {
-  event.preventDefault();
-  const formData = new FormData(form);
-  const name = formData.get('name');
-  const content = formData.get('content');
-
-  if (name.trim() && content.trim()) {
-    errorElement.style.display = 'none';
-    form.style.display = 'none';
-    loadingElement.style.display = '';
-
-    const mew = {
-      name,
-      content
-    };
-    
-    fetch(mewsUrl, {
-      method: 'POST',
-      body: JSON.stringify(mew),
-      headers: {
-        'content-type': 'application/json'
-      }
-    }).then(response => {      
-      if (!response.ok) {
-        const contentType = response.headers.get('content-type');
-        if (contentType.includes('json')) {
-          return response.json().then(error => Promise.reject(error.message));
-        } else {
-          return response.text().then(message => Promise.reject(message));
-        }
-      }
-    }).then(() => {
-      form.reset();
-      setTimeout(() => {
-        form.style.display = '';
-      }, 10000);
-      setTimeout(listAllMews, 1500) //  timeout prevent to launch before rateLimit  ..  TODO: weird    //listAllMews();
-    }).catch(errorMessage => {
-      form.style.display = '';
-      errorElement.textContent = errorMessage;
-      errorElement.style.display = '';
-      loadingElement.style.display = 'none';
-    });
-  } else {
-    errorElement.textContent = 'Name and content are required!';
-    errorElement.style.display = '';
-  }
-});
-
-function loadMore() {
-  skip += limit;
-  listAllMews(false);
-}
-
-function listAllMews(reset = true) {
-    loading = true;
-    if (reset) {
-        console.log('reset')
-        mewsElement.innerHTML = '';
-        skip = 0;
-        finished = false;
-    }
-
-    const url = `${mewsUrl}?skip=${skip}&limit=${limit}`
-
-    const options =  { method: 'GET', mode: 'no-cors' }
-
-    fetch(url, {options})
-        .then(response => response.json())
-        .then(result => {
-        result.mews.forEach(mew => {
-            const div = document.createElement('div');
-            
-            const r = document.createElement('div');
-            r.classList.add('row')
-            const col1 = document.createElement('div');
-            col1.classList.add('col-sm-3')
-            
-            const header = document.createElement('h4');
-            header.textContent = mew.name;
-            
-        
-            const col2 = document.createElement('div');
-            col2.classList.add('col-sm-9')
-
-            const contents = document.createElement('p');
-            contents.textContent = mew.content;
-
-            const date = document.createElement('small');
-            date.textContent = new Date(mew.created);
-
-
-            col1.appendChild(header)
-            col2.appendChild(contents);
-            col2.appendChild(date);
-            r.appendChild(col1)
-            r.appendChild(col2)
-            div.appendChild(r);
-        
-
-            mewsElement.appendChild(div);
-        });
-        loadingElement.style.display = 'none';
-        if (!result.meta.has_more) {
-            loadMoreElement.style.visibility = 'hidden';
-            finished = true;
-        } else {
-            loadMoreElement.style.visibility = 'visible';
-        }
-        loading = false;
-    });
-}
-
-
-
-
-async function getUserInfo()
-{
-    const log = <%- JSON.stringify(requestLog) %>
-    console.log(log)
-    const info = await Tools.ipLookUp()
-    info.logType =  'userIP'
-    info.content = 'Connection from ' + info.City + ', ' + info.Country + ' (' + info.IP + ')  Server Content:' + log.content
-    
-
-    info.client = log.client
-
-    info.authorization = log.authorization
-    info.host = log.host
-    info.ip = log.ip
-    info.hitCount = log.hitCount
-    info.created = log.created
-    info.queryParams = log.queryParams
-    info.path = log.path
-    info.method = log.method
-        
-    info.protocol = log.protocol
-    info.hostname = log.hostname
-    info.originalUrl = log.originalUrl
-    info.cookies = log.cookies
-
-   
-    //document.getElementById('ip_id').innerHTML =  "<pre>"+JSON.stringify(info,null, '\t') +"</pre>"
-    const url =   '/v2/logs' 
-    
-    fetch(url, {
-      method: 'POST',
-      body: JSON.stringify(info),
-      headers: {
-        'content-type': 'application/json'
-      }
-    }).then(response => {      
-      if (!response.ok) {
-        const contentType = response.headers.get('content-type');
-        if (contentType.includes('json')) {
-          return response.json().then(error => Promise.reject(error.message));
-        } else {
-          return response.text().then(message => Promise.reject(message));
-        }
-      }
-    }).catch(errorMessage => {   console.log(errorMessage)  });
-
-} 
-
-
-function engageInteractiveExperience() {
-
-    const welcomeSections = document.querySelectorAll('.welcome-section');
-    welcomeSections.forEach(section => section.style.display = 'none');
-
-    setupNestor()
-
-    //window.location.href = "/index";
-}
-
-
-////
-//     DOM LOADED
-////
-
-document.addEventListener('DOMContentLoaded', function() {
-  
-    const isWelcomePage = <%= isWelcomePage %>;
-
-    const welcomeSections = document.querySelectorAll('.welcome-section');
-            const interactiveSections = document.querySelectorAll('.interactive-section');
-
-            if (isWelcomePage) {
-                // Hide sections for the welcome page
-              //  interactiveSections.forEach(section => section.style.display = 'none');
-            } else {
-                // Show sections for the interacted page
-              //  welcomeSections.forEach(section => section.style.display = 'none');
-            }
-
-
-    // Initialize tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-mdb-toggle="tooltip"]'))
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new mdb.Tooltip(tooltipTriggerEl)
-    })
-
-   
-
-    getUserInfo()
-
-
-});
-
-</script>
-
-
-
+<script type='text/javascript' src='js/home-sketch.js'></script>
+<script type='text/javascript' src='js/mews.js'></script>
+<script type='text/javascript' src='js/home-main.js'></script>
 
 </body>
 </html>

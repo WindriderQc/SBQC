@@ -4,8 +4,9 @@ const router = require('express').Router(),
  moment = require('moment'),
  bcrypt = require('bcryptjs'),
  jwt = require('jsonwebtoken'),
+ { body, validationResult } = require('express-validator'),
  verify = require('./verifyToken'),
- { registerValidation, loginValidation } = require('./validation')
+ { registerValidationRules, loginValidationRules } = require('./validation')
 
 const LOGIN_SUCCESS_REDIRECT_PATH = '../settings';
 
@@ -17,25 +18,22 @@ router.get("/register", (req, res) => {
 })
 
 
-router.post("/register", async (req, res) => {
+router.post("/register", registerValidationRules(), async (req, res) => {
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorMessages = errors.array().map(error => error.msg).join(' ');
+      return res.status(400).render('partials/login/register', {
+        error: errorMessages,
+        name: req.body.name,
+        email: req.body.email
+      });
+    }
 
      const result = {
         user: req.body.name,
         email: req.body.email,
         message: ""
-    }
-
-    //  Validate entry form before user creation
-    const { error } = registerValidation(req.body)
-   
-    if (error) {
-        result.message = error.details[0].message
-        // return res.status(400).send(result)
-        return res.status(400).render('partials/login/register', {
-            error: result.message,
-            name: req.body.name, // To repopulate the form
-            email: req.body.email // To repopulate the form
-        });
     }
 
     const response2 = await fetch(apiUrl + "/users/fromEmail/" + req.body.email)
@@ -84,8 +82,14 @@ router.get('/', (req, res) => {
     res.render('partials/login/login') 
 })
 
-router.post('/', async (req, res) => {  
+router.post('/', loginValidationRules(), async (req, res) => {
     
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorMessages = errors.array().map(error => error.msg).join(' ');
+      return res.render('partials/login/loginnomatch', { alertMsg: "Oups: " + errorMessages });
+    }
+
     console.log('login request: ', req.body.email)
 
     try {
@@ -93,15 +97,6 @@ router.post('/', async (req, res) => {
             email: req.body.email,
             message: "",
             token: ""
-        }
-  
-        //  Validate entry form before login
-        const { error } = loginValidation(req.body)
-        if (error) {
-            result.message = error.details[0].message
-            console.log('login validation error: ', result.message)
-            //return res.status(400).send(result)
-            return res.render('partials/login/loginnomatch', {alertMsg: "Oups: " + result.message})
         }
     
         // Check if user exist

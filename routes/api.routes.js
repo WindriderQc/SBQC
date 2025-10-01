@@ -51,32 +51,33 @@ router.get('/weather/:latlon', async (req, res) => {
             }
         }
 
-        res.json({ weather: weather, air_quality: sensorAQData || aq_data }); // Fallback to broader aq_data if specific sensor fails
+        res.json({ status: "success", data: { weather: weather, air_quality: sensorAQData || aq_data } });
     } catch (error) {
         console.error('Error in /weather route:', error);
-        res.status(500).json({ error: 'Failed to fetch weather or air quality data', details: error.message });
+        res.status(500).json({ status: "error", message: 'Failed to fetch weather or air quality data', details: error.message });
     }
 });
 
 router.get('/tides', async (req, res) => {
     const { lat, lon, days } = req.query;
     if (!API_TIDES_KEY) {
-        return res.status(500).json({ error: 'Server configuration error: Missing Tides API key.' });
+        return res.status(500).json({ status: "error", message: 'Server configuration error: Missing Tides API key.' });
     }
     if (!lat || !lon || !days) {
-        return res.status(400).json({ error: 'Missing required query parameters: lat, lon, days.' });
+        return res.status(400).json({ status: "error", message: 'Missing required query parameters: lat, lon, days.' });
     }
     const worldTidesURL = `https://www.worldtides.info/api/v3?heights&extremes&key=${API_TIDES_KEY}&lat=${lat}&lon=${lon}&days=${days}`;
     try {
         const response = await fetch(worldTidesURL);
+        const data = await response.json();
         if (!response.ok) {
             const errorText = await response.text();
-            return res.status(response.status).json({ error: 'Failed to fetch tide data', details: errorText });
+            return res.status(response.status).json({ status: "error", message: 'Failed to fetch tide data', details: errorText });
         }
-        res.json(await response.json());
+        res.json({ status: "success", data: data });
     } catch (error) {
         console.error('Error fetching tide data:', error);
-        res.status(500).json({ error: 'Server error while fetching tide data', details: error.message });
+        res.status(500).json({ status: "error", message: 'Server error while fetching tide data', details: error.message });
     }
 });
 
@@ -92,10 +93,11 @@ router.get('/proxy-location', async (req, res) => {
 
         const geoResponse = await fetch(`http://ip-api.com/json/${publicIp}`);
         if (!geoResponse.ok) throw new Error(`ip-api.com error! Status: ${geoResponse.status}`);
-        res.json(await geoResponse.json());
+        const data = await geoResponse.json();
+        res.json({ status: "success", data: data });
     } catch (error) {
         console.error('Error in /proxy-location route:', error);
-        res.status(500).json({ error: 'Error fetching geolocation', details: error.message });
+        res.status(500).json({ status: "error", message: 'Error fetching geolocation', details: error.message });
     }
 });
 
@@ -104,10 +106,10 @@ router.post('/alert', async (req, res) => {
     console.log('Alert request received for:', dest);
     try {
         await mailman.sendEmail(dest, msg, image64); // Assuming sendEmail is async
-        res.status(200).send("Alert processed");
+        res.status(200).json({ status: "success", message: "Alert processed" });
     } catch (error) {
         console.error("Error sending email alert:", error);
-        res.status(500).send("Failed to process alert");
+        res.status(500).json({ status: "error", message: "Failed to process alert", details: error.message });
     }
 });
 
@@ -135,7 +137,7 @@ router.get('/deviceLatest/:esp',  async (req, res) => {
 
 router.post('/saveProfile', async (req, res) => {
     if (!req.session || !req.session.userToken) {
-        return res.status(401).send("Unauthorized: No session token.");
+        return res.status(401).json({ status: "error", message: "Unauthorized: No session token." });
     }
     const { profileName, config } = req.body;
     const profileData = { profileName, config };
@@ -146,22 +148,22 @@ router.post('/saveProfile', async (req, res) => {
     };
     try {
         const response = await fetch(`${apiUrl}/profile/${profileData.profileName}`, options);
-        const resultText = await response.text(); // Get text first to avoid JSON parse error on non-JSON response
+        const resultText = await response.text();
         if (response.ok) {
-            res.send('Profile saved successfully!');
+            res.json({ status: "success", message: 'Profile saved successfully!', data: resultText });
         } else {
             console.error('Error saving profile:', resultText);
-            res.status(response.status).send(`Error saving profile: ${resultText}`);
+            res.status(response.status).json({ status: "error", message: `Error saving profile: ${resultText}` });
         }
     } catch (err) {
         console.error('Error connecting to Data API for saveProfile:', err);
-        res.status(500).send(`Error connecting to Data API: ${err.message}`);
+        res.status(500).json({ status: "error", message: `Error connecting to Data API: ${err.message}` });
     }
 });
 
 router.get('/data/:options',  async (req, res) => {
     if (!req.session || !req.session.userToken) {
-        return res.status(401).json({ error: "Unauthorized: No session token."});
+        return res.status(401).json({ status: "error", message: "Unauthorized: No session token."});
     }
     const [samplingRatio, espID, dateFrom] = req.params.options.split(',');
     if (req.session) req.session.selectedDevice = espID;
@@ -169,14 +171,15 @@ router.get('/data/:options',  async (req, res) => {
     const options = { method: 'GET', headers: { 'auth-token': req.session.userToken }};
     try {
         const response = await fetch(`${apiUrl}/heartbeats/data/${samplingRatio},${espID},${dateFrom}`, options);
+        const data = await response.json();
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Data API error: ${response.status} - ${errorText}`);
         }
-        res.json(await response.json());
+        res.json({ status: "success", data: data });
     } catch (err) {
         console.error('Error fetching data in /data/:options route:', err);
-        res.status(500).json({ error: "Could not get data", details: err.message });
+        res.status(500).json({ status: "error", message: "Could not get data", details: err.message });
     }
 });
 
@@ -184,22 +187,22 @@ router.get('/tle', async (req, res) => {
     const now = Date.now();
     if (now - tleCache.timestamp < TLE_CACHE_DURATION_MS && tleCache.data) {
         console.log('Serving TLE data from cache.');
-        return res.type('text/plain').send(tleCache.data);
+        return res.json({ status: "success", data: tleCache.data });
     }
     console.log('Fetching new TLE data from Celestrak.');
     try {
         const response = await fetch(TLE_CELESTRAK_URL);
         if (!response.ok) {
             console.error(`Failed to fetch TLE data from Celestrak: ${response.status}`);
-            return res.status(response.status).json({ error: 'Failed to fetch TLE data from Celestrak' });
+            return res.status(response.status).json({ status: "error", message: 'Failed to fetch TLE data from Celestrak' });
         }
         const data = await response.text();
         tleCache = { data, timestamp: Date.now() };
         console.log('Updated TLE cache.');
-        res.type('text/plain').send(data);
+        res.json({ status: "success", data: data });
     } catch (error) {
         console.error('Error fetching TLE data:', error);
-        res.status(500).json({ error: 'Unable to fetch TLE data', details: error.message });
+        res.status(500).json({ status: "error", message: 'Unable to fetch TLE data', details: error.message });
     }
 });
 
@@ -275,7 +278,7 @@ router.get('/pressure', async (req, res) => {
     let dataSource = "openweathermap";
 
     if (!lat || !lon) {
-        return res.status(400).json({ error: 'Missing required query parameters: lat, lon.' });
+        return res.status(400).json({ status: "error", message: 'Missing required query parameters: lat, lon.' });
     }
 
     // Validate and set default for days
@@ -383,10 +386,13 @@ router.get('/pressure', async (req, res) => {
 
 
         res.json({
-            message: `Aggregated pressure and temperature data for lat: ${processedLat}, lon: ${processedLon} (Historical: ${numDaysHistorical} days)`,
-            readings: allReadings,
-            data_source: dataSource,
-            requested_historical_days: numDaysHistorical
+            status: "success",
+            data: {
+                message: `Aggregated pressure and temperature data for lat: ${processedLat}, lon: ${processedLon} (Historical: ${numDaysHistorical} days)`,
+                readings: allReadings,
+                data_source: dataSource,
+                requested_historical_days: numDaysHistorical
+            }
         });
 
     } catch (error) {
@@ -397,18 +403,24 @@ router.get('/pressure', async (req, res) => {
         
         if (allReadings.length === 0) {
             return res.status(500).json({ 
-                error: 'Failed to generate mock data after API failure.', 
+                status: "error",
+                message: 'Failed to generate mock data after API failure.',
                 details: error.message,
-                data_source: dataSource,
-                requested_historical_days: numDaysHistorical
+                data: {
+                    data_source: dataSource,
+                    requested_historical_days: numDaysHistorical
+                }
             });
         }
         res.status(200).json({ 
-            message: `Serving mock pressure and temperature data for lat: ${processedLat}, lon: ${processedLon} (Historical: ${numDaysHistorical} days) due to OpenWeatherMap API error.`,
-            readings: allReadings,
-            data_source: dataSource,
-            original_error_message: error.message,
-            requested_historical_days: numDaysHistorical
+            status: "success",
+            data: {
+                message: `Serving mock pressure and temperature data for lat: ${processedLat}, lon: ${processedLon} (Historical: ${numDaysHistorical} days) due to OpenWeatherMap API error.`,
+                readings: allReadings,
+                data_source: dataSource,
+                original_error_message: error.message,
+                requested_historical_days: numDaysHistorical
+            }
         });
     }
 });
