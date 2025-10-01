@@ -135,4 +135,25 @@ router.get('/pressure', async (req, res, next) => {
     }
 });
 
+// ISS Data Proxy
+router.get('/iss', async (req, res, next) => {
+    try {
+        const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+        const response = await fetch('https://data.specialblend.ca/iss');
+        const contentType = response.headers.get('content-type');
+
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            res.json(data);
+        } else {
+            const text = await response.text();
+            console.error("Received non-JSON response from ISS endpoint:", text);
+            // Sending a 502 Bad Gateway error as this server is acting as a proxy
+            res.status(502).json({ error: "Invalid response from upstream ISS data source." });
+        }
+    } catch (error) {
+        next(error);
+    }
+});
+
 module.exports = router;
