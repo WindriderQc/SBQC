@@ -36,7 +36,7 @@ router.post("/register", registerValidationRules(), async (req, res) => {
         message: ""
     }
 
-    const response2 = await fetch(apiUrl + "/users/fromEmail/" + req.body.email)
+    const response2 = await fetch(apiUrl + "/api/v1/users?email=" + req.body.email)
     const respJson = await response2.json()
     const emailExist = respJson.data[0]
     console.log('existing user entry: ', emailExist, '\n')
@@ -65,7 +65,7 @@ router.post("/register", registerValidationRules(), async (req, res) => {
 
     
     try {
-        const rawResponse = await fetch(apiUrl + '/users', { method: 'POST', headers: { "Content-type": "application/json" }, body: JSON.stringify(user)    }); 
+        const rawResponse = await fetch(apiUrl + '/api/v1/users', { method: 'POST', headers: { "Content-type": "application/json" }, body: JSON.stringify(user)    });
         const r = await rawResponse.json()
         if(r.status === 'success')  {  console.log(r.message, r.data)  } else console.log(r.status, r.message ) 
         res.redirect('../')
@@ -102,7 +102,7 @@ router.post('/', loginValidationRules(), async (req, res) => {
         // Check if user exist
         //const user = await User.findOne({ email: req.body.email })
         
-        const response2 = await fetch(apiUrl + "/users/fromEmail/" + req.body.email)
+        const response2 = await fetch(apiUrl + "/api/v1/users?email=" + req.body.email)
         const emailExist = await response2.json()
         const user = emailExist.data[0]
             
@@ -138,7 +138,7 @@ router.post('/', loginValidationRules(), async (req, res) => {
             console.log('updating user last connect -  id: ', user.email, user.lastConnectDate)
             user.lastConnectDate = moment().format('YYYY-MM-DDTHH:mm:ss.SSS')
               console.log(user.lastConnectDate)
-            const rawResponse = await fetch(apiUrl + '/user/:  ' + user._id, { method: 'PATCH', headers: { "Content-type": "application/json" }, body: JSON.stringify(user) }); 
+            const rawResponse = await fetch(apiUrl + '/api/v1/users/' + user._id, { method: 'PATCH', headers: { "Content-type": "application/json" }, body: JSON.stringify(user) });
             
             const r = await rawResponse.json()
             if(r.status === 'success')  {  console.log(r.message)  } else console.log(r.status, r.message ) 

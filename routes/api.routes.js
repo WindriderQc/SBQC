@@ -117,18 +117,18 @@ router.get('/deviceLatest/:esp',  async (req, res) => {
     if (!req.session || !req.session.userToken) {
         return res.status(401).json({ status: "error", message: "Unauthorized: No session token."});
     }
-    const options = { method: 'GET', headers: { 'auth-token': req.session.userToken }};
     try {
-        const response = await fetch(`${apiUrl}/heartbeats/senderLatest/${req.params.esp}`, options);
-        const respData = await response.json();
-        if (!response.ok) { // Check response.ok for HTTP errors from API
-             return res.status(response.status).json({ status: "error", message: respData.message || 'Error from data API', data: null });
+        const heartbeatsCollection = req.app.locals.collections['heartbeats'];
+        if (!heartbeatsCollection) {
+            return res.status(500).json({ status: "error", message: "Heartbeats collection not found." });
         }
-        const data = respData.data && respData.data[0];
-        if (!data) {
+
+        const data = await heartbeatsCollection.find({ sender: req.params.esp }).sort({ created: -1 }).limit(1).toArray();
+
+        if (!data || data.length === 0) {
             return res.json({ status: "info", message: 'No latest post found for this device.', data: null  });
         }
-        res.json({ status: "success", message: "Latest post retrieved", data: data  });
+        res.json({ status: "success", message: "Latest post retrieved", data: data[0]  });
     } catch (err) {
         console.error('Error retrieving latest device data for ESP:', req.params.esp, err);
         res.status(500).json({ status: "error", message: "Server error retrieving latest device data." });
@@ -140,24 +140,45 @@ router.post('/saveProfile', async (req, res) => {
         return res.status(401).json({ status: "error", message: "Unauthorized: No session token." });
     }
     const { profileName, config } = req.body;
-    const profileData = { profileName, config };
-    const options = {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'auth-token': req.session.userToken },
-        body: JSON.stringify(profileData)
-    };
+
     try {
-        const response = await fetch(`${apiUrl}/profile/${profileData.profileName}`, options);
-        const resultText = await response.text();
-        if (response.ok) {
-            res.json({ status: "success", message: 'Profile saved successfully!', data: resultText });
+        // First, get the profile to find its ID
+        const getProfileResponse = await fetch(`${apiUrl}/api/v1/profiles?profileName=${encodeURIComponent(profileName)}`, {
+            headers: { 'auth-token': req.session.userToken }
+        });
+
+        if (!getProfileResponse.ok) {
+            throw new Error('Failed to fetch profile to update.');
+        }
+
+        const profiles = await getProfileResponse.json();
+        const profile = profiles.data[0];
+
+        if (!profile) {
+            return res.status(404).json({ status: "error", message: `Profile '${profileName}' not found.` });
+        }
+
+        const profileId = profile._id;
+        const profileData = { profileName, config };
+
+        const options = {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'auth-token': req.session.userToken },
+            body: JSON.stringify(profileData)
+        };
+
+        const updateResponse = await fetch(`${apiUrl}/api/v1/profiles/${profileId}`, options);
+        const resultData = await updateResponse.json();
+
+        if (updateResponse.ok) {
+            res.json({ status: "success", message: 'Profile saved successfully!', data: resultData });
         } else {
-            console.error('Error saving profile:', resultText);
-            res.status(response.status).json({ status: "error", message: `Error saving profile: ${resultText}` });
+            console.error('Error saving profile:', resultData.message);
+            res.status(updateResponse.status).json({ status: "error", message: `Error saving profile: ${resultData.message}` });
         }
     } catch (err) {
-        console.error('Error connecting to Data API for saveProfile:', err);
-        res.status(500).json({ status: "error", message: `Error connecting to Data API: ${err.message}` });
+        console.error('Error in saveProfile route:', err);
+        res.status(500).json({ status: "error", message: `An unexpected error occurred: ${err.message}` });
     }
 });
 
@@ -168,15 +189,22 @@ router.get('/data/:options',  async (req, res) => {
     const [samplingRatio, espID, dateFrom] = req.params.options.split(',');
     if (req.session) req.session.selectedDevice = espID;
 
-    const options = { method: 'GET', headers: { 'auth-token': req.session.userToken }};
     try {
-        const response = await fetch(`${apiUrl}/heartbeats/data/${samplingRatio},${espID},${dateFrom}`, options);
-        const data = await response.json();
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Data API error: ${response.status} - ${errorText}`);
+        const heartbeatsCollection = req.app.locals.collections['heartbeats'];
+        if (!heartbeatsCollection) {
+            return res.status(500).json({ status: "error", message: "Heartbeats collection not found." });
         }
-        res.json({ status: "success", data: data });
+
+        const query = {
+            sender: espID,
+            created: { $gte: new Date(dateFrom) }
+        };
+
+        const allData = await heartbeatsCollection.find(query).sort({ created: 1 }).toArray();
+
+        const sampledData = allData.filter((_, index) => index % parseInt(samplingRatio, 10) === 0);
+
+        res.json({ status: "success", data: sampledData });
     } catch (err) {
         console.error('Error fetching data in /data/:options route:', err);
         res.status(500).json({ status: "error", message: "Could not get data", details: err.message });

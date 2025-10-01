@@ -295,8 +295,7 @@ router.post('/selectDevice', async (req, res) =>
 
 router.get('/database',  async (req, res) =>
  {
-    const response = await fetch(apiUrl+'api/v1/db/collectionList')
-    const list = await response.json()
+    const list = req.app.locals.collectionInfo;
     console.log('Sending collection list to client: ', list)
     res.render('database', {collectionList: JSON.stringify(list), apiUrl: apiUrl })
 })
