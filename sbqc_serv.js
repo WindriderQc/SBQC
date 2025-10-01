@@ -31,7 +31,7 @@ const mqtt = require('./scripts/mqttServer')
 const esp32 = require('./scripts/esp32')
 
 mqtt.initMqtt('mqtt://specialblend.ca', esp32.msgHandler, ['esp32', 'esp32/#', 'sbqc/iss']);
-esp32.setConnectedValidation(1000, mqtt.getClient()) //  check every X seconds if devices are still connected
+esp32.setConnectedValidation(30000, mqtt.getClient()) //  check every X seconds if devices are still connected
 
 
 
@@ -119,7 +119,6 @@ app
   .use('/api',      require('./routes/api.routes')) // New API routes
   .use('/',         require('./routes/routes'))
   .use('/checkins', require('./routes/checkins.routes'))
-  .use('/data',     require('./routes/data.routes'))
   .use('/meows',    require("./routes/meows.routes"))
   .use('/login',    require('./routes/login.routes'))
   .use('/ec-data',  require('./routes/ecWeather.routes')) // Environment Canada Data Endpoint
