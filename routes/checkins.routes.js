@@ -9,22 +9,30 @@ const router = require('express').Router()
 //const picDb = new Datastore('pics.db');
 //picDb.loadDatabase();
 
-router.get('/api', (request, response) => {
-    picDb.find({}, (err, data) => {
-        if (err) { response.end(); return; }
-        response.json(data);
-    });
+router.get('/api', (request, response, next) => {
+    try {
+        picDb.find({}, (err, data) => {
+            if (err) { return next(err); }
+            response.json(data);
+        });
+    } catch(error) {
+        next(error);
+    }
 });
 
-router.post('/api', (req, res) => { 
-
-    console.log('\npost to /checkins/api')
-    const data = req.body
-    const timestamp = Date.now()
-    data.timestamp = timestamp
-    picDb.insert(data)
-    res.json(data)
-
+router.post('/api', (req, res, next) => {
+    try {
+        console.log('\npost to /checkins/api')
+        const data = req.body
+        const timestamp = Date.now()
+        data.timestamp = timestamp
+        picDb.insert(data, (err, newDoc) => {
+            if (err) { return next(err); }
+            res.json(newDoc);
+        });
+    } catch(error) {
+        next(error);
+    }
 });
 
 

@@ -141,7 +141,7 @@ const esp32 = {
             let heartbeat = JSON.parse(message);
             esp32.receiveMessage(heartbeat);
             const currentTime = Date.now();
-            if (currentTime - (lastSaveTime[heartbeat.sender] || 0) >= 20000) {
+            if (currentTime - (lastSaveTime[heartbeat.sender] || 0) >= 60000) {
                 await esp32.saveEspPost(heartbeat);
                 lastSaveTime[heartbeat.sender] = currentTime;
             }

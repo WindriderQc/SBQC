@@ -1,7 +1,11 @@
 const { fetchJSON, fetchText } = require('./apiClient');
 const moment = require('moment');
 
-const { WEATHER_API_KEY, API_TIDES_KEY, OPENAQ_API_KEY } = process.env;
+const apiKeys = {
+    weather: process.env.WEATHER_API_KEY,
+    tides: process.env.API_TIDES_KEY,
+    openaq: process.env.OPENAQ_API_KEY,
+};
 
 // --- Caching for TLE and Pressure ---
 let tleCache = { data: null, timestamp: 0 };
@@ -11,19 +15,32 @@ const pressureAPIResponseCache = {};
 const HISTORICAL_PRESSURE_CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours
 const FORECAST_PRESSURE_CACHE_DURATION = 1 * 60 * 60 * 1000;   // 1 hour
 
+// --- Caching for Weather and Tides ---
+const weatherCache = {};
+const tidesCache = {};
+const WEATHER_CACHE_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+const TIDES_CACHE_DURATION_MS = 6 * 60 * 60 * 1000; // 6 hours
+
 // --- Weather ---
 async function getWeatherAndAirQuality(lat, lon) {
-    if (!WEATHER_API_KEY || !OPENAQ_API_KEY) {
+    const cacheKey = `${lat},${lon}`;
+    const cachedData = weatherCache[cacheKey];
+
+    if (cachedData && (Date.now() - cachedData.timestamp < WEATHER_CACHE_DURATION_MS)) {
+        return cachedData.data;
+    }
+
+    if (!apiKeys.weather || !apiKeys.openaq) {
         throw new Error('Server configuration error: Missing weather or air quality API key.');
     }
 
-    const weatherURL = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&APPID=${WEATHER_API_KEY}`;
+    const weatherURL = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&APPID=${apiKeys.weather}`;
     const aq_url = `https://api.openaq.org/v3/locations?coordinates=${lat},${lon}&radius=5000`;
 
     // Fetch in parallel
     const [weather, aq_data] = await Promise.all([
         fetchJSON(weatherURL),
-        fetchJSON(aq_url, { headers: { 'X-API-Key': OPENAQ_API_KEY } })
+        fetchJSON(aq_url, { headers: { 'X-API-Key': apiKeys.openaq } })
     ]);
 
     let sensorAQData = null;
@@ -33,23 +50,36 @@ async function getWeatherAndAirQuality(lat, lon) {
         if (latestSensor && latestSensor.id) {
             const sensor_url = `https://api.openaq.org/v3/sensors/${latestSensor.id}`;
             try {
-                sensorAQData = await fetchJSON(sensor_url, { headers: { 'X-API-Key': OPENAQ_API_KEY } });
+                sensorAQData = await fetchJSON(sensor_url, { headers: { 'X-API-Key': apiKeys.openaq } });
             } catch (e) {
                 console.warn(`Could not fetch details for sensor ${latestSensor.id}: ${e.message}`);
             }
         }
     }
 
-    return { weather, air_quality: sensorAQData || aq_data };
+    const result = { weather, air_quality: sensorAQData || aq_data };
+    weatherCache[cacheKey] = { data: result, timestamp: Date.now() };
+
+    return result;
 }
 
 // --- Tides ---
 async function getTides(lat, lon, days) {
-    if (!API_TIDES_KEY) {
+    const cacheKey = `${lat},${lon},${days}`;
+    const cachedData = tidesCache[cacheKey];
+
+    if (cachedData && (Date.now() - cachedData.timestamp < TIDES_CACHE_DURATION_MS)) {
+        return cachedData.data;
+    }
+
+    if (!apiKeys.tides) {
         throw new Error('Server configuration error: Missing Tides API key.');
     }
-    const worldTidesURL = `https://www.worldtides.info/api/v3?heights&extremes&key=${API_TIDES_KEY}&lat=${lat}&lon=${lon}&days=${days}`;
-    return await fetchJSON(worldTidesURL);
+    const worldTidesURL = `https://www.worldtides.info/api/v3?heights&extremes&key=${apiKeys.tides}&lat=${lat}&lon=${lon}&days=${days}`;
+    const result = await fetchJSON(worldTidesURL);
+
+    tidesCache[cacheKey] = { data: result, timestamp: Date.now() };
+    return result;
 }
 
 // --- Geolocation ---
@@ -82,7 +112,7 @@ async function fetchAndCacheWeatherData(url, cacheKey, cacheDuration) {
 }
 
 async function getPressure(lat, lon, numDaysHistorical = 2) {
-    if (!WEATHER_API_KEY) {
+    if (!apiKeys.weather) {
         console.warn('WEATHER_API_KEY is not set. Falling back to mock data for pressure.');
         return generateMockPressureTempData(lat, lon, numDaysHistorical);
     }
@@ -93,7 +123,7 @@ async function getPressure(lat, lon, numDaysHistorical = 2) {
         let allReadings = [];
 
         // Fetch Forecast
-        const forecastURL = `https://api.openweathermap.org/data/3.0/onecall?lat=${processedLat}&lon=${processedLon}&exclude=current,minutely,daily,alerts&units=metric&appid=${WEATHER_API_KEY}`;
+        const forecastURL = `https://api.openweathermap.org/data/3.0/onecall?lat=${processedLat}&lon=${processedLon}&exclude=current,minutely,daily,alerts&units=metric&appid=${apiKeys.weather}`;
         const forecastCacheKey = `fore-${processedLat}-${processedLon}`;
         const forecastData = await fetchAndCacheWeatherData(forecastURL, forecastCacheKey, FORECAST_PRESSURE_CACHE_DURATION);
         if (forecastData && forecastData.hourly) {
@@ -105,7 +135,7 @@ async function getPressure(lat, lon, numDaysHistorical = 2) {
         for (let i = 1; i <= numDaysHistorical; i++) {
             const targetDate = moment.utc().subtract(i, 'days');
             const targetTimestamp = targetDate.unix();
-            const historicalURL = `https://api.openweathermap.org/data/3.0/onecall/timemachine?lat=${processedLat}&lon=${processedLon}&dt=${targetTimestamp}&units=metric&appid=${WEATHER_API_KEY}`;
+            const historicalURL = `https://api.openweathermap.org/data/3.0/onecall/timemachine?lat=${processedLat}&lon=${processedLon}&dt=${targetTimestamp}&units=metric&appid=${apiKeys.weather}`;
             const historicalCacheKey = `hist-${processedLat}-${processedLon}-${targetDate.format('YYYYMMDD')}`;
             historicalPromises.push(fetchAndCacheWeatherData(historicalURL, historicalCacheKey, HISTORICAL_PRESSURE_CACHE_DURATION));
         }

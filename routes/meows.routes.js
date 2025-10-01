@@ -1,4 +1,5 @@
-let router = require('express').Router()
+let router = require('express').Router();
+const { BadRequest } = require('../utils/errors');
 
 //  meower
 
@@ -53,26 +54,24 @@ function isValidMew(mew) {
 
 
 const createMew = async (req, res, next) => {
-    if (isValidMew(req.body)) {
+    try {
+        if (!isValidMew(req.body)) {
+            throw new BadRequest('Hey! Name and Content are required! Name cannot be longer than 50 characters. Content cannot be longer than 140 characters.');
+        }
+
         const mew = {
-        name: req.body.name.toString().trim(),
-        content: req.body.content.toString().trim(),
-        created: new Date()
+            name: req.body.name.toString().trim(),
+            content: req.body.content.toString().trim(),
+            created: new Date()
         }
         
         const mewsdb =  req.app.locals.collections.mews;
-    try{
-        const createdMew = await mewsdb.insertOne(mew)
-        console.log( `Mew document was inserted with the _id: ${createdMew.insertedId}` )
-        res.json(createdMew)
+        const createdMew = await mewsdb.insertOne(mew);
+        console.log( `Mew document was inserted with the _id: ${createdMew.insertedId}` );
+        res.json(createdMew);
     }
-    catch(err) {console.log(err); next() }
-        
-    } else {
-        res.status(422)
-        res.json({
-        message: 'Hey! Name and Content are required! Name cannot be longer than 50 characters. Content cannot be longer than 140 characters.'
-        })
+    catch(err) {
+        next(err);
     }
 }
 
@@ -83,4 +82,4 @@ router.post('/v2/mews', createMew)
 
 
 // Export API routes
-module.exports = router
+module.exports = router;
