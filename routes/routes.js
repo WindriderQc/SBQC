@@ -121,10 +121,10 @@ router.get('/dashboard', async (req, res, next) => {
 
 router.get('/iot', async (req, res, next) => {
     try {
-        const registered = await dataApiService.getRegisteredDevices();
+        let registered = await dataApiService.getRegisteredDevices();
         if (registered == null) {
             console.log('Could not fetch devices list for iot. Is DataAPI online?');
-            return res.redirect('/index');
+            registered = [];
         }
         console.log('Registered devices for iot:', registered.map(dev => dev.id));
         res.render('iot', {
