@@ -62,7 +62,7 @@ function preload() {
     cloudyEarth = loadImage('/img/Planets/cloudyEarth.jpg');
     earthquakes = loadStrings('/data/quakes.csv');
     issGif = loadImage('/img/iss.png');
-    loadJSON('https://data.specialblend.ca/iss', populateInitialIssHistory);
+    loadJSON('/api/iss', populateInitialIssHistory);
 }
 
 function setup() {

@@ -178,9 +178,6 @@
                             ticks: { // Min, max, callback, autoSkip, etc. go into ticks configuration
                                 min: chartTimeLabels.length > 0 ? chartTimeLabels[0] : new Date(), // Fallback, will be empty if no data
                                 max: chartTimeLabels.length > 0 ? chartTimeLabels[chartTimeLabels.length - 1] : new Date(), // Fallback
-                                callback: function(value, index, values) {
-                                    return moment(value).format('MMM D, HH:mm');
-                                },
                                 autoSkip: true,
                                 maxTicksLimit: 20
                             }
