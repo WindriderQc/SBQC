@@ -33,16 +33,25 @@ async function registerDevice(device) {
 }
 
 async function getRegisteredDevices(forceRefresh = false) {
+    if (!process.env.DATA_API_URL) {
+        console.warn("DATA_API_URL is not defined. Cannot fetch registered devices.");
+        return null;
+    }
     const now = Date.now();
     if (!forceRefresh && deviceCache.data && (now - deviceCache.timestamp < CACHE_DURATION_MS)) {
         return deviceCache.data;
     }
-    const result = await fetchJSON(`${dataAPIUrl}/api/v1/devices`);
-    if (result.status === 'success') {
-        deviceCache = { data: result.data, timestamp: now };
-        return result.data;
+    try {
+        const result = await fetchJSON(`${dataAPIUrl}/api/v1/devices`);
+        if (result && result.status === 'success') {
+            deviceCache = { data: result.data, timestamp: now };
+            return result.data;
+        }
+        return deviceCache.data || null; // Return stale cache if available on error
+    } catch (error) {
+        console.error("Error fetching registered devices:", error.message);
+        return deviceCache.data || null; // Return stale cache on error
     }
-    return deviceCache.data || null; // Return stale cache if available on error
 }
 
 async function getDevice(id) {
