@@ -108,13 +108,11 @@ function setWorlGraph(data) {
                 options: {
                     showOutline: false,
                     showGraticule: false,
-                    scales: {
-                        projection: {
-                            axis: 'x',
-                            projection: 'equalEarth',
-                        },
+                    projection: {
+                        projection: 'equalEarth',
                     },
                     onClick: (evt, elems) => {
+                        if (!elems || !elems.length) return;
                         console.log(elems.map((elem) => elem.element.feature.properties.name));
                     },
                     geo: {

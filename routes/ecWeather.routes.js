@@ -175,7 +175,7 @@ function radarLayerInfo(lat, lon) {
 }
 
 // Main API route
-router.get('/api/ec-weather', async (req, res) => {
+router.get('/api/ec-weather', async (req, res, next) => {
   const lat = parseFloat(req.query.lat || '46.8139'); // Default to Quebec City area
   const lon = parseFloat(req.query.lon || '-71.208');
   const days = parseInt(req.query.days || '2'); // Default to 2 days historical to match previous behavior
@@ -209,8 +209,7 @@ router.get('/api/ec-weather', async (req, res) => {
 
     res.json(output);
   } catch (err) {
-    console.error('Main EC weather processing error:', err);
-    res.status(500).json({ error: 'Failed to fetch Environment Canada weather data', details: err.message });
+    next(err);
   }
 });
 
