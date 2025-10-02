@@ -81,8 +81,22 @@ router.post('/saveProfile', async (req, res, next) => {
     }
 });
 
-// Get Sampled Device Data
-router.get('/data/:options', async (req, res, next) => {
+router.get('/iss', async (req, res) => {
+    try {
+        const response = await fetch('https://api.wheretheiss.at/v1/satellites/25544');
+        if (!response.ok) {
+            throw new Error(`Failed to fetch ISS data: ${response.statusText}`);
+        }
+        const data = await response.json();
+        res.json({ status: "success", data: data });
+    } catch (error) {
+        console.error('Error fetching ISS data:', error);
+        res.status(500).json({ status: "error", message: 'Failed to fetch ISS data', details: error.message });
+    }
+});
+
+router.get('/data/:options',  async (req, res) => {
+
     if (!req.session || !req.session.userToken) {
         return res.status(401).json({ error: "Unauthorized: No session token." });
     }
