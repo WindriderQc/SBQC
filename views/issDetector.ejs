@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <%- include('partials/mainHead', { title: 'SBQC ISS Tracker' }) %>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.0.0/satellite.min.js"></script>
+
+
+
+
+</head>
+
+<body class="fixed-nav sticky-footer bg-light sidenav-toggled" id="page-top">
+
+<%- include('partials/nav') %>
+
+<div class="content-wrapper">
+<div class="container-fluid bg-3 text-center">
+    <!-- Begin Container -->
+
+    <div class="card mb-3">
+        <div class="card-header">3D ISS Viewer</div>
+        <div class="card-body" style="padding: 0; /* Adjust if needed */">
+            <div id="sketch-holder-wrapper" style="position: relative; width: 1280px; height: 720px; margin: 0 auto; background-color: #343a40; /* Dark background for canvas area */">
+                <div id="sketch-holder" style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;">
+                    <!-- p5.js canvas will be parented here by setup() in earth3D.js -->
+                </div>
+                <div id="controls-overlay" style="position: absolute; top: 10px; left: 10px; background-color: transparent; padding: 12px; border-radius: 6px; z-index: 1000; width: auto; min-width: 250px;">
+                    <div style="margin-bottom: 8px;">
+                        <label for="pathLengthSlider" style="font-size: 0.85em; display: block; margin-bottom: 2px;">Hist. Path: <span id="pathLengthValue">4200</span> pts</label>
+                        <input type="range" id="pathLengthSlider" min="100" max="4200" step="100" value="4200" style="width: 100%; margin-top: -2px;">
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <label for="predictionLengthSlider" style="font-size: 0.85em; display: block; margin-bottom: 2px;">Pred. Length: <span id="predictionLengthValue">15</span> min</label>
+                        <input type="range" id="predictionLengthSlider" min="5" max="360" step="5" value="15" style="width: 100%; margin-top: -2px;">
+                    </div>
+                    <div>
+                        <label for="passByRadiusSlider" style="font-size: 0.85em; display: block; margin-bottom: 2px;">Detect Radius: <span id="passByRadiusValue">1500</span> km</label>
+                        <input type="range" id="passByRadiusSlider" min="250" max="3000" step="50" value="1500" style="width: 100%; margin-top: -2px;">
+                    </div>
+                    <hr style="border-top: 1px solid rgba(255,255,255,0.2); margin-top: 8px; margin-bottom: 8px;">
+                    <div style="font-size: 0.85em;">
+                        <div style="margin-bottom: 4px;">
+                            <input type="checkbox" id="showIssHistoricalPath" checked>
+                            <label for="showIssHistoricalPath" style="margin-left: 4px;">Show Hist. Path</label>
+                        </div>
+                        <div style="margin-bottom: 4px;">
+                            <input type="checkbox" id="showIssPredictedPath" checked>
+                            <label for="showIssPredictedPath" style="margin-left: 4px;">Show Pred. Path</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="showQuakes" checked>
+                            <label for="showQuakes" style="margin-left: 4px;">Show Quakes</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer small text-muted">Press 'S' to save canvas to PNG.</div>
+    </div>
+
+    <div class="card mb-3" style="max-width: 1280px; margin: 0 auto;">
+        <div class="card-header">Controls & Info</div>
+        <div class="card-body">
+            <p>ISS Location - Latitude: <span id="isslat">N/A</span>&deg;, Longitude: <span id="isslon">N/A</span>&deg;</p>
+            <p>Client Location - Latitude: <span id="clat">N/A</span>&deg;, Longitude: <span id="clon">N/A</span>&deg;</p>
+            <p id="default-location-msg" style="font-size: 0.8em; color: #777; display: none;">Using default client location as live geolocation is unavailable or denied.</p>
+
+            <div style="padding: 10px; text-align: left; border-top: 1px solid #eee;">
+                <strong>Legend (3D View):</strong>
+                <div style="margin-top: 5px;">
+                    <span style="background-color: orange; display: inline-block; width: 20px; height: 10px; margin-right: 5px; border: 1px solid #555;"></span> Historical ISS Path
+                </div>
+                 <div style="margin-top: 5px;">
+                    <span style="background-color: #00FF00; display: inline-block; width: 20px; height: 10px; margin-right: 5px; border: 1px solid #555;"></span> Predicted ISS Path
+                </div>
+                <div style="margin-top: 5px;">
+                    <span style="background-color: yellow; display: inline-block; width: 10px; height: 10px; margin-right: 5px; border: 1px solid #555; border-radius: 50%;"></span> Default Location (Quebec City)
+                </div>
+                 <div style="margin-top: 5px;">
+                    <span style="background-color: rgba(0,100,255,0.3); display: inline-block; width: 20px; height: 10px; margin-right: 5px; border: 1px solid #555;"></span> Pass-by Detection Radius
+                </div>
+                <div style="margin-top: 5px;">
+                    <span style="background-color: teal; display: inline-block; width: 10px; height: 10px; margin-right: 5px; border: 1px solid #555; border-radius: 50%;"></span> Point of Closest Approach (if detected)
+                </div>
+                <div style="margin-top: 5px;">
+                    <span style="background-color: green; display: inline-block; width: 7px; height: 7px; margin-right: 5px; border: 1px solid #555; border-radius: 50%;"></span> End of Predicted Path
+                </div>
+            </div>
+
+            <div style="padding: 10px; text-align: left; border-top: 1px solid #eee;">
+                <strong>Quake Appearance:</strong>
+                <div style="margin-top: 5px;">
+                    <label for="quakeFromColor">From Color:</label>
+                    <input type="color" id="quakeFromColor" value="#00FF00"> <!-- Default Green -->
+                </div>
+                <div style="margin-top: 5px;">
+                    <label for="quakeToColor">To Color:</label>
+                    <input type="color" id="quakeToColor" value="#FF0000"> <!-- Default Red -->
+                </div>
+                <div style="margin-top: 5px;">
+                    <label for="quakeMagFactor">Magnitude Factor: <span id="quakeMagFactorValue">1.0</span></label>
+                    <input type="range" id="quakeMagFactor" min="0.1" max="5" step="0.1" value="1.0" style="width: 100%;">
+                </div>
+                <small style="display: block; margin-top: 8px;">
+                    Note: Quake color transitions from 'From Color' to 'To Color' based on magnitude. 'Magnitude Factor' affects the size of the quake spheres.
+                </small>
+            </div>
+
+            <div style="padding: 10px; text-align: left; border-top: 1px solid #eee;">
+                <%# Slider content was moved to the overlay %>
+            </div>
+        </div>
+        <div class="card-footer small text-muted">
+            <a href="https://eyes.nasa.gov/apps/solar-system/#/home" target="_blank" class="btn btn-outline-primary">Explore with NASA Eyes</a>
+        </div>
+         <div class="card-footer small text-muted">
+            <a href="/earthmap" target="_blank" class="btn btn-outline-primary">2D leaflet map</a>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <p>Next ISS pass-by: <span id="iss-passby-time">Calculating...</span></p>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col">
+                    <div>Wind Speed: <span id="wind-speed">N/A</span> m/s</div>
+                    <div>Wind Gust: <span id="wind-gust">N/A</span> m/s</div>
+                        <p>
+                            At location: <span id="summary">N/A</span> with a temperature of <span id="temp">N/A</span>&deg; C. <br>
+                            Air Quality (<span id="aq_parameter">N/A</span>): <span id="aq_value">N/A</span> <span id="aq_units"></span>
+                            <small>(Last read on <span id="aq_date">N/A</span>)</small>
+                        </p>
+                </div>
+            </div>
+            <div class="row">
+                <%- include('partials/tides') %>
+            </div>
+            <hr>
+            <div class="row">
+                <%- include('partials/pressureGraph') %>
+            </div>
+        </div>
+    </div>
+    <%# Removed <div id="ip_id"></div> %>
+</div>
+</div>
+</div>
+
+<%- include('partials/footer') %> <%# This should load tools.js %>
+<script src="/socket.io/socket.io.js"></script>
+<%- include('partials/p5') %>
+<%# <script src="/js/tools.js"></script> <!-- REMOVED - Loaded in footer --> %>
+<script src="/js/issDetector.js"></script>
+
+<script>
+window.ISSOrbitPredictor = (function () {
+    const TLE_URL = '/api/tle'; // Use our own server endpoint to get TLE data (handles server-side caching)
+    const TLE_CACHE_KEY = 'tleDataCache'; // Key for localStorage TLE cache
+    const CACHE_DURATION_MS = 2 * 60 * 60 * 1000; // Cache TLE data for 2 hours (in milliseconds)
+
+    const PREDICTION_INTERVAL_SEC = 10; // Calculate points every 10 seconds
+    const MAX_SEARCH_DURATION_SEC = 36 * 3600; // Max time to search for a pass (e.g., 36 hours)
+    const DEFAULT_SLIDER_MAX_DURATION_SEC = 6 * 3600; // Default max for slider if no pass found (e.g., 6 hours)
+
+    let currentRadiusKM = 1500; // Default, will be set by slider
+    let currentSliderDisplayDurationSec = 90 * 60; // Default initial display, will be updated
+
+    const targetLat = 46.8139; // Quebec City
+    const targetLon = -71.2080;
+    let satrec;
+
+    let fullCalculatedPath = []; // Stores all points up to MAX_SEARCH_DURATION_SEC
+    let timeToFirstClosePassSec = null; // Time in seconds to the first detected pass
+    let exposedClosestApproachDetails = null; // Stores details of the closest approach
+
+       // Fetches TLE data for ISS, using localStorage caching to reduce network requests
+       // and avoid potential 403 errors from excessive downloads from Celestrak.
+       async function fetchTLE() {
+           // Try to retrieve and use cached TLE data if it's recent enough
+           try {
+               const cachedItem = localStorage.getItem(TLE_CACHE_KEY);
+               if (cachedItem) {
+                   const cachedEntry = JSON.parse(cachedItem);
+                   // Check if the cached data is still valid (not older than CACHE_DURATION_MS)
+                   if (Date.now() - cachedEntry.timestamp < CACHE_DURATION_MS) {
+                       console.log("[ISSOrbitPredictor] Using cached TLE data.");
+                       const txt = cachedEntry.data;
+                       const lines = txt.split('\n');
+                       const i = lines.findIndex(l => l.includes('ISS (ZARYA)') || l.includes('ISS'));
+                       if (i >= 0 && lines[i+1] && lines[i+2]) {
+                           satrec = satellite.twoline2satrec(lines[i+1].trim(), lines[i+2].trim());
+                           if (satrec) { // Check if satrec was successfully initialized
+                               // console.log("[ISSOrbitPredictor] Set satrec from cached TLE.");
+                               return true;
+                           }
+                       }
+                       // If parsing failed or satrec is not valid from cache
+                       console.error("[ISSOrbitPredictor] Could not parse TLE from cached text or satrec invalid.");
+                       satrec = null;
+                       localStorage.removeItem(TLE_CACHE_KEY); // Remove invalid cached data
+                       return false;
+                   } else {
+                       console.log("[ISSOrbitPredictor] Cached TLE data expired.");
+                   }
+               }
+           } catch (e) {
+               console.error("[ISSOrbitPredictor] Error reading TLE from cache:", e);
+               localStorage.removeItem(TLE_CACHE_KEY); // Clear corrupted cache
+               satrec = null;
+               return false;
+           }
+
+           // If cache is invalid, expired, or not present, fetch new TLE data from the network.
+           try {
+               console.log("[ISSOrbitPredictor] Fetching new TLE data from network.");
+               const res = await fetch(TLE_URL);
+               if (!res.ok) { // Check response status directly
+                   console.error(`[ISSOrbitPredictor] Failed to fetch TLE: ${res.status}`);
+                   satrec = null;
+                   return false;
+               }
+               const txt = await res.text();
+
+               // Store the newly fetched TLE data and current timestamp in localStorage.
+               try {
+                   const cacheEntry = { timestamp: Date.now(), data: txt };
+                   localStorage.setItem(TLE_CACHE_KEY, JSON.stringify(cacheEntry));
+                   console.log("[ISSOrbitPredictor] Fetched new TLE and updated cache.");
+               } catch (e) {
+                   console.error("[ISSOrbitPredictor] Error saving TLE to cache:", e);
+                   // Potentially clear cache if quota exceeded, but for now just log
+               }
+
+               const lines = txt.split('\n');
+               const i = lines.findIndex(l => l.includes('ISS (ZARYA)') || l.includes('ISS'));
+               if (i >= 0 && lines[i+1] && lines[i+2]) {
+                   satrec = satellite.twoline2satrec(lines[i+1].trim(), lines[i+2].trim());
+                   if (satrec) { // Check if satrec was successfully initialized
+                       return true;
+                   }
+               }
+               // If parsing failed or satrec is not valid from fetched TLE
+               console.error("[ISSOrbitPredictor] Could not parse TLE from fetched text or satrec invalid.");
+               satrec = null;
+               return false;
+           } catch (error) {
+               console.error("[ISSOrbitPredictor] Error fetching TLE:", error);
+               satrec = null;
+               return false;
+           }
+           // Fallback, though ideally all paths above should return.
+           satrec = null;
+           return false;
+       }
+
+       function positionAt(time) {
+           if (!satrec) return null;
+           try {
+               const propagateResult = satellite.propagate(satrec, time);
+               if (!propagateResult || !propagateResult.position) {
+                   // console.warn('[ISSOrbitPredictor] Propagation failed for time:', time);
+                   return null;
+               }
+               const { position } = propagateResult;
+               const gmst = satellite.gstime(time);
+               const geodetic = satellite.eciToGeodetic(position, gmst);
+               return {
+                   lat: geodetic.latitude * 180 / Math.PI,
+                   lon: geodetic.longitude * 180 / Math.PI,
+                   alt: geodetic.height
+               };
+           } catch (e) {
+               console.error("[ISSOrbitPredictor] Error in positionAt or propagate:", e);
+               return null;
+           }
+       }
+
+    function haversineDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371;
+        const toRad = angle => angle * Math.PI / 180;
+        const dLat = toRad(lat2 - lat1);
+        const dLon = toRad(lon2 - lon1);
+        const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+        return 2 * R * Math.asin(Math.sqrt(a));
+    }
+
+    // Generates the full path and finds the first close pass
+    async function calculateFullPredictionAndDeterminePass() {
+        if (!satrec) {
+            const tleSetupSuccess = await fetchTLE();
+            if (!tleSetupSuccess) {
+                console.error("[ISSOrbitPredictor] TLE data (satrec) could not be initialized. Cannot calculate full prediction.");
+                exposedClosestApproachDetails = null; // Ensure details are cleared on TLE error
+                updatePassByText(null, Infinity); // Update text to show error/no pass
+                updatePredictionLengthSlider(DEFAULT_SLIDER_MAX_DURATION_SEC / 60, DEFAULT_SLIDER_MAX_DURATION_SEC / 60); // Default slider range
+                displaySlicedPath(0); // Display no path
+                return;
+            }
+        }
+
+        const now = new Date();
+        fullCalculatedPath = [];
+        timeToFirstClosePassSec = null;
+        let closestOverallDistance = Infinity;
+        let closestOverallPoint = null;
+
+        for (let t_sec = 0; t_sec < MAX_SEARCH_DURATION_SEC; t_sec += PREDICTION_INTERVAL_SEC) {
+            const timeInstance = new Date(now.getTime() + t_sec * 1000);
+            const pos = positionAt(timeInstance);
+            if (pos) {
+                fullCalculatedPath.push({ lat: pos.lat, lng: pos.lon, alt: pos.alt, time: t_sec });
+                const dist = haversineDistance(pos.lat, pos.lon, targetLat, targetLon);
+                if (dist < closestOverallDistance) {
+                    closestOverallDistance = dist;
+                    closestOverallPoint = { time: t_sec, dist, ...pos };
+                }
+                if (dist < currentRadiusKM && timeToFirstClosePassSec === null) {
+                    timeToFirstClosePassSec = t_sec;
+                    console.log(`[ISSOrbitPredictor] First close pass detected at ${t_sec/60} mins, dist: ${dist.toFixed(0)}km`);
+                }
+            }
+        }
+        console.log(`[ISSOrbitPredictor] Full path calculated. Points: ${fullCalculatedPath.length}. Closest overall: ${closestOverallDistance.toFixed(0)}km at ${closestOverallPoint ? closestOverallPoint.time/60 : 'N/A'} mins.`);
+
+        if (closestOverallPoint && closestOverallDistance < currentRadiusKM) {
+            exposedClosestApproachDetails = {
+                lat: closestOverallPoint.lat,
+                lon: closestOverallPoint.lon,
+                alt: closestOverallPoint.alt, // Assumes alt is part of closestOverallPoint from '...pos'
+                time: closestOverallPoint.time,
+                dist: closestOverallDistance
+            };
+            // console.log('[ISSOrbitPredictor] Closest approach details updated:', exposedClosestApproachDetails);
+        } else {
+            exposedClosestApproachDetails = null;
+            // console.log('[ISSOrbitPredictor] No close approach within radius, details cleared.');
+        }
+
+        updatePassByText(closestOverallPoint, closestOverallDistance);
+
+        let sliderMaxDurationSec = timeToFirstClosePassSec !== null ? timeToFirstClosePassSec : DEFAULT_SLIDER_MAX_DURATION_SEC;
+        // Ensure slider max is not less than a minimum (e.g. 5 mins) and not more than full search
+        sliderMaxDurationSec = Math.max(5 * 60, Math.min(sliderMaxDurationSec, MAX_SEARCH_DURATION_SEC));
+        currentSliderDisplayDurationSec = sliderMaxDurationSec; // Start by showing path up to pass or default max
+
+        updatePredictionLengthSlider(sliderMaxDurationSec / 60, currentSliderDisplayDurationSec / 60);
+        displaySlicedPath(currentSliderDisplayDurationSec);
+    }
+
+    function updatePassByText(closestPointData, closestDistVal) {
+        const passByStatus = document.getElementById('iss-passby-time');
+        if (!passByStatus) return;
+
+        if (closestPointData && closestPointData.dist < currentRadiusKM) {
+            const approachDate = new Date(new Date().getTime() + closestPointData.time * 1000);
+            passByStatus.textContent = `Approx. pass at ${approachDate.toLocaleTimeString()} (distance ~${Math.round(closestPointData.dist)} km). TLE based.`;
+        } else {
+            passByStatus.textContent = `No close pass predicted (within ${currentRadiusKM}km for next ${MAX_SEARCH_DURATION_SEC/3600}hrs). Closest ~${closestDistVal.toFixed(0)}km. TLE based.`;
+        }
+    }
+
+    function updatePredictionLengthSlider(maxMinutes, currentMinutes) {
+        const slider = document.getElementById('predictionLengthSlider');
+        const valueSpan = document.getElementById('predictionLengthValue');
+
+        if (!slider) {
+            console.error("[ISSOrbitPredictor] predictionLengthSlider DOM element not found.");
+            return; // Gracefully exit if slider is missing
+        }
+        if (!valueSpan) {
+            console.error("[ISSOrbitPredictor] predictionLengthValue DOM element not found.");
+            // Depending on desired behavior, you might still want to update the slider if it exists,
+            // but for now, we'll also return if the valueSpan is missing.
+            return;
+        }
+
+        // Proceed with original logic only if both elements are found
+        if (typeof maxMinutes === 'number' && !isNaN(maxMinutes)) {
+            slider.max = maxMinutes.toString();
+        } else {
+            console.warn("[ISSOrbitPredictor] Invalid maxMinutes for predictionLengthSlider:", maxMinutes);
+        }
+
+        if (typeof currentMinutes === 'number' && !isNaN(currentMinutes)) {
+            slider.value = currentMinutes.toString();
+            valueSpan.textContent = currentMinutes.toString();
+        } else {
+            console.warn("[ISSOrbitPredictor] Invalid currentMinutes for predictionLengthSlider:", currentMinutes);
+            // Optionally set a default text for valueSpan if currentMinutes is invalid
+            // valueSpan.textContent = 'N/A';
+        }
+    }
+
+    function displaySlicedPath(displayDurationSeconds) {
+        const pointsToDisplay = fullCalculatedPath.filter(p => p.time <= displayDurationSeconds);
+        if (window.earth3DSketch && typeof window.earth3DSketch.updatePredictedPath === 'function') {
+            window.earth3DSketch.updatePredictedPath(pointsToDisplay);
+        }
+    }
+
+    return {
+        fetchAndPredict: async function () {
+            await calculateFullPredictionAndDeterminePass();
+        },
+        setPredictionDurationSec: function(durationSeconds) {
+            currentSliderDisplayDurationSec = durationSeconds;
+            displaySlicedPath(currentSliderDisplayDurationSec);
+            // No need to call generatePredictedPath, just redisplay a portion of existing full path
+        },
+        setRadiusKM: function(radKM) {
+            if (typeof radKM === 'number' && radKM > 0) currentRadiusKM = radKM;
+            // Recalculate to find new timeToFirstClosePassSec and update slider/text
+            // This will re-use existing TLE if already fetched and satrec is valid.
+            calculateFullPredictionAndDeterminePass();
+        },
+        getClosestApproachDetails: function() {
+            return exposedClosestApproachDetails;
+        }
+    };
+})();
+
+    // Page UI and Socket.IO Logic
+
+    let clientLat = null;
+    let clientLon = null;
+
+    // let pagePredictedIssPathPoints = []; // Now managed by ISSOrbitPredictor
+
+    let lastPassByCheckTime = 0;
+    const PASS_BY_CHECK_INTERVAL = 30000;
+
+    // let PASS_BY_THRESHOLD_KM = 1000; // Now managed by ISSOrbitPredictor (as radiusKM)
+    // let predictionDurationSeconds = 15 * 60; // Now managed by ISSOrbitPredictor
+
+    const socket = io();
+
+    socket.on('connect', () => {
+        console.log('Connected to server via Socket.IO');
+    });
+
+    socket.on('iss', (data) => {
+        window.iss = data;
+
+        if (document.getElementById('isslat') && document.getElementById('isslon')) {
+            document.getElementById('isslat').textContent = parseFloat(data.latitude).toFixed(2);
+            document.getElementById('isslon').textContent = parseFloat(data.longitude).toFixed(2);
+        }
+
+        const now = Date.now();
+        if (clientLat !== null && clientLon !== null && now - lastPassByCheckTime > PASS_BY_CHECK_INTERVAL) {
+            // calculateAndDisplayPassBy(); // Old function, will be replaced by ISSOrbitPredictor logic
+            // For now, prediction is triggered by sliders or initially.
+            // To trigger on interval, ISSOrbitPredictor.fetchAndPredict() could be called here.
+            // However, TLE fetching on interval might be too frequent.
+            // The current ISSOrbitPredictor design re-predicts if parameters change via sliders.
+            // A separate timer for fetchAndPredict() might be better if periodic refresh is needed.
+            // For this step, we rely on initial call and slider changes.
+            if (window.ISSOrbitPredictor) {
+                // This will refetch TLE and predict. Consider if this is too frequent.
+                // window.ISSOrbitPredictor.fetchAndPredict();
+            }
+            lastPassByCheckTime = now;
+        }
+    });
+
+    async function fetchWeatherForCoords(lat, lon) {
+        if (!lat || !lon) return;
+        const url = `/api/weather/${lat},${lon}`;
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`Weather API request failed with status ${response.status}`);
+            const data = await response.json();
+            document.getElementById('summary').textContent = data.weather.weather[0].description;
+            document.getElementById('temp').textContent = data.weather.main.feels_like.toFixed(1);
+            if (data.air_quality && data.air_quality.results && data.air_quality.results[0] && data.air_quality.results[0].latest) {
+                const air = data.air_quality.results[0];
+                document.getElementById('aq_parameter').textContent = air.parameter ? air.parameter.displayName : 'N/A';
+                document.getElementById('aq_value').textContent = air.latest.value;
+                document.getElementById('aq_units').textContent = air.parameter ? air.parameter.units : '';
+                document.getElementById('aq_date').textContent = air.latest.datetime && air.latest.datetime.local ? air.latest.datetime.local : 'N/A';
+            } else { document.getElementById('aq_value').textContent = 'NO READING'; }
+            const wind = data.weather.wind;
+            document.getElementById('wind-speed').textContent = wind.speed;
+            document.getElementById('wind-gust').textContent = wind.gust || 'N/A';
+        } catch (e) {
+            console.error('Error fetching weather data:', e);
+            document.getElementById('summary').textContent = 'Error';
+            document.getElementById('temp').textContent = 'N/A';
+            document.getElementById('aq_value').textContent = 'NO READING';
+        }
+    }
+
+    async function setDefaultLocationAndFetchWeather() {
+        console.log("Using default client location (Quebec City area).");
+
+        clientLat = 46.8139; clientLon = -71.2080;
+
+        document.getElementById('clat').textContent = clientLat.toFixed(2);
+        document.getElementById('clon').textContent = clientLon.toFixed(2);
+        document.getElementById('default-location-msg').style.display = 'block';
+        await fetchWeatherForCoords(clientLat, clientLon);
+    }
+
+    async function updateGeoData() {
+        if (typeof Tools === 'undefined' || !Tools.isGeoLocAvailable || !Tools.geoLocate) {
+            console.log("Tools.js not available or complete. Using default location.");
+            await setDefaultLocationAndFetchWeather(); return;
+        }
+        if (!Tools.isGeoLocAvailable()) {
+
+            console.log("Geolocation not available in this browser.");
+            await setDefaultLocationAndFetchWeather(); return;
+        }
+        try {
+            console.log("Attempting to get live geolocation...");
+            const { coords } = await Tools.geoLocate();
+
+            clientLat = coords.latitude; clientLon = coords.longitude;
+            console.log("Live geolocation successful:", clientLat, clientLon);
+            document.getElementById('default-location-msg').style.display = 'none';
+            document.getElementById('clat').textContent = clientLat.toFixed(2);
+            document.getElementById('clon').textContent = clientLon.toFixed(2);
+            await fetchWeatherForCoords(clientLat, clientLon);
+        } catch (e) {
+            console.warn('Error getting live geolocation or permission denied:', e.message);
+            await setDefaultLocationAndFetchWeather();
+        }
+    }
+
+// calculateAndDisplayPassBy() function is now removed and replaced by ISSOrbitPredictor module.
+
+    document.addEventListener('DOMContentLoaded', () => {
+        updateGeoData();
+
+        const pathLengthSlider = document.getElementById('pathLengthSlider');
+        const pathLengthValueSpan = document.getElementById('pathLengthValue');
+        const predictionLengthSlider = document.getElementById('predictionLengthSlider');
+        const predictionLengthValueSpan = document.getElementById('predictionLengthValue');
+        const passByRadiusSlider = document.getElementById('passByRadiusSlider');
+        const passByRadiusValueSpan = document.getElementById('passByRadiusValue');
+
+        if (pathLengthSlider && pathLengthValueSpan) {
+            pathLengthSlider.addEventListener('input', function() {
+                pathLengthValueSpan.textContent = this.value;
+                if (window.earth3DSketch && typeof window.earth3DSketch.setMaxHistoryPoints === 'function') {
+                    window.earth3DSketch.setMaxHistoryPoints(parseInt(this.value));
+                }
+                // calculateAndDisplayPassBy(); // Old function call removed
+                // Prediction is handled by ISSOrbitPredictor setters or its internal logic
+            });
+        }
+
+        if (predictionLengthSlider && predictionLengthValueSpan) {
+            predictionLengthSlider.addEventListener('input', function() {
+                predictionLengthValueSpan.textContent = this.value;
+                // predictionDurationSeconds = parseInt(this.value) * 60; // Old variable
+                if (window.ISSOrbitPredictor) {
+                    window.ISSOrbitPredictor.setPredictionDurationSec(parseInt(this.value) * 60);
+                }
+                // calculateAndDisplayPassBy(); // Old function call removed
+            });
+        }
+
+        if (passByRadiusSlider && passByRadiusValueSpan) {
+            passByRadiusSlider.addEventListener('input', function() {
+                passByRadiusValueSpan.textContent = this.value;
+                // PASS_BY_THRESHOLD_KM = parseInt(this.value); // Old variable for calculation
+                if (window.ISSOrbitPredictor) {
+                    window.ISSOrbitPredictor.setRadiusKM(parseInt(this.value));
+                }
+                if (window.earth3DSketch && typeof window.earth3DSketch.setSketchPassByRadiusKM === 'function') {
+                    window.earth3DSketch.setSketchPassByRadiusKM(parseInt(this.value));
+                }
+                // calculateAndDisplayPassBy(); // Old function call removed
+            });
+        }
+
+        if (window.ISSOrbitPredictor) {
+            window.ISSOrbitPredictor.fetchAndPredict();
+        }
+
+        // Quake appearance controls
+        const quakeFromColorInput = document.getElementById('quakeFromColor');
+        const quakeToColorInput = document.getElementById('quakeToColor');
+        const quakeMagFactorInput = document.getElementById('quakeMagFactor');
+        const quakeMagFactorValueSpan = document.getElementById('quakeMagFactorValue');
+
+        if (quakeFromColorInput) {
+            quakeFromColorInput.addEventListener('input', function() {
+                if (window.earth3DSketch && typeof quakeFromColor !== 'undefined') {
+                    // p5.js color function is available in the global scope of the sketch
+                    // but earth3D.js's setup() initializes quakeFromColor.
+                    // We need to update that specific variable.
+                    // Direct assignment might be tricky if earth3D.js is not fully loaded or
+                    // if p5 instance is not directly accessible here in the same way.
+                    // A robust way is to expose a setter in earth3DSketch object.
+                    // For now, assuming direct update works or will be refined.
+                    // Let's create new p5.Color objects from the hex value.
+                    // This assumes p5 is loaded and `color()` is available globally.
+                    try {
+                        let newColor = color(this.value); // p5.color()
+                        newColor.setAlpha(150); // Keep original alpha
+                        quakeFromColor = newColor; // Update global in earth3D.js
+                         if (typeof redraw === 'function') redraw(); // Redraw sketch
+                    } catch (e) {
+                        console.error("Error creating color for quakeFromColor:", e);
+                    }
+                }
+            });
+        }
+
+        if (quakeToColorInput) {
+            quakeToColorInput.addEventListener('input', function() {
+                if (window.earth3DSketch && typeof quakeToColor !== 'undefined') {
+                     try {
+                        let newColor = color(this.value); // p5.color()
+                        newColor.setAlpha(150); // Keep original alpha
+                        quakeToColor = newColor; // Update global in earth3D.js
+                        if (typeof redraw === 'function') redraw(); // Redraw sketch
+                    } catch (e) {
+                        console.error("Error creating color for quakeToColor:", e);
+                    }
+                }
+            });
+        }
+
+        if (quakeMagFactorInput && quakeMagFactorValueSpan) {
+            quakeMagFactorInput.addEventListener('input', function() {
+                quakeMagFactorValueSpan.textContent = this.value;
+                if (window.earth3DSketch && typeof quakeMagFactor !== 'undefined') {
+                    quakeMagFactor = parseFloat(this.value); // Update global in earth3D.js
+                    if (typeof redraw === 'function') redraw(); // Redraw sketch
+                }
+            });
+        }
+
+        // Visibility checkbox handlers
+        const showIssHistoricalPathCheckbox = document.getElementById('showIssHistoricalPath');
+        const showIssPredictedPathCheckbox = document.getElementById('showIssPredictedPath');
+        const showQuakesCheckbox = document.getElementById('showQuakes');
+
+        if (showIssHistoricalPathCheckbox) {
+            showIssHistoricalPathCheckbox.addEventListener('change', function() {
+                if (window.earth3DSketch && typeof window.earth3DSketch.setShowIssHistoricalPath === 'function') {
+                    window.earth3DSketch.setShowIssHistoricalPath(this.checked);
+                }
+            });
+        }
+
+        if (showIssPredictedPathCheckbox) {
+            showIssPredictedPathCheckbox.addEventListener('change', function() {
+                if (window.earth3DSketch && typeof window.earth3DSketch.setShowIssPredictedPath === 'function') {
+                    window.earth3DSketch.setShowIssPredictedPath(this.checked);
+                }
+            });
+        }
+
+        if (showQuakesCheckbox) {
+            showQuakesCheckbox.addEventListener('change', function() {
+                if (window.earth3DSketch && typeof window.earth3DSketch.setShowQuakes === 'function') {
+                    window.earth3DSketch.setShowQuakes(this.checked);
+                }
+            });
+        }
+    });
+</script>
+
+</body>
+</html>
