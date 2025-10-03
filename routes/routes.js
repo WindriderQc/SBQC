@@ -254,6 +254,10 @@ staticRoutes.forEach(route => {
     });
 });
 
+router.get('/iss-detector', (req, res) => {
+    res.render('issDetector');
+});
+
 // --- Action Routes ---
 
 router.post('/set_io', (req, res) => {
