@@ -58,11 +58,20 @@ const END_OF_PATH_MARKER_SIZE = USER_LOCATION_MARKER_SIZE / 2;
 // ... (rest of variable declarations like sketchPassByRadiusKM are effectively here or remain where they are if not dependent)
 let sketchPassByRadiusKM = 1500; // Default pass-by radius in KM, will be updated by slider
 
-function preload() {
+async function preload() {
     cloudyEarth = loadImage('/img/Planets/cloudyEarth.jpg');
     earthquakes = loadStrings('/data/quakes.csv');
     issGif = loadImage('/img/iss.png');
-    loadJSON('/api/iss', populateInitialIssHistory);
+    try {
+        const response = await fetch('/api/iss');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        populateInitialIssHistory(data);
+    } catch(err) {
+        console.error('[fetch error] Failed to load historical ISS data:', err);
+    }
 }
 
 function setup() {
@@ -125,22 +134,37 @@ function setSketchPassByRadiusKM(newRadiusKM) {
 }
 
 function populateInitialIssHistory(responseData) {
-    console.log('[populateInitialIssHistory] Received historical ISS data. Points in data array:', responseData && responseData.data ? responseData.data.length : 'null/undefined');
-    if (responseData && responseData.data && Array.isArray(responseData.data) && responseData.data.length > 0) {
-        let pointsToProcess = responseData.data.sort((a, b) => new Date(a.timeStamp).getTime() - new Date(b.timeStamp).getTime());
-        originalLoadedIssHistory = pointsToProcess.map(p => ({
-            lat: p.latitude,
-            lon: p.longitude,
-            timeStamp: p.timeStamp
-        }));
-        let startIndex = Math.max(0, originalLoadedIssHistory.length - MAX_HISTORY_POINTS);
-        internalIssPathHistory = originalLoadedIssHistory.slice(startIndex);
+    try {
+        console.log('[populateInitialIssHistory] Received historical ISS data. Points in data array:', responseData && responseData.data ? responseData.data.length : 'null/undefined');
 
-        console.log(`[populateInitialIssHistory] Initial internalIssPathHistory populated with ${internalIssPathHistory.length} points.`);
-        if (typeof window.onHistoricalDataReadyForPrediction === 'function') {
-            window.onHistoricalDataReadyForPrediction();
+        if (responseData && responseData.data && Array.isArray(responseData.data) && responseData.data.length > 0) {
+            // Log the first data point to inspect its structure
+            console.log('[populateInitialIssHistory] First data point:', JSON.stringify(responseData.data[0]));
+
+            let pointsToProcess = responseData.data.sort((a, b) => new Date(a.timeStamp).getTime() - new Date(b.timeStamp).getTime());
+
+            originalLoadedIssHistory = pointsToProcess.map(p => ({
+                lat: p.latitude,
+                lon: p.longitude,
+                timeStamp: p.timeStamp
+            }));
+
+            let startIndex = Math.max(0, originalLoadedIssHistory.length - MAX_HISTORY_POINTS);
+            internalIssPathHistory = originalLoadedIssHistory.slice(startIndex);
+
+            console.log(`[populateInitialIssHistory] Initial internalIssPathHistory populated with ${internalIssPathHistory.length} points.`);
+
+            if (typeof window.onHistoricalDataReadyForPrediction === 'function') {
+                window.onHistoricalDataReadyForPrediction();
+            }
+        } else {
+            console.log('[populateInitialIssHistory] No historical data received or data is empty.');
+            originalLoadedIssHistory = [];
+            internalIssPathHistory = [];
         }
-    } else {
+    } catch (e) {
+        console.error('[populateInitialIssHistory] Error processing historical data:', e);
+        // Ensure these are reset on error to avoid using corrupted data.
         originalLoadedIssHistory = [];
         internalIssPathHistory = [];
     }

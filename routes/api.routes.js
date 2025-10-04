@@ -81,21 +81,7 @@ router.post('/saveProfile', async (req, res, next) => {
     }
 });
 
-router.get('/iss', async (req, res) => {
-    try {
-        const response = await fetch('https://api.wheretheiss.at/v1/satellites/25544');
-        if (!response.ok) {
-            throw new Error(`Failed to fetch ISS data: ${response.statusText}`);
-        }
-        const data = await response.json();
-        res.json({ status: "success", data: data });
-    } catch (error) {
-        console.error('Error fetching ISS data:', error);
-        res.status(500).json({ status: "error", message: 'Failed to fetch ISS data', details: error.message });
-    }
-});
-
-router.get('/data/:options',  async (req, res) => {
+router.get('/data/:options',  async (req, res, next) => {
 
     if (!req.session || !req.session.userToken) {
         return res.status(401).json({ error: "Unauthorized: No session token." });
@@ -149,23 +135,26 @@ router.get('/pressure', async (req, res, next) => {
     }
 });
 
-// ISS Data Proxy
+// ISS Data
 router.get('/iss', async (req, res, next) => {
     try {
-        const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-        const response = await fetch('https://data.specialblend.ca/iss');
-        const contentType = response.headers.get('content-type');
-
-        if (contentType && contentType.includes('application/json')) {
-            const data = await response.json();
-            res.json(data);
-        } else {
-            const text = await response.text();
-            console.error("Received non-JSON response from ISS endpoint:", text);
-            // Sending a 502 Bad Gateway error as this server is acting as a proxy
-            res.status(502).json({ error: "Invalid response from upstream ISS data source." });
+        const issdb = req.app.locals.collections.iss;
+        if (!issdb) {
+            return res.status(500).json({ status: 'error', message: 'ISS data collection not available.' });
         }
+
+        // Fetch the last 5000 records, sorted by timestamp descending, then reverse in code.
+        const historicalData = await issdb.find({})
+            .sort({ timeStamp: -1 })
+            .limit(5000)
+            .toArray();
+
+        // The frontend expects data sorted ascending by time.
+        const sortedData = historicalData.reverse();
+
+        res.json({ status: "success", data: sortedData });
     } catch (error) {
+        console.error('Error fetching historical ISS data:', error);
         next(error);
     }
 });
