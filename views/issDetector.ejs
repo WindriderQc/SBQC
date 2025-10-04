@@ -5,9 +5,9 @@
     <%- include('partials/mainHead', { title: 'SBQC ISS Tracker' }) %>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.0.0/satellite.min.js"></script>
 
+  
 
-
-
+       
 </head>
 
 <body class="fixed-nav sticky-footer bg-light sidenav-toggled" id="page-top">
@@ -17,36 +17,6 @@
 <div class="content-wrapper">
 <div class="container-fluid bg-3 text-center">
     <!-- Begin Container -->
-
-    <div class="card mb-3">
-        <div class="card-body">
-            <div class="row mb-4">
-                <div class="col">
-                    <div>Wind Speed: <span id="wind-speed">N/A</span> m/s</div>
-                    <div>Wind Gust: <span id="wind-gust">N/A</span> m/s</div>
-                        <p>
-                            At location: <span id="summary">N/A</span> with a temperature of <span id="temp">N/A</span>&deg; C. <br>
-                            Air Quality (<span id="aq_parameter">N/A</span>): <span id="aq_value">N/A</span> <span id="aq_units"></span>
-                            <small>(Last read on <span id="aq_date">N/A</span>)</small>
-                        </p>
-                </div>
-            </div>
-            <div class="row">
-                <%- include('partials/tides') %>
-            </div>
-            <hr>
-            <div class="row">
-                <%- include('partials/pressureGraph') %>
-            </div>
-        </div>
-    </div>
-
-
-    <div class="card mb-3">
-        <div class="card-body">
-            <p>Next ISS pass-by: <span id="iss-passby-time">Calculating...</span></p>
-        </div>
-    </div>
 
     <div class="card mb-3">
         <div class="card-header">3D ISS Viewer</div>
@@ -148,6 +118,35 @@
             <a href="/earthmap" target="_blank" class="btn btn-outline-primary">2D leaflet map</a>
         </div>
     </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <p>Next ISS pass-by: <span id="iss-passby-time">Calculating...</span></p>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col">
+                    <div>Wind Speed: <span id="wind-speed">N/A</span> m/s</div>
+                    <div>Wind Gust: <span id="wind-gust">N/A</span> m/s</div>
+                        <p>
+                            At location: <span id="summary">N/A</span> with a temperature of <span id="temp">N/A</span>&deg; C. <br>
+                            Air Quality (<span id="aq_parameter">N/A</span>): <span id="aq_value">N/A</span> <span id="aq_units"></span>
+                            <small>(Last read on <span id="aq_date">N/A</span>)</small>
+                        </p>
+                </div>
+            </div>
+            <div class="row">
+                <%- include('partials/tides') %>
+            </div>
+            <hr>
+            <div class="row">
+                <%- include('partials/pressureGraph') %>
+            </div>
+        </div>
+    </div>
     <%# Removed <div id="ip_id"></div> %>
 </div>
 </div>
@@ -174,7 +173,7 @@ window.ISSOrbitPredictor = (function () {
 
     const targetLat = 46.8139; // Quebec City
     const targetLon = -71.2080;
-    let satrec;
+    let satrec; 
 
     let fullCalculatedPath = []; // Stores all points up to MAX_SEARCH_DURATION_SEC
     let timeToFirstClosePassSec = null; // Time in seconds to the first detected pass
@@ -227,7 +226,7 @@ window.ISSOrbitPredictor = (function () {
                    return false;
                }
                const txt = await res.text();
-
+               
                // Store the newly fetched TLE data and current timestamp in localStorage.
                try {
                    const cacheEntry = { timestamp: Date.now(), data: txt };
@@ -237,7 +236,7 @@ window.ISSOrbitPredictor = (function () {
                    console.error("[ISSOrbitPredictor] Error saving TLE to cache:", e);
                    // Potentially clear cache if quota exceeded, but for now just log
                }
-
+               
                const lines = txt.split('\n');
                const i = lines.findIndex(l => l.includes('ISS (ZARYA)') || l.includes('ISS'));
                if (i >= 0 && lines[i+1] && lines[i+2]) {
@@ -266,7 +265,7 @@ window.ISSOrbitPredictor = (function () {
                const propagateResult = satellite.propagate(satrec, time);
                if (!propagateResult || !propagateResult.position) {
                    // console.warn('[ISSOrbitPredictor] Propagation failed for time:', time);
-                   return null;
+                   return null; 
                }
                const { position } = propagateResult;
                const gmst = satellite.gstime(time);
@@ -328,7 +327,7 @@ window.ISSOrbitPredictor = (function () {
             }
         }
         console.log(`[ISSOrbitPredictor] Full path calculated. Points: ${fullCalculatedPath.length}. Closest overall: ${closestOverallDistance.toFixed(0)}km at ${closestOverallPoint ? closestOverallPoint.time/60 : 'N/A'} mins.`);
-
+        
         if (closestOverallPoint && closestOverallDistance < currentRadiusKM) {
             exposedClosestApproachDetails = {
                 lat: closestOverallPoint.lat,
@@ -344,7 +343,7 @@ window.ISSOrbitPredictor = (function () {
         }
 
         updatePassByText(closestOverallPoint, closestOverallDistance);
-
+        
         let sliderMaxDurationSec = timeToFirstClosePassSec !== null ? timeToFirstClosePassSec : DEFAULT_SLIDER_MAX_DURATION_SEC;
         // Ensure slider max is not less than a minimum (e.g. 5 mins) and not more than full search
         sliderMaxDurationSec = Math.max(5 * 60, Math.min(sliderMaxDurationSec, MAX_SEARCH_DURATION_SEC));
@@ -418,7 +417,7 @@ window.ISSOrbitPredictor = (function () {
             if (typeof radKM === 'number' && radKM > 0) currentRadiusKM = radKM;
             // Recalculate to find new timeToFirstClosePassSec and update slider/text
             // This will re-use existing TLE if already fetched and satrec is valid.
-            calculateFullPredictionAndDeterminePass();
+            calculateFullPredictionAndDeterminePass(); 
         },
         getClosestApproachDetails: function() {
             return exposedClosestApproachDetails;

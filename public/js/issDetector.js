@@ -40,10 +40,10 @@ let closestApproachMarker = {
 
 // Constants for sizes and distances
 const earthSize = 300;
-const earthActualRadiusKM = 6371;
-const issDistanceToEarth = 50;
-const gpsSize = 5;
-const issSize = 6;
+const earthActualRadiusKM = 6371; 
+const issDistanceToEarth = 50; 
+const gpsSize = 5; 
+const issSize = 6; 
 const CYLINDER_VISUAL_LENGTH = issDistanceToEarth * 3; // Now correctly uses defined constants
 
 // Constants for marker appearance
@@ -151,11 +151,11 @@ function draw() {
     if (typeof frameCount !== 'undefined' && frameCount % 60 === 1) {
         console.log(`[draw frameCount: ${frameCount}] AngleY: ${angleY.toFixed(2)}, AngleX: ${angleX.toFixed(2)}, Zoom: ${zoomLevel.toFixed(2)}`);
     }
-
-    let currentDisplayLat = (typeof window.clientLat === 'number' && window.clientLat !== null) ? window.clientLat : 46.8139;
+    
+    let currentDisplayLat = (typeof window.clientLat === 'number' && window.clientLat !== null) ? window.clientLat : 46.8139; 
     let currentDisplayLon = (typeof window.clientLon === 'number' && window.clientLon !== null) ? window.clientLon : -71.2080;
 
-    background(52);
+    background(52); 
 
     // Normal angleY auto-rotation
     if (typeof autoRotationSpeed === 'number' && !isNaN(autoRotationSpeed)) {
@@ -166,7 +166,7 @@ function draw() {
 
     ambientLight(250);
     scale(zoomLevel); // Apply zoom
-
+  
     push(); // Main push for all rotating elements
     // Changed rotation order: X rotation first, then Y
     rotateX(angleX); // Use dynamic angleX (pitch, controlled by vertical drag)
@@ -251,13 +251,13 @@ function draw() {
         endShape();
         pop();
     }
-
+    
     // Use currentDisplayLat, currentDisplayLon for the client location marker
-    let pClientLoc = Tools.p5.getSphereCoord(earthSize, currentDisplayLat, currentDisplayLon);
-    push();
+    let pClientLoc = Tools.p5.getSphereCoord(earthSize, currentDisplayLat, currentDisplayLon); 
+    push(); 
     translate(pClientLoc.x, pClientLoc.y, pClientLoc.z);
-    noStroke();
-    fill(255, 255, 0);
+    noStroke(); 
+    fill(255, 255, 0); 
     sphere(gpsSize);
     pop();
 
@@ -297,35 +297,35 @@ function draw() {
     // Draw Pass-by Detection Cylinder (Standard Alignment)
     if (sketchPassByRadiusKM > 0) {
         const detectionRadius3DUnits = (sketchPassByRadiusKM / earthActualRadiusKM) * earthSize;
-
-        let directionVector = pClientLoc.copy().normalize();
+       
+        let directionVector = pClientLoc.copy().normalize(); 
         let defaultCylinderAxis = createVector(0, -1, 0); // p5.js cylinder's height is along its local Y-axis
-
+        
         let rotationAngle = defaultCylinderAxis.angleBetween(directionVector);
         let rotationAxis = defaultCylinderAxis.cross(directionVector);
 
-        if (rotationAxis.magSq() < 0.0001) {
-            if (defaultCylinderAxis.dot(directionVector) < 0) {
+        if (rotationAxis.magSq() < 0.0001) { 
+            if (defaultCylinderAxis.dot(directionVector) < 0) { 
                 rotationAngle = 0;//PI;
-                rotationAxis = createVector(1, 0, 0);
+                rotationAxis = createVector(1, 0, 0); 
             } else {
                 rotationAngle = 0;
             }
         }
-
+        
         push(); // Start a new context for the cylinder
-
-
+          
+        
        // 1. Translate to where the BASE of the cylinder should be.
         translate(pClientLoc.x, pClientLoc.y, pClientLoc.z);
 
-
+      
         // 2. Apply the orientation rotation `q` (aligns local Y with upVector).
         //    (This is the block with defaultCylinderAxis, angleBetween, cross, rotate)
         if (rotationAngle !== 0 && rotationAxis.magSq() > 0.0001) {
             rotate(rotationAngle, rotationAxis);
         }
-
+        
         // 3. Translate UP along the NEW Y-axis (which is now upVector) by HALF the cylinder's desired visual height.
         translate(0, -CYLINDER_VISUAL_LENGTH / 2, 0);
 
