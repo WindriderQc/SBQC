@@ -48,10 +48,6 @@
                             <input type="checkbox" id="showIssPredictedPath" checked>
                             <label for="showIssPredictedPath" style="margin-left: 4px;">Show Pred. Path</label>
                         </div>
-                        <div>
-                            <input type="checkbox" id="showQuakes" checked>
-                            <label for="showQuakes" style="margin-left: 4px;">Show Quakes</label>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -60,91 +56,17 @@
     </div>
 
     <div class="card mb-3" style="max-width: 1280px; margin: 0 auto;">
-        <div class="card-header">Controls & Info</div>
+        <div class="card-header">Info</div>
         <div class="card-body">
             <p>ISS Location - Latitude: <span id="isslat">N/A</span>&deg;, Longitude: <span id="isslon">N/A</span>&deg;</p>
             <p>Client Location - Latitude: <span id="clat">N/A</span>&deg;, Longitude: <span id="clon">N/A</span>&deg;</p>
             <p id="default-location-msg" style="font-size: 0.8em; color: #777; display: none;">Using default client location as live geolocation is unavailable or denied.</p>
-
-            <div style="padding: 10px; text-align: left; border-top: 1px solid #eee;">
-                <strong>Legend (3D View):</strong>
-                <div style="margin-top: 5px;">
-                    <span style="background-color: orange; display: inline-block; width: 20px; height: 10px; margin-right: 5px; border: 1px solid #555;"></span> Historical ISS Path
-                </div>
-                 <div style="margin-top: 5px;">
-                    <span style="background-color: #00FF00; display: inline-block; width: 20px; height: 10px; margin-right: 5px; border: 1px solid #555;"></span> Predicted ISS Path
-                </div>
-                <div style="margin-top: 5px;">
-                    <span style="background-color: yellow; display: inline-block; width: 10px; height: 10px; margin-right: 5px; border: 1px solid #555; border-radius: 50%;"></span> Default Location (Quebec City)
-                </div>
-                 <div style="margin-top: 5px;">
-                    <span style="background-color: rgba(0,100,255,0.3); display: inline-block; width: 20px; height: 10px; margin-right: 5px; border: 1px solid #555;"></span> Pass-by Detection Radius
-                </div>
-                <div style="margin-top: 5px;">
-                    <span style="background-color: teal; display: inline-block; width: 10px; height: 10px; margin-right: 5px; border: 1px solid #555; border-radius: 50%;"></span> Point of Closest Approach (if detected)
-                </div>
-                <div style="margin-top: 5px;">
-                    <span style="background-color: green; display: inline-block; width: 7px; height: 7px; margin-right: 5px; border: 1px solid #555; border-radius: 50%;"></span> End of Predicted Path
-                </div>
-            </div>
-
-            <div style="padding: 10px; text-align: left; border-top: 1px solid #eee;">
-                <strong>Quake Appearance:</strong>
-                <div style="margin-top: 5px;">
-                    <label for="quakeFromColor">From Color:</label>
-                    <input type="color" id="quakeFromColor" value="#00FF00"> <!-- Default Green -->
-                </div>
-                <div style="margin-top: 5px;">
-                    <label for="quakeToColor">To Color:</label>
-                    <input type="color" id="quakeToColor" value="#FF0000"> <!-- Default Red -->
-                </div>
-                <div style="margin-top: 5px;">
-                    <label for="quakeMagFactor">Magnitude Factor: <span id="quakeMagFactorValue">1.0</span></label>
-                    <input type="range" id="quakeMagFactor" min="0.1" max="5" step="0.1" value="1.0" style="width: 100%;">
-                </div>
-                <small style="display: block; margin-top: 8px;">
-                    Note: Quake color transitions from 'From Color' to 'To Color' based on magnitude. 'Magnitude Factor' affects the size of the quake spheres.
-                </small>
-            </div>
-
-            <div style="padding: 10px; text-align: left; border-top: 1px solid #eee;">
-                <%# Slider content was moved to the overlay %>
-            </div>
-        </div>
-        <div class="card-footer small text-muted">
-            <a href="https://eyes.nasa.gov/apps/solar-system/#/home" target="_blank" class="btn btn-outline-primary">Explore with NASA Eyes</a>
-        </div>
-         <div class="card-footer small text-muted">
-            <a href="/earthmap" target="_blank" class="btn btn-outline-primary">2D leaflet map</a>
         </div>
     </div>
 
     <div class="card mb-3">
         <div class="card-body">
             <p>Next ISS pass-by: <span id="iss-passby-time">Calculating...</span></p>
-        </div>
-    </div>
-
-    <div class="card mb-3">
-        <div class="card-body">
-            <div class="row mb-4">
-                <div class="col">
-                    <div>Wind Speed: <span id="wind-speed">N/A</span> m/s</div>
-                    <div>Wind Gust: <span id="wind-gust">N/A</span> m/s</div>
-                        <p>
-                            At location: <span id="summary">N/A</span> with a temperature of <span id="temp">N/A</span>&deg; C. <br>
-                            Air Quality (<span id="aq_parameter">N/A</span>): <span id="aq_value">N/A</span> <span id="aq_units"></span>
-                            <small>(Last read on <span id="aq_date">N/A</span>)</small>
-                        </p>
-                </div>
-            </div>
-            <div class="row">
-                <%- include('partials/tides') %>
-            </div>
-            <hr>
-            <div class="row">
-                <%- include('partials/pressureGraph') %>
-            </div>
         </div>
     </div>
     <%# Removed <div id="ip_id"></div> %>
@@ -469,34 +391,7 @@ window.ISSOrbitPredictor = (function () {
         }
     });
 
-    async function fetchWeatherForCoords(lat, lon) {
-        if (!lat || !lon) return;
-        const url = `/api/weather/${lat},${lon}`;
-        try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`Weather API request failed with status ${response.status}`);
-            const data = await response.json();
-            document.getElementById('summary').textContent = data.weather.weather[0].description;
-            document.getElementById('temp').textContent = data.weather.main.feels_like.toFixed(1);
-            if (data.air_quality && data.air_quality.results && data.air_quality.results[0] && data.air_quality.results[0].latest) {
-                const air = data.air_quality.results[0];
-                document.getElementById('aq_parameter').textContent = air.parameter ? air.parameter.displayName : 'N/A';
-                document.getElementById('aq_value').textContent = air.latest.value;
-                document.getElementById('aq_units').textContent = air.parameter ? air.parameter.units : '';
-                document.getElementById('aq_date').textContent = air.latest.datetime && air.latest.datetime.local ? air.latest.datetime.local : 'N/A';
-            } else { document.getElementById('aq_value').textContent = 'NO READING'; }
-            const wind = data.weather.wind;
-            document.getElementById('wind-speed').textContent = wind.speed;
-            document.getElementById('wind-gust').textContent = wind.gust || 'N/A';
-        } catch (e) {
-            console.error('Error fetching weather data:', e);
-            document.getElementById('summary').textContent = 'Error';
-            document.getElementById('temp').textContent = 'N/A';
-            document.getElementById('aq_value').textContent = 'NO READING';
-        }
-    }
-
-    async function setDefaultLocationAndFetchWeather() {
+    async function setDefaultLocation() {
         console.log("Using default client location (Quebec City area).");
 
         clientLat = 46.8139; clientLon = -71.2080;
@@ -504,18 +399,17 @@ window.ISSOrbitPredictor = (function () {
         document.getElementById('clat').textContent = clientLat.toFixed(2);
         document.getElementById('clon').textContent = clientLon.toFixed(2);
         document.getElementById('default-location-msg').style.display = 'block';
-        await fetchWeatherForCoords(clientLat, clientLon);
     }
 
     async function updateGeoData() {
         if (typeof Tools === 'undefined' || !Tools.isGeoLocAvailable || !Tools.geoLocate) {
             console.log("Tools.js not available or complete. Using default location.");
-            await setDefaultLocationAndFetchWeather(); return;
+            await setDefaultLocation(); return;
         }
         if (!Tools.isGeoLocAvailable()) {
 
             console.log("Geolocation not available in this browser.");
-            await setDefaultLocationAndFetchWeather(); return;
+            await setDefaultLocation(); return;
         }
         try {
             console.log("Attempting to get live geolocation...");
@@ -526,10 +420,9 @@ window.ISSOrbitPredictor = (function () {
             document.getElementById('default-location-msg').style.display = 'none';
             document.getElementById('clat').textContent = clientLat.toFixed(2);
             document.getElementById('clon').textContent = clientLon.toFixed(2);
-            await fetchWeatherForCoords(clientLat, clientLon);
         } catch (e) {
             console.warn('Error getting live geolocation or permission denied:', e.message);
-            await setDefaultLocationAndFetchWeather();
+            await setDefaultLocation();
         }
     }
 
@@ -585,65 +478,9 @@ window.ISSOrbitPredictor = (function () {
             window.ISSOrbitPredictor.fetchAndPredict();
         }
 
-        // Quake appearance controls
-        const quakeFromColorInput = document.getElementById('quakeFromColor');
-        const quakeToColorInput = document.getElementById('quakeToColor');
-        const quakeMagFactorInput = document.getElementById('quakeMagFactor');
-        const quakeMagFactorValueSpan = document.getElementById('quakeMagFactorValue');
-
-        if (quakeFromColorInput) {
-            quakeFromColorInput.addEventListener('input', function() {
-                if (window.earth3DSketch && typeof quakeFromColor !== 'undefined') {
-                    // p5.js color function is available in the global scope of the sketch
-                    // but earth3D.js's setup() initializes quakeFromColor.
-                    // We need to update that specific variable.
-                    // Direct assignment might be tricky if earth3D.js is not fully loaded or
-                    // if p5 instance is not directly accessible here in the same way.
-                    // A robust way is to expose a setter in earth3DSketch object.
-                    // For now, assuming direct update works or will be refined.
-                    // Let's create new p5.Color objects from the hex value.
-                    // This assumes p5 is loaded and `color()` is available globally.
-                    try {
-                        let newColor = color(this.value); // p5.color()
-                        newColor.setAlpha(150); // Keep original alpha
-                        quakeFromColor = newColor; // Update global in earth3D.js
-                         if (typeof redraw === 'function') redraw(); // Redraw sketch
-                    } catch (e) {
-                        console.error("Error creating color for quakeFromColor:", e);
-                    }
-                }
-            });
-        }
-
-        if (quakeToColorInput) {
-            quakeToColorInput.addEventListener('input', function() {
-                if (window.earth3DSketch && typeof quakeToColor !== 'undefined') {
-                     try {
-                        let newColor = color(this.value); // p5.color()
-                        newColor.setAlpha(150); // Keep original alpha
-                        quakeToColor = newColor; // Update global in earth3D.js
-                        if (typeof redraw === 'function') redraw(); // Redraw sketch
-                    } catch (e) {
-                        console.error("Error creating color for quakeToColor:", e);
-                    }
-                }
-            });
-        }
-
-        if (quakeMagFactorInput && quakeMagFactorValueSpan) {
-            quakeMagFactorInput.addEventListener('input', function() {
-                quakeMagFactorValueSpan.textContent = this.value;
-                if (window.earth3DSketch && typeof quakeMagFactor !== 'undefined') {
-                    quakeMagFactor = parseFloat(this.value); // Update global in earth3D.js
-                    if (typeof redraw === 'function') redraw(); // Redraw sketch
-                }
-            });
-        }
-
         // Visibility checkbox handlers
         const showIssHistoricalPathCheckbox = document.getElementById('showIssHistoricalPath');
         const showIssPredictedPathCheckbox = document.getElementById('showIssPredictedPath');
-        const showQuakesCheckbox = document.getElementById('showQuakes');
 
         if (showIssHistoricalPathCheckbox) {
             showIssHistoricalPathCheckbox.addEventListener('change', function() {
@@ -657,14 +494,6 @@ window.ISSOrbitPredictor = (function () {
             showIssPredictedPathCheckbox.addEventListener('change', function() {
                 if (window.earth3DSketch && typeof window.earth3DSketch.setShowIssPredictedPath === 'function') {
                     window.earth3DSketch.setShowIssPredictedPath(this.checked);
-                }
-            });
-        }
-
-        if (showQuakesCheckbox) {
-            showQuakesCheckbox.addEventListener('change', function() {
-                if (window.earth3DSketch && typeof window.earth3DSketch.setShowQuakes === 'function') {
-                    window.earth3DSketch.setShowQuakes(this.checked);
                 }
             });
         }

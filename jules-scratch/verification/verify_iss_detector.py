@@ -1,51 +1,34 @@
-import re
-from playwright.sync_api import Page, expect
+from playwright.sync_api import sync_playwright, Page, expect
 
-def verify_iss_detector_view(page: Page):
+def run_verification(page: Page):
     """
-    This test verifies that the ISS Detector has been moved to its own view,
-    that the navigation link works, and that the original Earth view is clean.
+    This test verifies that the issDetector page loads correctly and displays the
+    3D viewer and essential information sections.
     """
-    # 1. Navigate to the home page and check for the new nav link.
-    page.goto("http://localhost:3001")
+    # 1. Arrange: Go to the issDetector page.
+    page.goto("http://localhost:3001/iss-detector")
 
-    # Expect the "ISS Detector" link to be visible in the nav bar.
-    iss_detector_link = page.get_by_role("link", name="ISS Detector")
-    expect(iss_detector_link).to_be_visible()
+    # 2. Assert: Check for the presence of key elements.
+    # Expect the main 3D viewer card to be visible.
+    expect(page.locator(".card-header", has_text="3D ISS Viewer")).to_be_visible()
 
-    # 2. Click the link and verify the new page.
-    iss_detector_link.click()
+    # Expect the info card with ISS and client location to be visible.
+    expect(page.locator(".card-header", has_text="Info")).to_be_visible()
+    expect(page.locator("p", has_text="ISS Location - Latitude:")).to_be_visible()
+    expect(page.locator("p", has_text="Client Location - Latitude:")).to_be_visible()
 
-    # Expect the URL to be correct.
-    expect(page).to_have_url(re.compile(r".*/iss-detector"))
+    # Expect the pass-by time card to be visible.
+    expect(page.locator("p", has_text="Next ISS pass-by:")).to_be_visible()
 
-    # Expect the "3D ISS Viewer" header to be present on the new page.
-    viewer_header = page.get_by_text("3D ISS Viewer")
-    expect(viewer_header).to_be_visible()
+    # 3. Screenshot: Capture the final result for visual verification.
+    page.screenshot(path="jules-scratch/verification/verification.png")
 
-    # Take a screenshot of the new ISS Detector page.
-    page.screenshot(path="jules-scratch/verification/iss_detector_page.png")
+def main():
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page()
+        run_verification(page)
+        browser.close()
 
-    # 3. Navigate to the Earth page and verify it's clean.
-    page.goto("http://localhost:3001/earth")
-
-    # Expect the URL to be correct.
-    expect(page).to_have_url(re.compile(r".*/earth"))
-
-    # Expect the "3D ISS Viewer" header to NOT be on the Earth page.
-    iss_viewer_on_earth = page.get_by_text("3D ISS Viewer")
-    expect(iss_viewer_on_earth).not_to_be_visible()
-
-    # Take a screenshot of the cleaned-up Earth page.
-    page.screenshot(path="jules-scratch/verification/earth_page_clean.png")
-
-# This is a bit of a hack to run the test function without a test runner.
-# We'll just instantiate the browser and page and call the function directly.
-from playwright.sync_api import sync_playwright
-
-with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True)
-    page = browser.new_page()
-    verify_iss_detector_view(page)
-    browser.close()
-    print("Verification script completed successfully.")
+if __name__ == "__main__":
+    main()
