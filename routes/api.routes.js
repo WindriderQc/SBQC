@@ -2,6 +2,7 @@ const router = require('express').Router();
 const mailman = require('../public/js/mailman');
 const dataApiService = require('../services/dataApiService');
 const weatherService = require('../services/weatherService');
+const issService = require('../services/issService');
 const { BadRequest } = require('../utils/errors');
 
 // Weather and Air Quality
@@ -138,21 +139,8 @@ router.get('/pressure', async (req, res, next) => {
 // ISS Data
 router.get('/iss', async (req, res, next) => {
     try {
-        const issdb = req.app.locals.collections.iss;
-        if (!issdb) {
-            return res.status(500).json({ status: 'error', message: 'ISS data collection not available.' });
-        }
-
-        // Fetch the last 5000 records, sorted by timestamp descending, then reverse in code.
-        const historicalData = await issdb.find({})
-            .sort({ timeStamp: -1 })
-            .limit(5000)
-            .toArray();
-
-        // The frontend expects data sorted ascending by time.
-        const sortedData = historicalData.reverse();
-
-        res.json({ status: "success", data: sortedData });
+        const issData = await issService.getIssData(req.app.locals.collections.iss);
+        res.json({ status: "success", data: issData });
     } catch (error) {
         console.error('Error fetching historical ISS data:', error);
         next(error);

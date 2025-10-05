@@ -1,4 +1,7 @@
-require('dotenv/config')
+require('dotenv/config');
+const { validateEnv } = require('./utils/envValidator');
+validateEnv();
+
 const express = require('express'),
     session = require('express-session'),
     MongoDBStore = require('connect-mongodb-session')(session),
@@ -64,47 +67,18 @@ const options = {
 }
 */
 
-//  Databases
+// Databases
+const { connectDb, loadCollections } = require('./scripts/database');
 
-// mongoose with local DB
-//require('./scripts/mongooseDB')
-
-//Mongodb Client setup  with CloudDB  // TODO: used for posts book but should be uniformized to one DB.  the use of collection in app.locals seem different
-const mongo = require('./scripts/mongoClientDB')
-
-mongo.connectDb( process.env.MONGO_CLOUD, 'SBQC', async (db) =>{    // dbServ, test, admin, local
-
-    app.locals.collections = []
-    const list = await mongo.getCollectionsList()
-
-    console.log("Assigning Collections to app.locals :")
-    for(coll of list) {
-        console.log(coll.name)
-        app.locals.collections[coll.name] =  mongo.getDb(coll.name)
+(async () => {
+    try {
+        const db = await connectDb(process.env.MONGO_CLOUD, 'SBQC');
+        await loadCollections(db, app);
+    } catch (err) {
+        console.error("Failed to connect to the database or load collections:", err);
+        process.exit(1); // Exit if DB connection fails
     }
-
-    // The 'boot' collection will be created automatically by MongoDB if it doesn't exist upon the first insertOne operation.
-    // No explicit conditional creation is needed unless specific collection options are required at creation time.
-    app.locals.collections.boot = mongo.getDb('boot');
-    app.locals.collections.boot.insertOne({
-            logType: 'boot',
-            client: 'server',
-            content: 'dbServer boot',
-            authorization: 'none',
-            host: IN_PROD ? "Production Mode" : "Developpement Mode",
-            ip: 'localhost',
-            hitCount: 'N/A',
-            created: Date.now()
-        })
-
-    // Fetch collection names and document counts
-    app.locals.collectionInfo = {}
-    for (const coll of list) {
-        const count = await app.locals.collections[coll.name].countDocuments()
-        app.locals.collectionInfo[coll.name] = count
-    }
-    console.log("Collection Info:", app.locals.collectionInfo, '\n__________________________________________________\n\n')
-})
+})();
 
 
 
