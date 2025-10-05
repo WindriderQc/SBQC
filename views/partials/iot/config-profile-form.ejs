@@ -71,38 +71,40 @@
 </div>
 
 <script>
-    const configTable = document.getElementById('configTable').querySelector('tbody');
-    const addRowBtn = document.querySelector('.add-row-btn');
+    document.addEventListener('DOMContentLoaded', () => {
+        const configTable = document.getElementById('configTable').querySelector('tbody');
+        const addRowBtn = document.querySelector('.add-row-btn');
 
-    // Add a new row to the table
-    addRowBtn.addEventListener('click', () => {
-        const rowCount = configTable.rows.length;
-        const newRow = document.createElement('tr');
-        newRow.innerHTML = `
-            <td><input type="text" name="config[${rowCount}][io]" required></td>
-            <td>
-                <select name="config[${rowCount}][mode]" required>
-                    <option value="IN">IN</option>
-                    <option value="OUT">OUT</option>
-                </select>
-            </td>
-            <td><input type="text" name="config[${rowCount}][lbl]"></td>
-            <td>
-                <select name="config[${rowCount}][isA]" required>
-                    <option value="1">1</option>
-                    <option value="0">0</option>
-                </select>
-            </td>
-            <td><input type="text" name="config[${rowCount}][name]"></td>
-            <td><button type="button" class="remove-row-btn">Remove</button></td>
-        `;
-        configTable.appendChild(newRow);
-    });
+        // Add a new row to the table
+        addRowBtn.addEventListener('click', () => {
+            const rowCount = configTable.rows.length;
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td><input type="text" name="config[${rowCount}][io]" required></td>
+                <td>
+                    <select name="config[${rowCount}][mode]" required>
+                        <option value="IN">IN</option>
+                        <option value="OUT">OUT</option>
+                    </select>
+                </td>
+                <td><input type="text" name="config[${rowCount}][lbl]"></td>
+                <td>
+                    <select name="config[${rowCount}][isA]" required>
+                        <option value="1">1</option>
+                        <option value="0">0</option>
+                    </select>
+                </td>
+                <td><input type="text" name="config[${rowCount}][name]"></td>
+                <td><button type="button" class="remove-row-btn">Remove</button></td>
+            `;
+            configTable.appendChild(newRow);
+        });
 
-    // Remove a row from the table
-    configTable.addEventListener('click', (event) => {
-        if (event.target.classList.contains('remove-row-btn')) {
-            event.target.closest('tr').remove();
-        }
+        // Remove a row from the table
+        configTable.addEventListener('click', (event) => {
+            if (event.target.classList.contains('remove-row-btn')) {
+                event.target.closest('tr').remove();
+            }
+        });
     });
 </script>
