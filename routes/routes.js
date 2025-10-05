@@ -258,6 +258,10 @@ router.get('/iss-detector', (req, res) => {
     res.render('issDetector');
 });
 
+router.get('/device-config-profile', (req, res) => {
+    res.render('device-config-profile');
+});
+
 // --- Action Routes ---
 
 router.post('/set_io', (req, res) => {
