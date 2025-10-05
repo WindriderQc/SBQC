@@ -1,24 +1,22 @@
 const sendEmail = async (mail, msg, image64) => {
 
-    const nodemailer = require('nodemailer'); 
-    const smtpTransport = require('nodemailer-smtp-transport');
-
+    const nodemailer = require('nodemailer');
 
     this.admin = process.env.ADM_MAIL;
     this.admpass = process.env.ADM_PASS;
 
-    console.log ("Sending email from: " + this.admin + " to " + mail) //, this.admpass)
-    var transporter = nodemailer.createTransport(smtpTransport({    
-        //host: 'mail.specialblend.xyz ,   
-        //port: 587,
-        //secure: false ,// true for 465, false for other ports
-        // tls:{rejectUnauthorized:false},   //  this allows to send from localhost
+    console.log("Sending email from: " + this.admin + " to " + mail);
+
+    // Use nodemailer's built-in SMTP transport configuration instead of the
+    // deprecated `nodemailer-smtp-transport` package. This removes that
+    // dependency and avoids pulling in vulnerable transitive packages.
+    var transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-                user: this.admin,
-                pass: this.admpass
-            }
-    }))
+            user: this.admin,
+            pass: this.admpass
+        }
+    });
         
 
     const htmlmsg = '<html><body><p>motion detected</p><p>*-*</p></body></html>'

@@ -20,7 +20,36 @@ describe('Database Module', function() {
 
     after(async function() {
         if (db) {
-            await db.dropDatabase();
+            try {
+                await db.dropDatabase();
+            } catch (err) {
+                // If the test user doesn't have permission to drop the whole DB,
+                // attempt a best-effort cleanup: drop or clear known test collections
+                console.warn('[test] dropDatabase failed (permissions?). Falling back to per-collection cleanup:', err.message);
+                try {
+                    const collections = await db.listCollections().toArray();
+                    for (const cinfo of collections) {
+                        const name = cinfo.name;
+                        // Only touch collections that look like test artifacts to avoid touching production data
+                        if (name.startsWith('test_') || name === 'test_collection' || name === 'boot') {
+                            try {
+                                const col = db.collection(name);
+                                // Try dropping the collection, if not allowed then remove documents
+                                try {
+                                    await col.drop();
+                                } catch (dropErr) {
+                                    console.warn(`[test] could not drop collection ${name}: ${dropErr.message}. Attempting to remove documents instead.`);
+                                    try { await col.deleteMany({}); } catch (delErr) { /* ignore */ }
+                                }
+                            } catch (inner) {
+                                // ignore per-collection failures
+                            }
+                        }
+                    }
+                } catch (listErr) {
+                    console.warn('[test] failed to list collections for fallback cleanup:', listErr.message);
+                }
+            }
         }
         if (connection) {
             await connection.close();
