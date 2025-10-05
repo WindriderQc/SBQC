@@ -1,8 +1,8 @@
 const requiredEnvVars = [
     'MONGO_CLOUD',
     'DATA_API_URL',
-    'DATA_API_PORT',
-    'MQTT_PORT',
+    // 'DATA_API_PORT',
+   // 'MQTT_PORT',
     'SESS_NAME',
     'SESS_SECRET',
     'TOKEN_SECRET'
