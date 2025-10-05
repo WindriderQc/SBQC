@@ -75,13 +75,23 @@ async function preload() {
 }
 
 function setup() {
-    var canvas = createCanvas(1280, 720, WEBGL);
+    const sketchHolder = document.getElementById('sketch-holder');
+    const canvasWidth = sketchHolder.offsetWidth;
+    const canvasHeight = canvasWidth * (9 / 16); // Maintain 16:9 aspect ratio
+    var canvas = createCanvas(canvasWidth, canvasHeight, WEBGL);
     canvas.parent('sketch-holder');
     controlsOverlayElement = document.getElementById('controls-overlay');
 
     // Initialize quake colors
     quakeFromColor = color(0, 255, 0, 150); // Default fromColor (green)
     quakeToColor = color(255, 0, 0, 150); // Default toColor (red)
+}
+
+function windowResized() {
+    const sketchHolder = document.getElementById('sketch-holder');
+    const canvasWidth = sketchHolder.offsetWidth;
+    const canvasHeight = canvasWidth * (9 / 16); // Maintain 16:9 aspect ratio
+    resizeCanvas(canvasWidth, canvasHeight);
 }
 
 function keyPressed() {
@@ -459,4 +469,30 @@ function mouseWheel(event) {
         return false; // Prevent default scrolling ONLY if mouse is over canvas
     }
     // If mouse is not over canvas, allow default browser scrolling (do not return false, implicitly returns undefined)
+}
+
+let initialPinchDistance = 0;
+
+function touchStarted() {
+    if (touches.length === 2) {
+        initialPinchDistance = dist(touches[0].x, touches[0].y, touches[1].x, touches[1].y);
+    }
+    return false;
+}
+
+function touchMoved() {
+    if (touches.length === 2) {
+        const currentPinchDistance = dist(touches[0].x, touches[0].y, touches[1].x, touches[1].y);
+        const zoomAmount = (currentPinchDistance - initialPinchDistance) * 0.01;
+        zoomLevel += zoomAmount;
+        zoomLevel = constrain(zoomLevel, 0.2, 5.0);
+        initialPinchDistance = currentPinchDistance;
+    } else if (touches.length === 1) {
+        let dx = mouseX - pmouseX;
+        let dy = mouseY - pmouseY;
+        angleY += dx * 0.01;
+        angleX -= dy * 0.01;
+        angleX = constrain(angleX, -Math.PI / 2.1, Math.PI / 2.1);
+    }
+    return false;
 }
