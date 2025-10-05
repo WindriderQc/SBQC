@@ -139,7 +139,7 @@ router.get('/pressure', async (req, res, next) => {
 // ISS Data
 router.get('/iss', async (req, res, next) => {
     try {
-        const issData = await issService.getIssData(req.app.locals.collections.iss);
+        const issData = await issService.getIssData(req.app.locals.collections.isses);
         res.json({ status: "success", data: issData });
     } catch (error) {
         console.error('Error fetching historical ISS data:', error);

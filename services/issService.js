@@ -1,6 +1,7 @@
 const getIssData = async (issCollection) => {
     if (!issCollection) {
-        throw new Error('ISS data collection not available.');
+        console.warn('ISS data collection not available; returning empty dataset.');
+        return [];
     }
 
     // Fetch the last 5000 records, sorted by timestamp descending, then reverse in code.

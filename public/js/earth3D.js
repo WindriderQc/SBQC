@@ -208,12 +208,18 @@ function draw() {
         let vISS = Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, window.iss.latitude, window.iss.longitude);
         push();
         translate(vISS.x, vISS.y, vISS.z);
-        if(issGif && issGif.width > 0 && issGif.height > 0) {
-             noStroke();
-             texture(issGif);
-             plane(issGif.width / issSize, issGif.height / issSize);
+        // Always try to draw the ISS texture if available. If the image
+        // hasn't loaded yet (width/height may be 0), fall back to a
+        // reasonable plane size so the PNG is still visible.
+        noStroke();
+        if (issGif) {
+            // fallback size when image dimensions are not ready
+            const planeW = (issGif.width && issGif.width > 0) ? issGif.width / issSize : 40;
+            const planeH = (issGif.height && issGif.height > 0) ? issGif.height / issSize : 40;
+            texture(issGif);
+            plane(planeW, planeH);
         } else {
-            noStroke();
+            // If there's no image at all, show a small sphere as placeholder
             fill(255,0,0);
             sphere(5);
         }

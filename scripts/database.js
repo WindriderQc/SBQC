@@ -37,6 +37,20 @@ const loadCollections = async (db, app) => {
         app.locals.collectionInfo[coll.name] = count;
     }
     console.log("Collection Info:", app.locals.collectionInfo, '\n__________________________________________________\n\n');
+
+    // Ensure an `isses` collection reference exists even if the collection wasn't present in the
+    // initial listCollections() result. This prevents code that expects
+    // `app.locals.collections.isses` from throwing when the collection hasn't been created yet.
+    if (!app.locals.collections.isses) {
+        app.locals.collections.isses = db.collection('isses');
+        try {
+            const count = await app.locals.collections.isses.countDocuments();
+            app.locals.collectionInfo.isses = count;
+        } catch (e) {
+            // If the collection does not exist or count fails, set to 0 and continue.
+            app.locals.collectionInfo.isses = 0;
+        }
+    }
 };
 
 module.exports = { connectDb, loadCollections };
