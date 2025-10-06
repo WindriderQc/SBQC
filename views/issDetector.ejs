@@ -25,6 +25,12 @@
                 <div id="sketch-holder" style="width: 100%; height: auto; display: flex; justify-content: center; align-items: center;">
                     <!-- p5.js canvas will be parented here -->
                 </div>
+                <!-- Pass-by overlay: appears on top of the map, right under the card title -->
+                <div id="passby-overlay" style="position: absolute; top: 8px; left: 50%; transform: translateX(-50%); z-index: 1101; background: rgba(0,0,0,0.6); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 0.95em; display: flex; gap: 12px; align-items: center;">
+                    <div>Next ISS pass-by: <span id="iss-passby-time">Calculating...</span></div>
+                    <div style="font-size:0.85em; color:#ddd;">Loc: <span id="iss-target-loc">46.81, -71.21</span></div>
+                    <button id="refresh-tle-btn" style="background:#007bff; color:#fff; border:none; padding:6px 8px; border-radius:4px; cursor:pointer; font-size:0.85em;">Refresh TLE</button>
+                </div>
                 <div id="controls-overlay" style="position: absolute; top: 10px; left: 10px; background-color: transparent; padding: 12px; border-radius: 6px; z-index: 1000; width: auto; min-width: 250px;">
                     <div style="margin-bottom: 8px;">
                         <label for="pathLengthSlider" style="font-size: 0.85em; display: block; margin-bottom: 2px;">Hist. Path: <span id="pathLengthValue">4200</span> pts</label>
@@ -119,11 +125,7 @@
         </div>
     </div>
 
-    <div class="card mb-3">
-        <div class="card-body">
-            <p>Next ISS pass-by: <span id="iss-passby-time">Calculating...</span></p>
-        </div>
-    </div>
+    <!-- Next pass-by display moved to overlay on top of 3D viewer -->
 
     <div class="card mb-3">
         <div class="card-body">
@@ -171,8 +173,9 @@ window.ISSOrbitPredictor = (function () {
     let currentRadiusKM = 1500; // Default, will be set by slider
     let currentSliderDisplayDurationSec = 90 * 60; // Default initial display, will be updated
 
-    const targetLat = 46.8139; // Quebec City
-    const targetLon = -71.2080;
+    // Default target location (Quebec City). This can be updated to the client's location via setTargetLatLon().
+    let targetLat = 46.8139; // Quebec City
+    let targetLon = -71.2080;
     let satrec; 
 
     let fullCalculatedPath = []; // Stores all points up to MAX_SEARCH_DURATION_SEC
@@ -257,6 +260,12 @@ window.ISSOrbitPredictor = (function () {
            // Fallback, though ideally all paths above should return.
            satrec = null;
            return false;
+       }
+
+       // Force-refresh TLE by clearing cache and fetching again
+       async function refreshTLE() {
+           try { localStorage.removeItem(TLE_CACHE_KEY); } catch (e) { /* ignore */ }
+           return await fetchTLE();
        }
 
        function positionAt(time) {
@@ -358,10 +367,14 @@ window.ISSOrbitPredictor = (function () {
         if (!passByStatus) return;
 
         if (closestPointData && closestPointData.dist < currentRadiusKM) {
-            const approachDate = new Date(new Date().getTime() + closestPointData.time * 1000);
-            passByStatus.textContent = `Approx. pass at ${approachDate.toLocaleTimeString()} (distance ~${Math.round(closestPointData.dist)} km). TLE based.`;
+            const nowMs = Date.now();
+            const approachMs = nowMs + closestPointData.time * 1000;
+            const approachDate = new Date(approachMs);
+            const minutesUntil = Math.round(closestPointData.time / 60);
+            const minutesText = minutesUntil <= 0 ? '<1' : minutesUntil.toString();
+            passByStatus.textContent = `in ${minutesText} min (at ${approachDate.toLocaleTimeString()}) — ~${Math.round(closestPointData.dist)} km — TLE based.`;
         } else {
-            passByStatus.textContent = `No close pass predicted (within ${currentRadiusKM}km for next ${MAX_SEARCH_DURATION_SEC/3600}hrs). Closest ~${closestDistVal.toFixed(0)}km. TLE based.`;
+            passByStatus.textContent = `No close pass predicted within ${currentRadiusKM} km for the next ${MAX_SEARCH_DURATION_SEC/3600} hrs. Closest ~${closestDistVal.toFixed(0)} km. TLE based.`;
         }
     }
 
@@ -407,6 +420,22 @@ window.ISSOrbitPredictor = (function () {
     return {
         fetchAndPredict: async function () {
             await calculateFullPredictionAndDeterminePass();
+        },
+        setTargetLatLon: function(lat, lon) {
+            if (typeof lat === 'number' && typeof lon === 'number') {
+                targetLat = lat;
+                targetLon = lon;
+                // Recalculate prediction for new target
+                calculateFullPredictionAndDeterminePass();
+            }
+        },
+        getTargetLatLon: function() {
+            return { lat: targetLat, lon: targetLon };
+        },
+        refreshTLE: async function() {
+            const ok = await refreshTLE();
+            if (ok) await calculateFullPredictionAndDeterminePass();
+            return ok;
         },
         setPredictionDurationSec: function(durationSeconds) {
             currentSliderDisplayDurationSec = durationSeconds;
@@ -505,6 +534,14 @@ window.ISSOrbitPredictor = (function () {
         document.getElementById('clon').textContent = clientLon.toFixed(2);
         document.getElementById('default-location-msg').style.display = 'block';
         await fetchWeatherForCoords(clientLat, clientLon);
+        // Update ISS predictor target and refresh prediction for the chosen/default location
+        if (window.ISSOrbitPredictor && typeof window.ISSOrbitPredictor.setTargetLatLon === 'function') {
+            window.ISSOrbitPredictor.setTargetLatLon(clientLat, clientLon);
+            // fetchAndPredict will be called by setTargetLatLon via calculateFullPredictionAndDeterminePass
+        }
+        // Update overlay display immediately
+        const targetLocSpan_def = document.getElementById('iss-target-loc');
+        if (targetLocSpan_def) targetLocSpan_def.textContent = `${clientLat.toFixed(2)}, ${clientLon.toFixed(2)}`;
     }
 
     async function updateGeoData() {
@@ -527,6 +564,13 @@ window.ISSOrbitPredictor = (function () {
             document.getElementById('clat').textContent = clientLat.toFixed(2);
             document.getElementById('clon').textContent = clientLon.toFixed(2);
             await fetchWeatherForCoords(clientLat, clientLon);
+            // Update ISS predictor target to the live client location and recalculate
+            if (window.ISSOrbitPredictor && typeof window.ISSOrbitPredictor.setTargetLatLon === 'function') {
+                window.ISSOrbitPredictor.setTargetLatLon(clientLat, clientLon);
+            }
+            // Update overlay display immediately
+            const targetLocSpan_live = document.getElementById('iss-target-loc');
+            if (targetLocSpan_live) targetLocSpan_live.textContent = `${clientLat.toFixed(2)}, ${clientLon.toFixed(2)}`;
         } catch (e) {
             console.warn('Error getting live geolocation or permission denied:', e.message);
             await setDefaultLocationAndFetchWeather();
@@ -583,6 +627,42 @@ window.ISSOrbitPredictor = (function () {
 
         if (window.ISSOrbitPredictor) {
             window.ISSOrbitPredictor.fetchAndPredict();
+        }
+
+        // Set overlay target location if predictor is ready
+        const targetLocSpan = document.getElementById('iss-target-loc');
+        if (window.ISSOrbitPredictor && typeof window.ISSOrbitPredictor.getTargetLatLon === 'function' && targetLocSpan) {
+            const t = window.ISSOrbitPredictor.getTargetLatLon();
+            targetLocSpan.textContent = `${t.lat.toFixed(2)}, ${t.lon.toFixed(2)}`;
+        }
+
+        const refreshBtn = document.getElementById('refresh-tle-btn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', async function() {
+                const passSpan = document.getElementById('iss-passby-time');
+                const origText = passSpan ? passSpan.textContent : '';
+                if (passSpan) passSpan.textContent = 'Refreshing TLE...';
+                this.disabled = true;
+                this.textContent = 'Refreshing...';
+                try {
+                    if (window.ISSOrbitPredictor && typeof window.ISSOrbitPredictor.refreshTLE === 'function') {
+                        const ok = await window.ISSOrbitPredictor.refreshTLE();
+                        if (!ok && passSpan) passSpan.textContent = 'Failed to refresh TLE';
+                        // Update overlay target loc after refresh
+                        if (window.ISSOrbitPredictor && typeof window.ISSOrbitPredictor.getTargetLatLon === 'function' && targetLocSpan) {
+                            const t = window.ISSOrbitPredictor.getTargetLatLon();
+                            targetLocSpan.textContent = `${t.lat.toFixed(2)}, ${t.lon.toFixed(2)}`;
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error refreshing TLE:', e);
+                } finally {
+                    this.disabled = false;
+                    this.textContent = 'Refresh TLE';
+                    // restore pass text if it still says 'Refreshing...'
+                    if (passSpan && passSpan.textContent === 'Refreshing TLE...') passSpan.textContent = origText;
+                }
+            });
         }
 
         // Quake appearance controls
