@@ -26,7 +26,7 @@ let quakeMagFactor = 1.0; // Default magnitude factor
 // Visibility toggles
 let showIssHistoricalPath = true;
 let showIssPredictedPath = true;
-let showQuakes = true;
+let showQuakes = false; // Default: off
 
 // New marker variables
 let closestApproachMarker = {
@@ -52,6 +52,14 @@ const MARKER_COLOR_GREEN = [0, 200, 0]; // Green (matching predicted path)
 const USER_LOCATION_MARKER_SIZE = gpsSize;
 const CLOSEST_APPROACH_MARKER_SIZE = USER_LOCATION_MARKER_SIZE;
 const END_OF_PATH_MARKER_SIZE = USER_LOCATION_MARKER_SIZE / 2;
+
+
+// Helper: normalize longitude to [-180, 180]
+function normalizeLon(lon) {
+    if (typeof lon !== 'number' || isNaN(lon)) return lon;
+    // Wrap to 0..360 then shift to -180..180
+    return ((lon + 180) % 360 + 360) % 360 - 180;
+}
 
 
 // Global variables for the p5.js sketch (ensure these are below all const declarations they might depend on)
@@ -85,6 +93,75 @@ function setup() {
     canvas.parent('sketch-holder');
     controlsOverlayElement = document.getElementById('controls-overlay');
 
+    // Ensure the controls overlay is on top and can receive pointer events.
+    // Some browsers / canvases can capture pointer events; make stacking explicit here.
+    try {
+        if (controlsOverlayElement) {
+            controlsOverlayElement.style.pointerEvents = 'auto';
+            controlsOverlayElement.style.zIndex = 2000; // higher than canvas
+        }
+        // p5 returns a p5.Element; set its underlying DOM element style to avoid it blocking overlay
+        if (canvas && canvas.elt) {
+            canvas.elt.style.zIndex = 1000; // ensure canvas sits below overlay
+            // keep pointer events enabled on canvas so the globe remains interactive when not covered
+            canvas.elt.style.pointerEvents = 'auto';
+        }
+    } catch (e) {
+        console.warn('Could not adjust canvas/overlay z-index/pointer settings:', e);
+    }
+
+    // Prevent pointer/touch events on overlay controls from bubbling to the p5 canvas
+    try {
+        if (controlsOverlayElement) {
+            // Attach conservative (non-passive) handlers to individual controls so we can
+            // reliably stop propagation before the p5 canvas handlers run. Use
+            // stopImmediatePropagation where available to prevent other listeners from
+            // intercepting the pointer events.
+            const controlEls = controlsOverlayElement.querySelectorAll('input, button, label');
+            controlEls.forEach(el => {
+                el.addEventListener('pointerdown', (ev) => { ev.stopPropagation(); if (ev.stopImmediatePropagation) ev.stopImmediatePropagation(); }, false);
+                el.addEventListener('pointermove', (ev) => { ev.stopPropagation(); }, false);
+                el.addEventListener('mousedown', (ev) => { ev.stopPropagation(); if (ev.stopImmediatePropagation) ev.stopImmediatePropagation(); }, false);
+                el.addEventListener('touchstart', (ev) => { ev.stopPropagation(); }, false);
+                el.addEventListener('touchmove', (ev) => { ev.stopPropagation(); }, false);
+            });
+
+            // Also guard the overlay container as a whole to catch events that may
+            // bubble from custom controls or labels. We purposely do not call
+            // preventDefault here since we want the browser's native control behavior
+            // (dragging sliders, clicks) to proceed; we only stop the event from
+            // propagating to the canvas and other global handlers.
+            controlsOverlayElement.addEventListener('pointerdown', (ev) => { ev.stopPropagation(); if (ev.stopImmediatePropagation) ev.stopImmediatePropagation(); }, false);
+            controlsOverlayElement.addEventListener('mousedown', (ev) => { ev.stopPropagation(); if (ev.stopImmediatePropagation) ev.stopImmediatePropagation(); }, false);
+            controlsOverlayElement.addEventListener('click', (ev) => { ev.stopPropagation(); }, false);
+
+            // Workaround: Temporarily disable canvas pointer events while the user is
+            // interacting with overlay controls. This prevents the p5/WebGL canvas
+            // from capturing pointermove/mousemove during slider drags in Chrome/Windows.
+            try {
+                if (canvas && canvas.elt) {
+                    let isControlActive = false;
+                    controlsOverlayElement.addEventListener('pointerdown', (ev) => {
+                        isControlActive = true;
+                        try { canvas.elt.style.pointerEvents = 'none'; } catch (e) {}
+                    }, false);
+                    window.addEventListener('pointerup', (ev) => {
+                        if (isControlActive) {
+                            isControlActive = false;
+                            try { canvas.elt.style.pointerEvents = 'auto'; } catch (e) {}
+                        }
+                    }, false);
+                }
+            } catch (e) {
+                // Non-fatal; best-effort workaround
+                console.warn('Could not attach canvas pointer-toggle workaround:', e);
+            }
+        }
+    } catch (e) {
+        // Non-fatal; input elements may not exist at this point in some race conditions
+        console.warn('Could not attach overlay control event handlers:', e);
+    }
+
     // Create a small checkbox control to toggle drawing the debug axes
     (function createAxisToggleControl() {
         const parent = controlsOverlayElement || document.getElementById('sketch-holder') || document.body;
@@ -92,6 +169,8 @@ function setup() {
             const ctrl = document.createElement('div');
             ctrl.id = 'axis-toggle-control';
             ctrl.style.cssText = 'position: absolute; top: 8px; left: 8px; padding: 6px 8px; background: rgba(0,0,0,0.45); color: #fff; font-family: sans-serif; font-size: 12px; border-radius: 4px; z-index: 1000;';
+            // Hidden by default - show via UI toggle or console if needed
+            ctrl.style.display = 'none';
 
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
@@ -324,20 +403,91 @@ function draw() {
         pop();
     }
 
+    // Draw predicted path (green) but stop when it intersects the pass-by cylinder
+    let endPath3D = null; // will hold the 3D point where the predicted path hits the cylinder (if any)
     if (showIssPredictedPath && internalPredictedPath && internalPredictedPath.length > 1) {
+        // Prepare cylinder geometry for intersection tests
+        const detectionRadius3DUnits = (sketchPassByRadiusKM / earthActualRadiusKM) * earthSize;
+        const cylinderHalfLength = CYLINDER_VISUAL_LENGTH / 2;
+        const client3D = Tools.p5.getSphereCoord(earthSize, currentDisplayLat, currentDisplayLon);
+        const cylCenter = client3D.copy();
+        const cylAxis = cylCenter.copy().normalize(); // unit axis
+
+        // Helper: test segment P0->P1 against finite cylinder (center C, axis u, radius r, half-length h)
+        function segmentIntersectsCylinder(P0, P1, C, u, r, h) {
+            const d = p5.Vector.sub(P1, P0);
+            const m = p5.Vector.sub(P0, C);
+            const dDotU = d.dot(u);
+            const mDotU = m.dot(u);
+            const d_perp = p5.Vector.sub(d, p5.Vector.mult(u, dDotU));
+            const m_perp = p5.Vector.sub(m, p5.Vector.mult(u, mDotU));
+            const a = d_perp.dot(d_perp);
+            const b = 2 * d_perp.dot(m_perp);
+            const c = m_perp.dot(m_perp) - r * r;
+
+            const EPS = 1e-9;
+            if (Math.abs(a) < EPS) {
+                // Segment parallel to cylinder axis (no radial change). Either completely outside or inside radially.
+                return null;
+            }
+            const disc = b * b - 4 * a * c;
+            if (disc < 0) return null;
+            const sqrtD = Math.sqrt(disc);
+            const tCandidates = [(-b - sqrtD) / (2 * a), (-b + sqrtD) / (2 * a)];
+            for (let t of tCandidates) {
+                if (t < 0 || t > 1) continue;
+                const z = mDotU + t * dDotU; // axial coordinate relative to cylinder center
+                if (z >= -h && z <= h) {
+                    // Intersection point
+                    const P = p5.Vector.add(P0, p5.Vector.mult(d, t));
+                    return { t: t, point: P };
+                }
+            }
+            return null;
+        }
+
         push();
         stroke(0, 200, 0, 180);
         strokeWeight(1.5);
         noFill();
-
         beginShape();
-        for (let i = 0; i < internalPredictedPath.length; i++) {
-            const predPoint = internalPredictedPath[i];
-            if (typeof predPoint.lat === 'number' && typeof predPoint.lon === 'number') {
-                let vPredPath = Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, predPoint.lat, predPoint.lon);
-                vertex(vPredPath.x, vPredPath.y, vPredPath.z);
+
+        let stopped = false;
+        for (let i = 0; i < internalPredictedPath.length - 1 && !stopped; i++) {
+            const pA = internalPredictedPath[i];
+            const pB = internalPredictedPath[i + 1];
+            if (!pA || !pB) continue;
+            if (typeof pA.lat !== 'number' || typeof pA.lon !== 'number') continue;
+            if (typeof pB.lat !== 'number' || typeof pB.lon !== 'number') continue;
+
+            const lonA = normalizeLon(pA.lon);
+            const lonB = normalizeLon(pB.lon);
+            const P0 = Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, pA.lat, lonA);
+            const P1 = Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, pB.lat, lonB);
+
+            // Add starting vertex for this segment (for continuous line)
+            vertex(P0.x, P0.y, P0.z);
+
+            // Test intersection of segment with cylinder (half-length is cylinderHalfLength)
+            const hit = segmentIntersectsCylinder(P0, P1, cylCenter, cylAxis, detectionRadius3DUnits, cylinderHalfLength);
+            if (hit) {
+                // Add the intersection point as the final vertex and stop drawing further segments
+                const Q = hit.point;
+                vertex(Q.x, Q.y, Q.z);
+                endPath3D = Q.copy();
+                stopped = true;
             }
         }
+
+        // If we didn't stop (no intersection), append the last predicted point as usual
+        if (!stopped) {
+            const last = internalPredictedPath[internalPredictedPath.length - 1];
+            const lastLon = normalizeLon(last.lon);
+            const vLast = Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, last.lat, lastLon);
+            vertex(vLast.x, vLast.y, vLast.z);
+            endPath3D = vLast.copy();
+        }
+
         endShape();
         pop();
     }
@@ -357,10 +507,20 @@ function draw() {
     if (window.ISSOrbitPredictor && typeof window.ISSOrbitPredictor.getClosestApproachDetails === 'function') {
         const approachDetails = window.ISSOrbitPredictor.getClosestApproachDetails();
         if (approachDetails) {
+            // Optional debug logging, enable by setting window.DEBUG_ISS_APPROACH = true elsewhere
+            if (window.DEBUG_ISS_APPROACH) console.log('[ISSApproach] raw:', approachDetails);
             // Ensure approachDetails has lat, lon. alt might be optional or used if available.
             // The ISS path is drawn at earthSize + issDistanceToEarth.
             // The closest approach point should also be at this altitude relative to Earth's surface.
-            let vApproach = Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, approachDetails.lat, approachDetails.lon);
+            // Use provided altitude (in km) if available to place marker at correct visual radius.
+            let useRadius = earthSize + issDistanceToEarth;
+            if (typeof approachDetails.alt === 'number' && !isNaN(approachDetails.alt)) {
+                // approachDetails.alt expected in kilometers above Earth's surface
+                useRadius = earthSize + (approachDetails.alt / earthActualRadiusKM) * earthSize;
+            }
+            const normLon = normalizeLon(approachDetails.lon);
+            if (window.DEBUG_ISS_APPROACH) console.log('[ISSApproach] normLon, useRadius:', normLon, useRadius);
+            let vApproach = Tools.p5.getSphereCoord(useRadius, approachDetails.lat, normLon);
             push();
             translate(vApproach.x, vApproach.y, vApproach.z);
             noStroke();
@@ -372,58 +532,71 @@ function draw() {
 
     // Draw End of Prediction Path Marker (Green)
     if (internalPredictedPath && internalPredictedPath.length > 0) {
-        const lastPoint = internalPredictedPath[internalPredictedPath.length - 1];
-        // Ensure lastPoint has lat, lon.
-        // Similar to the closest approach marker, position it relative to Earth's surface.
-        let vEndPath = Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, lastPoint.lat, lastPoint.lon);
-        push();
-        translate(vEndPath.x, vEndPath.y, vEndPath.z);
-        noStroke();
-        fill(MARKER_COLOR_GREEN[0], MARKER_COLOR_GREEN[1], MARKER_COLOR_GREEN[2]); // Use defined Green color
-        sphere(END_OF_PATH_MARKER_SIZE); // Use defined size
-        pop();
+        // If the predicted path intersection with the cylinder was computed earlier,
+        // prefer that 3D point so the green marker sits exactly where the path stopped.
+        if (typeof endPath3D !== 'undefined' && endPath3D && endPath3D.x !== undefined) {
+            push();
+            translate(endPath3D.x, endPath3D.y, endPath3D.z);
+            noStroke();
+            fill(MARKER_COLOR_GREEN[0], MARKER_COLOR_GREEN[1], MARKER_COLOR_GREEN[2]); // Use defined Green color
+            sphere(END_OF_PATH_MARKER_SIZE); // Use defined size
+            pop();
+        } else {
+            const lastPoint = internalPredictedPath[internalPredictedPath.length - 1];
+            // Ensure lastPoint has lat, lon. Normalize lon before computing 3D position.
+            const normLon = normalizeLon(lastPoint.lon);
+            let vEndPath = Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, lastPoint.lat, normLon);
+            push();
+            translate(vEndPath.x, vEndPath.y, vEndPath.z);
+            noStroke();
+            fill(MARKER_COLOR_GREEN[0], MARKER_COLOR_GREEN[1], MARKER_COLOR_GREEN[2]); // Use defined Green color
+            sphere(END_OF_PATH_MARKER_SIZE); // Use defined size
+            pop();
+        }
     }
 
     // Draw Pass-by Detection Cylinder (Standard Alignment)
     if (sketchPassByRadiusKM > 0) {
         const detectionRadius3DUnits = (sketchPassByRadiusKM / earthActualRadiusKM) * earthSize;
        
-        let directionVector = pClientLoc.copy().normalize(); 
-        let defaultCylinderAxis = createVector(0, -1, 0); // p5.js cylinder's height is along its local Y-axis
-        
-        let rotationAngle = defaultCylinderAxis.angleBetween(directionVector);
-        let rotationAxis = defaultCylinderAxis.cross(directionVector);
+        // Compute a unit vector from Earth center to client location (surface normal)
+        let upVector = pClientLoc.copy().normalize();
 
-        if (rotationAxis.magSq() < 0.0001) { 
-            if (defaultCylinderAxis.dot(directionVector) < 0) { 
-                rotationAngle = 0;//PI;
-                rotationAxis = createVector(1, 0, 0); 
+        // p5.js cylinder's local axis is +Y. We need rotation that maps (0, -1, 0) to upVector
+        // Use defaultCylinderAxis pointing up in model coordinates that matches how cylinder draws
+        let defaultCylinderAxis = createVector(0, -1, 0);
+        let rotationAxis = defaultCylinderAxis.cross(upVector);
+        let rotationAngle = defaultCylinderAxis.angleBetween(upVector);
+
+        // If vectors are nearly parallel/antiparallel, handle gracefully
+        if (rotationAxis.magSq() < 1e-8) {
+            // If opposite direction, rotate 180 degrees around X axis
+            if (defaultCylinderAxis.dot(upVector) < 0) {
+                rotationAxis = createVector(1, 0, 0);
+                rotationAngle = Math.PI;
             } else {
+                // Parallel and same direction: no rotation needed
+                rotationAxis = createVector(1, 0, 0);
                 rotationAngle = 0;
             }
         }
-        
+
         push(); // Start a new context for the cylinder
-          
-        
-       // 1. Translate to where the BASE of the cylinder should be.
+        // Center the cylinder on the client location: translate to client point
         translate(pClientLoc.x, pClientLoc.y, pClientLoc.z);
 
-      
-        // 2. Apply the orientation rotation `q` (aligns local Y with upVector).
-        //    (This is the block with defaultCylinderAxis, angleBetween, cross, rotate)
-        if (rotationAngle !== 0 && rotationAxis.magSq() > 0.0001) {
+        // Apply rotation to align cylinder's local Y axis with the surface normal (upVector)
+        if (rotationAngle !== 0 && rotationAxis.magSq() > 0) {
             rotate(rotationAngle, rotationAxis);
         }
-        
-        // 3. Translate UP along the NEW Y-axis (which is now upVector) by HALF the cylinder's desired visual height.
-        translate(0, -CYLINDER_VISUAL_LENGTH / 2, 0);
 
-        // 4. Draw the cylinder using standard (radius, height) parameters.
+        // After rotation, draw the cylinder centered vertically on the client point
+        // Cylinder is drawn centered at local origin; to have it extend equally above and below
+        // the surface, we draw it with its center at origin and with the length CYLINDER_VISUAL_LENGTH
         fill(0, 100, 255, 30);
         noStroke();
+        // Draw with center at origin so it extends half-length in both directions
         cylinder(detectionRadius3DUnits, CYLINDER_VISUAL_LENGTH);
-       
         pop();
     }
 
@@ -492,11 +665,26 @@ window.earth3DSketch = {
 };
 
 function mouseDragged() {
-    if (controlsOverlayElement &&
-        mouseX >= controlsOverlayElement.offsetLeft && mouseX <= controlsOverlayElement.offsetLeft + controlsOverlayElement.offsetWidth &&
-        mouseY >= controlsOverlayElement.offsetTop && mouseY <= controlsOverlayElement.offsetTop + controlsOverlayElement.offsetHeight) {
-        // Mouse is over the overlay, allow default drag for sliders
-        return; // Equivalent to returning true in p5 for allowing default behavior
+    try {
+        // Convert p5 mouse coordinates (canvas local) to page coordinates and check the top element
+        const canvasEl = document.querySelector('#sketch-holder canvas');
+        if (canvasEl && controlsOverlayElement) {
+            const rect = canvasEl.getBoundingClientRect();
+            const pageX = rect.left + mouseX;
+            const pageY = rect.top + mouseY;
+            const topEl = document.elementFromPoint(pageX, pageY);
+            if (topEl && (topEl.closest('#controls-overlay') || topEl.closest('#axis-toggle-control') || topEl.tagName === 'INPUT' || topEl.closest('input'))) {
+                // Mouse is over the overlay or its controls — allow the browser to handle the interaction
+                return true; // allow default p5/browser behavior
+            }
+        }
+    } catch (e) {
+        // If anything goes wrong here, fall back to original bounding-box check as a best-effort
+        if (controlsOverlayElement &&
+            mouseX >= controlsOverlayElement.offsetLeft && mouseX <= controlsOverlayElement.offsetLeft + controlsOverlayElement.offsetWidth &&
+            mouseY >= controlsOverlayElement.offsetTop && mouseY <= controlsOverlayElement.offsetTop + controlsOverlayElement.offsetHeight) {
+            return true;
+        }
     }
 
     // If not over the overlay, and mouse is within canvas bounds (original check)
