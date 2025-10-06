@@ -58,6 +58,9 @@ const END_OF_PATH_MARKER_SIZE = USER_LOCATION_MARKER_SIZE / 2;
 // ... (rest of variable declarations like sketchPassByRadiusKM are effectively here or remain where they are if not dependent)
 let sketchPassByRadiusKM = 1500; // Default pass-by radius in KM, will be updated by slider
 
+// Toggle to show debug axes
+let showAxis = false;
+
 async function preload() {
     cloudyEarth = loadImage('/img/Planets/cloudyEarth.jpg');
     earthquakes = loadStrings('/data/quakes.csv');
@@ -82,6 +85,39 @@ function setup() {
     canvas.parent('sketch-holder');
     controlsOverlayElement = document.getElementById('controls-overlay');
 
+    // Create a small checkbox control to toggle drawing the debug axes
+    (function createAxisToggleControl() {
+        const parent = controlsOverlayElement || document.getElementById('sketch-holder') || document.body;
+        try {
+            const ctrl = document.createElement('div');
+            ctrl.id = 'axis-toggle-control';
+            ctrl.style.cssText = 'position: absolute; top: 8px; left: 8px; padding: 6px 8px; background: rgba(0,0,0,0.45); color: #fff; font-family: sans-serif; font-size: 12px; border-radius: 4px; z-index: 1000;';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = 'axis-toggle-checkbox';
+            checkbox.style.verticalAlign = 'middle';
+
+            const label = document.createElement('label');
+            label.htmlFor = 'axis-toggle-checkbox';
+            label.style.marginLeft = '6px';
+            label.style.cursor = 'pointer';
+            label.textContent = 'Show axes';
+
+            checkbox.addEventListener('change', function () { showAxis = !!checkbox.checked; });
+
+            ctrl.appendChild(checkbox);
+            ctrl.appendChild(label);
+
+            // Append to the parent; make sure parent allows positioned children
+            parent.style.position = parent.style.position || 'relative';
+            parent.appendChild(ctrl);
+        } catch (e) {
+            // If DOM ops fail (rare), ignore silently
+            console.warn('Could not create axis toggle control:', e);
+        }
+    })();
+
     // Initialize quake colors
     quakeFromColor = color(0, 255, 0, 150); // Default fromColor (green)
     quakeToColor = color(255, 0, 0, 150); // Default toColor (red)
@@ -97,6 +133,12 @@ function windowResized() {
 function keyPressed() {
     if (key === 's' || key === 'S') {
         saveCanvas('earth3d_snapshot', 'png');
+    }
+    // quick keyboard toggle for axes
+    if (key === 'a' || key === 'A') {
+        showAxis = !showAxis;
+        const cb = document.getElementById('axis-toggle-checkbox');
+        if (cb) cb.checked = showAxis;
     }
 }
 
@@ -181,6 +223,7 @@ function populateInitialIssHistory(responseData) {
 }
 
 function draw() {
+   
     // Updated periodic log
     if (typeof frameCount !== 'undefined' && frameCount % 60 === 1) {
         console.log(`[draw frameCount: ${frameCount}] AngleY: ${angleY.toFixed(2)}, AngleX: ${angleX.toFixed(2)}, Zoom: ${zoomLevel.toFixed(2)}`);
@@ -190,6 +233,13 @@ function draw() {
     let currentDisplayLon = (typeof window.clientLon === 'number' && window.clientLon !== null) ? window.clientLon : -71.2080;
 
     background(52); 
+  // Conditional axes drawing controlled by the UI checkbox / 'A' key
+        if (showAxis) {
+            push();
+            // drawAxis expects a length in model units; use a visible scale relative to earthSize
+            drawAxis(earthSize * 50);
+            pop();
+        }
 
     // Normal angleY auto-rotation
     if (typeof autoRotationSpeed === 'number' && !isNaN(autoRotationSpeed)) {
@@ -373,7 +423,7 @@ function draw() {
         fill(0, 100, 255, 30);
         noStroke();
         cylinder(detectionRadius3DUnits, CYLINDER_VISUAL_LENGTH);
-        //drawAxis(500);
+       
         pop();
     }
 
