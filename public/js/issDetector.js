@@ -61,6 +61,19 @@ function normalizeLon(lon) {
     return ((lon + 180) % 360 + 360) % 360 - 180;
 }
 
+function haversineDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Radius of Earth in kilometers
+    const toRad = angle => angle * Math.PI / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Distance in km
+}
+
 
 // Global variables for the p5.js sketch (ensure these are below all const declarations they might depend on)
 // ... (rest of variable declarations like sketchPassByRadiusKM are effectively here or remain where they are if not dependent)
@@ -246,7 +259,7 @@ function update3DPredictedPath(pointsFrom2D) {
     }
 
     if (Array.isArray(pointsFrom2D)) {
-        internalPredictedPath = pointsFrom2D.map(p => ({ lat: p.lat, lon: p.lng }));
+        internalPredictedPath = pointsFrom2D.map(p => ({ lat: p.lat, lon: p.lng, time: p.time }));
         console.log(`[3D Path] Updated internalPredictedPath. New length: ${internalPredictedPath.length}`);
         if (internalPredictedPath.length > 0) {
             console.log('[3D Path] First 3 internalPredictedPath points:', JSON.stringify(internalPredictedPath.slice(0,3)));
@@ -403,93 +416,100 @@ function draw() {
         pop();
     }
 
-    // Draw predicted path (green) but stop when it intersects the pass-by cylinder
-    let endPath3D = null; // will hold the 3D point where the predicted path hits the cylinder (if any)
+    // --- ENHANCED TRAJECTORY INTERSECTION & HIGHLIGHTING ---
     if (showIssPredictedPath && internalPredictedPath && internalPredictedPath.length > 1) {
-        // Prepare cylinder geometry for intersection tests
-        const detectionRadius3DUnits = (sketchPassByRadiusKM / earthActualRadiusKM) * earthSize;
-        const cylinderHalfLength = CYLINDER_VISUAL_LENGTH / 2;
-        const client3D = Tools.p5.getSphereCoord(earthSize, currentDisplayLat, currentDisplayLon);
-        const cylCenter = client3D.copy();
-        const cylAxis = cylCenter.copy().normalize(); // unit axis
+        const detectionRadiusKM = sketchPassByRadiusKM;
+        let insideCylinder = false;
+        let entryPoint = null;
+        let exitPoint = null;
 
-        // Helper: test segment P0->P1 against finite cylinder (center C, axis u, radius r, half-length h)
-        function segmentIntersectsCylinder(P0, P1, C, u, r, h) {
-            const d = p5.Vector.sub(P1, P0);
-            const m = p5.Vector.sub(P0, C);
-            const dDotU = d.dot(u);
-            const mDotU = m.dot(u);
-            const d_perp = p5.Vector.sub(d, p5.Vector.mult(u, dDotU));
-            const m_perp = p5.Vector.sub(m, p5.Vector.mult(u, mDotU));
-            const a = d_perp.dot(d_perp);
-            const b = 2 * d_perp.dot(m_perp);
-            const c = m_perp.dot(m_perp) - r * r;
+        // Path segments to draw
+        const regularPath = [];
+        const highlightedPath = [];
 
-            const EPS = 1e-9;
-            if (Math.abs(a) < EPS) {
-                // Segment parallel to cylinder axis (no radial change). Either completely outside or inside radially.
-                return null;
-            }
-            const disc = b * b - 4 * a * c;
-            if (disc < 0) return null;
-            const sqrtD = Math.sqrt(disc);
-            const tCandidates = [(-b - sqrtD) / (2 * a), (-b + sqrtD) / (2 * a)];
-            for (let t of tCandidates) {
-                if (t < 0 || t > 1) continue;
-                const z = mDotU + t * dDotU; // axial coordinate relative to cylinder center
-                if (z >= -h && z <= h) {
-                    // Intersection point
-                    const P = p5.Vector.add(P0, p5.Vector.mult(d, t));
-                    return { t: t, point: P };
-                }
-            }
-            return null;
-        }
+        for (let i = 0; i < internalPredictedPath.length - 1; i++) {
+            const p1 = internalPredictedPath[i];
+            const p2 = internalPredictedPath[i+1];
 
-        push();
-        stroke(0, 200, 0, 180);
-        strokeWeight(1.5);
-        noFill();
-        beginShape();
+            const dist1 = haversineDistance(p1.lat, p1.lon, currentDisplayLat, currentDisplayLon);
+            const dist2 = haversineDistance(p2.lat, p2.lon, currentDisplayLat, currentDisplayLon);
 
-        let stopped = false;
-        for (let i = 0; i < internalPredictedPath.length - 1 && !stopped; i++) {
-            const pA = internalPredictedPath[i];
-            const pB = internalPredictedPath[i + 1];
-            if (!pA || !pB) continue;
-            if (typeof pA.lat !== 'number' || typeof pA.lon !== 'number') continue;
-            if (typeof pB.lat !== 'number' || typeof pB.lon !== 'number') continue;
+            const p1_inside = dist1 <= detectionRadiusKM;
+            const p2_inside = dist2 <= detectionRadiusKM;
 
-            const lonA = normalizeLon(pA.lon);
-            const lonB = normalizeLon(pB.lon);
-            const P0 = Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, pA.lat, lonA);
-            const P1 = Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, pB.lat, lonB);
+            if (!insideCylinder && p2_inside) { // Entering cylinder
+                entryPoint = p2;
+                insideCylinder = true;
+                regularPath.push(p1);
+                highlightedPath.push(p1, p2);
 
-            // Add starting vertex for this segment (for continuous line)
-            vertex(P0.x, P0.y, P0.z);
+            } else if (insideCylinder && !p2_inside) { // Exiting cylinder
+                exitPoint = p2;
+                insideCylinder = false;
+                highlightedPath.push(p1, p2);
+                 break;
 
-            // Test intersection of segment with cylinder (half-length is cylinderHalfLength)
-            const hit = segmentIntersectsCylinder(P0, P1, cylCenter, cylAxis, detectionRadius3DUnits, cylinderHalfLength);
-            if (hit) {
-                // Add the intersection point as the final vertex and stop drawing further segments
-                const Q = hit.point;
-                vertex(Q.x, Q.y, Q.z);
-                endPath3D = Q.copy();
-                stopped = true;
+            } else if (insideCylinder) { // Fully inside cylinder
+                highlightedPath.push(p1, p2);
+
+            } else { // Fully outside cylinder
+                 regularPath.push(p1, p2);
             }
         }
 
-        // If we didn't stop (no intersection), append the last predicted point as usual
-        if (!stopped) {
-            const last = internalPredictedPath[internalPredictedPath.length - 1];
-            const lastLon = normalizeLon(last.lon);
-            const vLast = Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, last.lat, lastLon);
-            vertex(vLast.x, vLast.y, vLast.z);
-            endPath3D = vLast.copy();
+        // Update UI with pass times
+        const entryTimeSpan = document.getElementById('pass-entry-time');
+        const exitTimeSpan = document.getElementById('pass-exit-time');
+
+        if (entryPoint && entryTimeSpan) {
+            const entryDate = new Date(Date.now() + entryPoint.time * 1000);
+            entryTimeSpan.textContent = entryDate.toLocaleTimeString();
+        } else if (entryTimeSpan) {
+            entryTimeSpan.textContent = 'N/A';
         }
 
-        endShape();
-        pop();
+        if (exitPoint && exitTimeSpan) {
+            const exitDate = new Date(Date.now() + exitPoint.time * 1000);
+            exitTimeSpan.textContent = exitDate.toLocaleTimeString();
+        } else if (exitTimeSpan) {
+            exitTimeSpan.textContent = 'N/A';
+        }
+
+        // Draw the regular (non-highlighted) part of the path
+        if(regularPath.length > 0) {
+            push();
+            stroke(0, 200, 0, 180); // Standard green
+            strokeWeight(1.5);
+            noFill();
+            beginShape();
+            for(const p of regularPath) {
+                const v = Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, p.lat, normalizeLon(p.lon));
+                vertex(v.x, v.y, v.z);
+            }
+            endShape();
+            pop();
+        }
+
+        // Draw the highlighted part of the path
+        if(highlightedPath.length > 0) {
+            push();
+            stroke(255, 255, 0, 220); // Bright yellow for highlight
+            strokeWeight(3); // Thicker line for emphasis
+            noFill();
+            beginShape();
+            for(const p of highlightedPath) {
+                const v = Tools.p5.getSphereCoord(earthSize + issDistanceToEarth, p.lat, normalizeLon(p.lon));
+                vertex(v.x, v.y, v.z);
+            }
+            endShape();
+            pop();
+        }
+    } else {
+        // Clear times if no path is being drawn
+        const entryTimeSpan = document.getElementById('pass-entry-time');
+        const exitTimeSpan = document.getElementById('pass-exit-time');
+        if (entryTimeSpan) entryTimeSpan.textContent = 'N/A';
+        if (exitTimeSpan) exitTimeSpan.textContent = 'N/A';
     }
     
     // Use currentDisplayLat, currentDisplayLon for the client location marker
