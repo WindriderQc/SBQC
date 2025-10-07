@@ -3,14 +3,20 @@ const fs = require('fs').promises;
 let visitorCount = 0
  
 
-async function initCount() { 
-  try {
-    const data = await fs.readFile('visitCounter.txt')
-    console.log('Visitor count loaded: ', data.toString());
-    visitorCount = data
-  }
-  catch(err) {  console.error(`Got an error trying to read to a file: ${err.message}`); } 
-   
+async function initCount() {
+    try {
+        const data = await fs.readFile('visitCounter.txt');
+        visitorCount = parseInt(data.toString(), 10) || 0;
+        console.log('Visitor count loaded: ', visitorCount);
+    } catch (err) {
+        if (err.code === 'ENOENT') {
+            console.log('visitCounter.txt not found. Initializing count to 0.');
+            visitorCount = 0;
+            await fs.writeFile('visitCounter.txt', '0');
+        } else {
+            console.error(`Got an error trying to read the file: ${err.message}`);
+        }
+    }
 }
 (async function () {  await initCount()  })();
 
@@ -19,14 +25,12 @@ async function initCount() { 
 exports.increaseCount = async () =>{
     try {
       visitorCount++
-      let str = visitorCount.toString()
-      await fs.writeFile('visitCounter.txt', str) 
-      console.log('count', str)
-      return str
+      await fs.writeFile('visitCounter.txt', visitorCount.toString())
+      console.log('count', visitorCount)
+      return visitorCount
     } catch (error) {
       console.error(`Got an error trying to write to a file: ${error.message}`);
     }
-  
 }
 
 
