@@ -1,3 +1,6 @@
+import { haversineDistance } from './utils.js';
+import { getClosestApproachDetails } from './issOrbitPredictor.js';
+
 // Global variables for the p5.js sketch
 let internalIssPathHistory = [];
 
@@ -40,10 +43,10 @@ let closestApproachMarker = {
 
 // Constants for sizes and distances
 const earthSize = 300;
-const earthActualRadiusKM = 6371; 
-const issDistanceToEarth = 50; 
-const gpsSize = 5; 
-const issSize = 6; 
+const earthActualRadiusKM = 6371;
+const issDistanceToEarth = 50;
+const gpsSize = 5;
+const issSize = 6;
 const CYLINDER_VISUAL_LENGTH = issDistanceToEarth * 3; // Now correctly uses defined constants
 
 // Constants for marker appearance
@@ -59,19 +62,6 @@ function normalizeLon(lon) {
     if (typeof lon !== 'number' || isNaN(lon)) return lon;
     // Wrap to 0..360 then shift to -180..180
     return ((lon + 180) % 360 + 360) % 360 - 180;
-}
-
-function haversineDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371; // Radius of Earth in kilometers
-    const toRad = angle => angle * Math.PI / 180;
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
-    const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-        Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; // Distance in km
 }
 
 
@@ -99,6 +89,9 @@ async function preload() {
 }
 
 function setup() {
+    window.addEventListener('iss-path-update', (event) => {
+        update3DPredictedPath(event.detail);
+    });
     const sketchHolder = document.getElementById('sketch-holder');
     const canvasWidth = sketchHolder.offsetWidth;
     const canvasHeight = canvasWidth * (9 / 16); // Maintain 16:9 aspect ratio
@@ -234,7 +227,7 @@ function keyPressed() {
     }
 }
 
-function set3DMaxHistoryPoints(newLimit) {
+export function set3DMaxHistoryPoints(newLimit) {
     console.log('[set3DMaxHistoryPoints] Called with newLimit:', newLimit, 'Current MAX_HISTORY_POINTS:', MAX_HISTORY_POINTS);
     if (typeof newLimit !== 'number' || isNaN(newLimit) || newLimit < 0) {
         console.error('[set3DMaxHistoryPoints] Invalid newLimit provided. Value:', newLimit);
@@ -270,7 +263,7 @@ function update3DPredictedPath(pointsFrom2D) {
     }
 }
 
-function setSketchPassByRadiusKM(newRadiusKM) {
+export function setSketchPassByRadiusKM(newRadiusKM) {
     if (typeof newRadiusKM === 'number' && newRadiusKM >= 0) {
         sketchPassByRadiusKM = newRadiusKM;
         console.log('[earth3DSketch] sketchPassByRadiusKM updated to:', sketchPassByRadiusKM);
@@ -524,30 +517,28 @@ function draw() {
     // --- DIAGNOSTIC LINE REMOVED ---
 
     // Draw Closest Approach Marker (Teal)
-    if (window.ISSOrbitPredictor && typeof window.ISSOrbitPredictor.getClosestApproachDetails === 'function') {
-        const approachDetails = window.ISSOrbitPredictor.getClosestApproachDetails();
-        if (approachDetails) {
-            // Optional debug logging, enable by setting window.DEBUG_ISS_APPROACH = true elsewhere
-            if (window.DEBUG_ISS_APPROACH) console.log('[ISSApproach] raw:', approachDetails);
-            // Ensure approachDetails has lat, lon. alt might be optional or used if available.
-            // The ISS path is drawn at earthSize + issDistanceToEarth.
-            // The closest approach point should also be at this altitude relative to Earth's surface.
-            // Use provided altitude (in km) if available to place marker at correct visual radius.
-            let useRadius = earthSize + issDistanceToEarth;
-            if (typeof approachDetails.alt === 'number' && !isNaN(approachDetails.alt)) {
-                // approachDetails.alt expected in kilometers above Earth's surface
-                useRadius = earthSize + (approachDetails.alt / earthActualRadiusKM) * earthSize;
-            }
-            const normLon = normalizeLon(approachDetails.lon);
-            if (window.DEBUG_ISS_APPROACH) console.log('[ISSApproach] normLon, useRadius:', normLon, useRadius);
-            let vApproach = Tools.p5.getSphereCoord(useRadius, approachDetails.lat, normLon);
-            push();
-            translate(vApproach.x, vApproach.y, vApproach.z);
-            noStroke();
-            fill(MARKER_COLOR_TEAL[0], MARKER_COLOR_TEAL[1], MARKER_COLOR_TEAL[2]); // Use defined Teal color
-            sphere(CLOSEST_APPROACH_MARKER_SIZE); // Use defined size
-            pop();
+    const approachDetails = getClosestApproachDetails();
+    if (approachDetails) {
+        // Optional debug logging, enable by setting window.DEBUG_ISS_APPROACH = true elsewhere
+        if (window.DEBUG_ISS_APPROACH) console.log('[ISSApproach] raw:', approachDetails);
+        // Ensure approachDetails has lat, lon. alt might be optional or used if available.
+        // The ISS path is drawn at earthSize + issDistanceToEarth.
+        // The closest approach point should also be at this altitude relative to Earth's surface.
+        // Use provided altitude (in km) if available to place marker at correct visual radius.
+        let useRadius = earthSize + issDistanceToEarth;
+        if (typeof approachDetails.alt === 'number' && !isNaN(approachDetails.alt)) {
+            // approachDetails.alt expected in kilometers above Earth's surface
+            useRadius = earthSize + (approachDetails.alt / earthActualRadiusKM) * earthSize;
         }
+        const normLon = normalizeLon(approachDetails.lon);
+        if (window.DEBUG_ISS_APPROACH) console.log('[ISSApproach] normLon, useRadius:', normLon, useRadius);
+        let vApproach = Tools.p5.getSphereCoord(useRadius, approachDetails.lat, normLon);
+        push();
+        translate(vApproach.x, vApproach.y, vApproach.z);
+        noStroke();
+        fill(MARKER_COLOR_TEAL[0], MARKER_COLOR_TEAL[1], MARKER_COLOR_TEAL[2]); // Use defined Teal color
+        sphere(CLOSEST_APPROACH_MARKER_SIZE); // Use defined size
+        pop();
     }
 
     // Draw End of Prediction Path Marker (Green)
@@ -664,25 +655,20 @@ function show3DQuakes() {
     }
 }
 
-window.earth3DSketch = {
-    setMaxHistoryPoints: set3DMaxHistoryPoints,
-    updatePredictedPath: update3DPredictedPath,
-    getInternalIssPathHistory: () => internalIssPathHistory,
-    getMaxHistoryPoints: () => MAX_HISTORY_POINTS,
-    setSketchPassByRadiusKM: setSketchPassByRadiusKM,
-    setShowIssHistoricalPath: function(value) {
-        showIssHistoricalPath = !!value; // Ensure boolean
-        if (typeof redraw === 'function') redraw();
-    },
-    setShowIssPredictedPath: function(value) {
-        showIssPredictedPath = !!value; // Ensure boolean
-        if (typeof redraw === 'function') redraw();
-    },
-    setShowQuakes: function(value) {
-        showQuakes = !!value; // Ensure boolean
-        if (typeof redraw === 'function') redraw();
-    }
-};
+export function setShowIssHistoricalPath(value) {
+    showIssHistoricalPath = !!value; // Ensure boolean
+    if (typeof redraw === 'function') redraw();
+}
+
+export function setShowIssPredictedPath(value) {
+    showIssPredictedPath = !!value; // Ensure boolean
+    if (typeof redraw === 'function') redraw();
+}
+
+export function setShowQuakes(value) {
+    showQuakes = !!value; // Ensure boolean
+    if (typeof redraw === 'function') redraw();
+}
 
 function mouseDragged() {
     try {
@@ -737,6 +723,19 @@ function touchStarted() {
     }
     return false;
 }
+
+// Export the p5.js lifecycle functions for use in instance mode.
+export {
+    preload,
+    setup,
+    draw,
+    windowResized,
+    keyPressed,
+    mouseDragged,
+    mouseWheel,
+    touchStarted,
+    touchMoved
+};
 
 function touchMoved() {
     if (touches.length === 2) {

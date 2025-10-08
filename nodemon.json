@@ -1,0 +1,8 @@
+{
+  "ignore": [
+    "public/Projects/",
+    "jules-scratch/",
+    "greetings.txt",
+    "server.log"
+  ]
+}
