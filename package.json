@@ -6,7 +6,8 @@
   "scripts": {
     "test": "mocha",
     "start": "node sbqc_serv.js",
-    "dev": "nodemon sbqc_serv.js"
+    "dev": "nodemon sbqc_serv.js",
+    "agent": "node sbqc_serv.js"
   },
   "repository": {
     "type": "git",
