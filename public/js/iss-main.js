@@ -49,6 +49,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const showIssHistoricalPathCheckbox = document.getElementById('showIssHistoricalPath');
     const showIssPredictedPathCheckbox = document.getElementById('showIssPredictedPath');
     const showQuakesCheckbox = document.getElementById('showQuakes');
+    const showIssCameraCheckbox = document.getElementById('showIssCamera');
+    const issCameraControls = document.getElementById('iss-camera-controls');
+    const issFovSlider = document.getElementById('issFovSlider');
+    const issFovValueSpan = document.getElementById('issFovValue');
     const refreshBtn = document.getElementById('refresh-tle-btn');
 
     pathLengthSlider.addEventListener('input', (e) => {
@@ -77,6 +81,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     showQuakesCheckbox.addEventListener('change', (e) => {
         if (window.p5SketchApi) window.p5SketchApi.setShowQuakes(e.target.checked);
+    });
+
+    showIssCameraCheckbox.addEventListener('change', (e) => {
+        const isChecked = e.target.checked;
+        issCameraControls.style.display = isChecked ? 'block' : 'none';
+        if (window.p5SketchApi) window.p5SketchApi.setShowIssCamera(isChecked);
+    });
+
+    issFovSlider.addEventListener('input', (e) => {
+        const fov = parseInt(e.target.value, 10);
+        issFovValueSpan.textContent = fov;
+        if (window.p5SketchApi) window.p5SketchApi.setIssFov(fov);
     });
 
     refreshBtn.addEventListener('click', () => {

@@ -23,6 +23,9 @@ export default function(p) {
     let showIssHistoricalPath = true;
     let showIssPredictedPath = true;
     let showQuakes = false;
+    let showIssCamera = false;
+    let issCameraView;
+    let issFov = 60;
     let showApproachInfo = true; // UI toggle: show/hide great-circle path and approach time label
     const earthSize = 300;
     const earthActualRadiusKM = 6371;
@@ -64,6 +67,8 @@ export default function(p) {
         setShowIssHistoricalPath: (value) => { showIssHistoricalPath = !!value; },
         setShowIssPredictedPath: (value) => { showIssPredictedPath = !!value; },
         setShowQuakes: (value) => { showQuakes = !!value; },
+        setShowIssCamera: (value) => { showIssCamera = !!value; },
+        setIssFov: (value) => { issFov = value; },
     };
     window.p5SketchApi = sketchApi;
 
@@ -101,6 +106,9 @@ export default function(p) {
         const canvas = p.createCanvas(canvasWidth, canvasHeight, p.WEBGL);
         canvas.parent('sketch-holder');
         controlsOverlayElement = document.getElementById('controls-overlay');
+
+        // Create a separate graphics buffer for the ISS camera view
+        issCameraView = p.createGraphics(canvasWidth / 4, (canvasWidth / 4) * (9 / 16), p.WEBGL);
 
         try {
             if (controlsOverlayElement) {
@@ -173,6 +181,9 @@ export default function(p) {
         const canvasWidth = sketchHolder.offsetWidth;
         const canvasHeight = canvasWidth * (9 / 16);
         p.resizeCanvas(canvasWidth, canvasHeight);
+        if (issCameraView) {
+            issCameraView.resizeCanvas(canvasWidth / 4, (canvasWidth / 4) * (9/16));
+        }
     };
 
     p.keyPressed = () => {
@@ -485,7 +496,47 @@ export default function(p) {
 
         if (showQuakes) show3DQuakes();
         p.pop();
+
+        if (showIssCamera) {
+            drawIssCameraView();
+            // Display the camera view as an overlay
+            p.push();
+            p.resetMatrix(); // Reset transformations to draw in 2D screen space
+            p.image(issCameraView, p.width - issCameraView.width - 10, p.height - issCameraView.height - 10);
+            p.stroke(255);
+            p.noFill();
+            p.rect(p.width - issCameraView.width - 10, p.height - issCameraView.height - 10, issCameraView.width, issCameraView.height);
+            p.pop();
+        }
     };
+
+    function drawIssCameraView() {
+        if (!window.iss || typeof window.iss.latitude !== 'number' || typeof window.iss.longitude !== 'number') {
+            return;
+        }
+
+        const cam = issCameraView;
+        cam.background(10, 10, 20); // Deep space color
+
+        // Set camera perspective based on FOV slider
+        const fovRadians = p.radians(issFov);
+        cam.perspective(fovRadians, cam.width / cam.height, 0.1, earthSize * 10);
+
+        // Position the camera at the ISS location
+        const issPos = getSphereCoord(p, earthSize + issDistanceToEarth, window.iss.latitude, window.iss.longitude);
+
+        // Point the camera towards the center of the Earth
+        cam.camera(issPos.x, issPos.y, issPos.z, 0, 0, 0, 0, 1, 0);
+
+        cam.ambientLight(250);
+
+        // Draw the Earth
+        cam.push();
+        cam.texture(cloudyEarth);
+        cam.noStroke();
+        cam.sphere(earthSize);
+        cam.pop();
+    }
 
     p.mouseDragged = () => {
         if (p.mouseX > 0 && p.mouseX < p.width && p.mouseY > 0 && p.mouseY < p.height) {
