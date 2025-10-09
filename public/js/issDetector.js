@@ -335,14 +335,46 @@ export default function(p) {
             const rotationAxis = defaultCylinderAxis.cross(upVector);
             let rotationAngle = defaultCylinderAxis.angleBetween(upVector);
 
+            // Draw a ground-projected translucent disk (visibility horizon) and an outline ring
             p.push();
             p.translate(pClientLoc.x, pClientLoc.y, pClientLoc.z);
             if (rotationAngle !== 0 && rotationAxis.magSq() > 0) {
                 p.rotate(rotationAngle, rotationAxis);
             }
-            p.fill(0, 100, 255, 30);
+
+            // Translucent filled disk (triangle fan)
+            const diskSegments = 64;
+            p.push();
+            p.rotateX(Math.PI / 2); // make the disk lie tangent to the sphere at the user location
             p.noStroke();
-            p.cylinder(detectionRadius3DUnits, CYLINDER_VISUAL_LENGTH);
+            p.fill(0, 100, 255, 30);
+            p.beginShape(p.TRIANGLE_FAN);
+            p.vertex(0, 0, 0);
+            for (let i = 0; i <= diskSegments; i++) {
+                const theta = (i / diskSegments) * Math.PI * 2;
+                const x = Math.cos(theta) * detectionRadius3DUnits;
+                const y = Math.sin(theta) * detectionRadius3DUnits;
+                p.vertex(x, y, 0);
+            }
+            p.endShape();
+            p.pop();
+
+            // Outline ring for better visibility
+            p.push();
+            p.rotateX(Math.PI / 2);
+            p.noFill();
+            p.stroke(0, 180, 255, 180);
+            p.strokeWeight(2);
+            p.beginShape();
+            for (let i = 0; i <= diskSegments; i++) {
+                const theta = (i / diskSegments) * Math.PI * 2;
+                const x = Math.cos(theta) * detectionRadius3DUnits;
+                const y = Math.sin(theta) * detectionRadius3DUnits;
+                p.vertex(x, y, 0);
+            }
+            p.endShape();
+            p.pop();
+
             p.pop();
         }
 
