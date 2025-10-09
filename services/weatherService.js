@@ -95,9 +95,19 @@ async function getTLE() {
         return tleCache.data;
     }
     const TLE_CELESTRAK_URL = 'https://celestrak.com/NORAD/elements/stations.txt';
-    const data = await fetchText(TLE_CELESTRAK_URL);
-    tleCache = { data, timestamp: now };
-    return data;
+    try {
+        const data = await fetchText(TLE_CELESTRAK_URL);
+        tleCache = { data, timestamp: now };
+        return data;
+    } catch (error) {
+        console.error("Error fetching TLE data from Celestrak:", error.message);
+        // Return stale data if available, otherwise re-throw
+        if (tleCache.data) {
+            console.warn("Returning stale TLE data due to fetch error.");
+            return tleCache.data;
+        }
+        throw new Error("Failed to fetch TLE data and no cache is available.");
+    }
 }
 
 // --- Barometric Pressure ---

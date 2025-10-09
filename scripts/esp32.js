@@ -89,31 +89,35 @@ const esp32 = {
     },
 
     validConnected: async () => {
-        const currentRegistered = await dataApiService.getRegisteredDevices();
-        if (!currentRegistered) {
-            console.log('Could not retrieve device list for validation, skipping check.');
-            return;
-        }
-        registered = currentRegistered; // Update local copy
-
-        currentRegistered.forEach((device) => {
-            if (lastComm[device.id]) {
-                const last = moment(lastComm[device.id].time).format('YYYY-MM-DD HH:mm:ss');
-                const seconds = esp32.timeSince(last);
-                if (seconds >= DISCONNECT_TIMOUT) {
-                    if (connectedDevices[device.id]) {
-                        console.log(`\n${device.id} disconnected!! :(\n`);
-                    }
-                    connectedDevices[device.id] = false;
-                    lastComm[device.id] = null;
-                    mqttclient_.publish('esp32/disconnected', `{"sender":"${device.id}", "delay":"${seconds}"}`);
-                } else {
-                    connectedDevices[device.id] = true;
-                }
-            } else {
-                connectedDevices[device.id] = false;
+        try {
+            const currentRegistered = await dataApiService.getRegisteredDevices();
+            if (!currentRegistered) {
+                console.log('Could not retrieve device list for validation, skipping check.');
+                return;
             }
-        });
+            registered = currentRegistered; // Update local copy
+
+            currentRegistered.forEach((device) => {
+                if (lastComm[device.id]) {
+                    const last = moment(lastComm[device.id].time).format('YYYY-MM-DD HH:mm:ss');
+                    const seconds = esp32.timeSince(last);
+                    if (seconds >= DISCONNECT_TIMOUT) {
+                        if (connectedDevices[device.id]) {
+                            console.log(`\n${device.id} disconnected!! :(\n`);
+                        }
+                        connectedDevices[device.id] = false;
+                        lastComm[device.id] = null;
+                        mqttclient_.publish('esp32/disconnected', `{"sender":"${device.id}", "delay":"${seconds}"}`);
+                    } else {
+                        connectedDevices[device.id] = true;
+                    }
+                } else {
+                    connectedDevices[device.id] = false;
+                }
+            });
+        } catch (error) {
+            console.error("Failed to validate connected devices:", error.message);
+        }
     },
 
     setConnectedValidation: (interval, mqtt_client) => {

@@ -1,143 +1,83 @@
 import { haversineDistance } from './utils.js';
 
-const TLE_URL = '/api/tle'; // Use our own server endpoint to get TLE data (handles server-side caching)
-const TLE_CACHE_KEY = 'tleDataCache'; // Key for localStorage TLE cache
-const CACHE_DURATION_MS = 2 * 60 * 60 * 1000; // Cache TLE data for 2 hours (in milliseconds)
+const TLE_URL = '/api/tle';
+const TLE_CACHE_KEY = 'tleDataCache';
+const CACHE_DURATION_MS = 2 * 60 * 60 * 1000;
+const PREDICTION_INTERVAL_SEC = 10;
+const MAX_SEARCH_DURATION_SEC = 36 * 3600;
+const DEFAULT_SLIDER_MAX_DURATION_SEC = 6 * 3600;
 
-const PREDICTION_INTERVAL_SEC = 10; // Calculate points every 10 seconds
-const MAX_SEARCH_DURATION_SEC = 36 * 3600; // Max time to search for a pass (e.g., 36 hours)
-const DEFAULT_SLIDER_MAX_DURATION_SEC = 6 * 3600; // Default max for slider if no pass found (e.g., 6 hours)
-
-let currentRadiusKM = 1500; // Default, will be set by slider
-let currentSliderDisplayDurationSec = 90 * 60; // Default initial display, will be updated
-
-// Default target location (Quebec City). This can be updated to the client's location via setTargetLatLon().
-let targetLat = 46.8139; // Quebec City
+let currentRadiusKM = 1500;
+let currentSliderDisplayDurationSec = 90 * 60;
+let targetLat = 46.8139;
 let targetLon = -71.2080;
 let satrec;
+let fullCalculatedPath = [];
+let timeToFirstClosePassSec = null;
+let exposedClosestApproachDetails = null;
 
-let fullCalculatedPath = []; // Stores all points up to MAX_SEARCH_DURATION_SEC
-let timeToFirstClosePassSec = null; // Time in seconds to the first detected pass
-let exposedClosestApproachDetails = null; // Stores details of the closest approach
+// Callback functions to be set by the main script
+let onPathUpdateCallback = null;
+let onPredictionUpdateCallback = null;
 
-// Fetches TLE data for ISS, using localStorage caching to reduce network requests
-// and avoid potential 403 errors from excessive downloads from Celestrak.
 async function fetchTLE() {
-    // Try to retrieve and use cached TLE data if it's recent enough
-    try {
-        const cachedItem = localStorage.getItem(TLE_CACHE_KEY);
-        if (cachedItem) {
-            const cachedEntry = JSON.parse(cachedItem);
-            // Check if the cached data is still valid (not older than CACHE_DURATION_MS)
-            if (Date.now() - cachedEntry.timestamp < CACHE_DURATION_MS) {
-                console.log("[ISSOrbitPredictor] Using cached TLE data.");
-                const txt = cachedEntry.data;
-                const lines = txt.split('\n');
-                const i = lines.findIndex(l => l.includes('ISS (ZARYA)') || l.includes('ISS'));
-                if (i >= 0 && lines[i+1] && lines[i+2]) {
-                    satrec = window.satellite.twoline2satrec(lines[i+1].trim(), lines[i+2].trim());
-                    if (satrec) { // Check if satrec was successfully initialized
-                        // console.log("[ISSOrbitPredictor] Set satrec from cached TLE.");
-                        return true;
-                    }
-                }
-                // If parsing failed or satrec is not valid from cache
-                console.error("[ISSOrbitPredictor] Could not parse TLE from cached text or satrec invalid.");
-                satrec = null;
-                localStorage.removeItem(TLE_CACHE_KEY); // Remove invalid cached data
-                return false;
-            } else {
-                console.log("[ISSOrbitPredictor] Cached TLE data expired.");
+    const cachedItem = localStorage.getItem(TLE_CACHE_KEY);
+    if (cachedItem) {
+        const cachedEntry = JSON.parse(cachedItem);
+        if (Date.now() - cachedEntry.timestamp < CACHE_DURATION_MS) {
+            const lines = cachedEntry.data.split('\n');
+            const i = lines.findIndex(l => l.includes('ISS'));
+            if (i >= 0 && lines[i + 1] && lines[i + 2]) {
+                satrec = window.satellite.twoline2satrec(lines[i + 1].trim(), lines[i + 2].trim());
+                if (satrec) return true;
             }
         }
-    } catch (e) {
-        console.error("[ISSOrbitPredictor] Error reading TLE from cache:", e);
-        localStorage.removeItem(TLE_CACHE_KEY); // Clear corrupted cache
-        satrec = null;
-        return false;
     }
-
-    // If cache is invalid, expired, or not present, fetch new TLE data from the network.
     try {
-        console.log("[ISSOrbitPredictor] Fetching new TLE data from network.");
         const res = await fetch(TLE_URL);
-        if (!res.ok) { // Check response status directly
-            console.error(`[ISSOrbitPredictor] Failed to fetch TLE: ${res.status}`);
-            satrec = null;
-            return false;
-        }
+        if (!res.ok) return false;
         const txt = await res.text();
-
-        // Store the newly fetched TLE data and current timestamp in localStorage.
-        try {
-            const cacheEntry = { timestamp: Date.now(), data: txt };
-            localStorage.setItem(TLE_CACHE_KEY, JSON.stringify(cacheEntry));
-            console.log("[ISSOrbitPredictor] Fetched new TLE and updated cache.");
-        } catch (e) {
-            console.error("[ISSOrbitPredictor] Error saving TLE to cache:", e);
-            // Potentially clear cache if quota exceeded, but for now just log
-        }
-
+        localStorage.setItem(TLE_CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data: txt }));
         const lines = txt.split('\n');
-        const i = lines.findIndex(l => l.includes('ISS (ZARYA)') || l.includes('ISS'));
-        if (i >= 0 && lines[i+1] && lines[i+2]) {
-            satrec = window.satellite.twoline2satrec(lines[i+1].trim(), lines[i+2].trim());
-            if (satrec) { // Check if satrec was successfully initialized
-                return true;
-            }
+        const i = lines.findIndex(l => l.includes('ISS'));
+        if (i >= 0 && lines[i + 1] && lines[i + 2]) {
+            satrec = window.satellite.twoline2satrec(lines[i + 1].trim(), lines[i + 2].trim());
+            return !!satrec;
         }
-        // If parsing failed or satrec is not valid from fetched TLE
-        console.error("[ISSOrbitPredictor] Could not parse TLE from fetched text or satrec invalid.");
-        satrec = null;
-        return false;
     } catch (error) {
-        console.error("[ISSOrbitPredictor] Error fetching TLE:", error);
-        satrec = null;
+        console.error("Error fetching TLE:", error);
         return false;
     }
-    // Fallback, though ideally all paths above should return.
-    satrec = null;
     return false;
-}
-
-// Force-refresh TLE by clearing cache and fetching again
-async function refreshTLE() {
-    try { localStorage.removeItem(TLE_CACHE_KEY); } catch (e) { /* ignore */ }
-    return await fetchTLE();
 }
 
 function positionAt(time) {
     if (!satrec) return null;
-    try {
-        const propagateResult = window.satellite.propagate(satrec, time);
-        if (!propagateResult || !propagateResult.position) {
-            // console.warn('[ISSOrbitPredictor] Propagation failed for time:', time);
-            return null;
-        }
-        const { position } = propagateResult;
-        const gmst = window.satellite.gstime(time);
-        const geodetic = window.satellite.eciToGeodetic(position, gmst);
-        return {
-            lat: geodetic.latitude * 180 / Math.PI,
-            lon: geodetic.longitude * 180 / Math.PI,
-            alt: geodetic.height
-        };
-    } catch (e) {
-        console.error("[ISSOrbitPredictor] Error in positionAt or propagate:", e);
-        return null;
-    }
+    const propagateResult = window.satellite.propagate(satrec, time);
+    if (!propagateResult || !propagateResult.position) return null;
+    const { position } = propagateResult;
+    const gmst = window.satellite.gstime(time);
+    const geodetic = window.satellite.eciToGeodetic(position, gmst);
+    return {
+        lat: geodetic.latitude * 180 / Math.PI,
+        lon: geodetic.longitude * 180 / Math.PI,
+        alt: geodetic.height
+    };
 }
 
-// Generates the full path and finds the first close pass
 async function calculateFullPredictionAndDeterminePass() {
     if (!satrec) {
         const tleSetupSuccess = await fetchTLE();
         if (!tleSetupSuccess) {
-            console.error("[ISSOrbitPredictor] TLE data (satrec) could not be initialized. Cannot calculate full prediction.");
-            exposedClosestApproachDetails = null; // Ensure details are cleared on TLE error
-            updatePassByText(null, Infinity); // Update text to show error/no pass
-            updatePredictionLengthSlider(DEFAULT_SLIDER_MAX_DURATION_SEC / 60, DEFAULT_SLIDER_MAX_DURATION_SEC / 60); // Default slider range
-            displaySlicedPath(0); // Display no path
+            if (typeof onPredictionUpdateCallback === 'function') {
+                onPredictionUpdateCallback({
+                    closestPoint: null,
+                    closestDist: Infinity,
+                    sliderMax: DEFAULT_SLIDER_MAX_DURATION_SEC / 60,
+                    sliderCurrent: DEFAULT_SLIDER_MAX_DURATION_SEC / 60
+                });
+            }
+            displaySlicedPath(0);
             return;
         }
     }
@@ -149,7 +89,6 @@ async function calculateFullPredictionAndDeterminePass() {
     let closestDistanceInNextPass = Infinity;
     let inPass = false;
 
-    // First, calculate the full path for display purposes
     for (let t_sec = 0; t_sec < MAX_SEARCH_DURATION_SEC; t_sec += PREDICTION_INTERVAL_SEC) {
         const timeInstance = new Date(now.getTime() + t_sec * 1000);
         const pos = positionAt(timeInstance);
@@ -158,23 +97,15 @@ async function calculateFullPredictionAndDeterminePass() {
         }
     }
 
-    // Now, analyze the path to find the next pass details
     for (const point of fullCalculatedPath) {
         const dist = haversineDistance(point.lat, point.lng, targetLat, targetLon);
-
         if (dist < currentRadiusKM) {
-            // We are inside the detection radius
             if (!inPass) {
-                // This is the beginning of a pass.
                 inPass = true;
                 if (timeToFirstClosePassSec === null) {
-                    // This is the *first* pass we've encountered.
                     timeToFirstClosePassSec = point.time;
-                    console.log(`[ISSOrbitPredictor] First pass starts at ${point.time / 60} mins, dist: ${dist.toFixed(0)}km`);
                 }
             }
-
-            // If we are in the first pass, check for the closest point within it.
             if (timeToFirstClosePassSec !== null && point.time >= timeToFirstClosePassSec) {
                 if (dist < closestDistanceInNextPass) {
                     closestDistanceInNextPass = dist;
@@ -182,103 +113,46 @@ async function calculateFullPredictionAndDeterminePass() {
                 }
             }
         } else {
-            // We are outside the detection radius
-            if (inPass && timeToFirstClosePassSec !== null) {
-                // We have just exited the first pass, so we can stop looking.
-                break;
-            }
+            if (inPass && timeToFirstClosePassSec !== null) break;
         }
     }
 
-    // Find the closest point overall for the "No close pass" message
-    let closestOverallDistance = Infinity;
-    if (fullCalculatedPath.length > 0) {
-        let overallClosestPointDetails = fullCalculatedPath.reduce((closest, p) => {
-            const dist = haversineDistance(p.lat, p.lng, targetLat, targetLon);
-            if (dist < closest.dist) {
-                return { dist, p };
-            }
-            return closest;
-        }, { dist: Infinity, p: null });
-        closestOverallDistance = overallClosestPointDetails.dist;
-    }
+    let closestOverallDistance = fullCalculatedPath.length > 0 ? fullCalculatedPath.reduce((min, p) => {
+        const dist = haversineDistance(p.lat, p.lng, targetLat, targetLon);
+        return Math.min(min, dist);
+    }, Infinity) : Infinity;
 
-
-    console.log(`[ISSOrbitPredictor] Full path calculated. Points: ${fullCalculatedPath.length}.`);
-    if(closestPointInNextPass) {
-         console.log(`[ISSOrbitPredictor] Closest point in next pass: ${closestPointInNextPass.dist.toFixed(0)}km at ${closestPointInNextPass.time/60} mins.`);
-         exposedClosestApproachDetails = closestPointInNextPass;
-    } else {
-        console.log(`[ISSOrbitPredictor] No pass within ${currentRadiusKM}km found. Closest overall approach: ${closestOverallDistance.toFixed(0)}km.`);
-        exposedClosestApproachDetails = null;
-    }
-
-    updatePassByText(closestPointInNextPass, closestOverallDistance);
+    exposedClosestApproachDetails = closestPointInNextPass;
 
     let sliderMaxDurationSec = timeToFirstClosePassSec !== null ? timeToFirstClosePassSec : DEFAULT_SLIDER_MAX_DURATION_SEC;
-    // Ensure slider max is not less than a minimum (e.g. 5 mins) and not more than full search
     sliderMaxDurationSec = Math.max(5 * 60, Math.min(sliderMaxDurationSec, MAX_SEARCH_DURATION_SEC));
-    currentSliderDisplayDurationSec = sliderMaxDurationSec; // Start by showing path up to pass or default max
+    currentSliderDisplayDurationSec = sliderMaxDurationSec;
 
-    updatePredictionLengthSlider(sliderMaxDurationSec / 60, currentSliderDisplayDurationSec / 60);
+    if (typeof onPredictionUpdateCallback === 'function') {
+        onPredictionUpdateCallback({
+            closestPoint: closestPointInNextPass,
+            closestDist: closestOverallDistance,
+            sliderMax: sliderMaxDurationSec / 60,
+            sliderCurrent: currentSliderDisplayDurationSec / 60
+        });
+    }
+    
     displaySlicedPath(currentSliderDisplayDurationSec);
-}
-
-function updatePassByText(closestPointData, closestDistVal) {
-    const passByStatus = document.getElementById('iss-passby-time');
-    if (!passByStatus) return;
-
-    if (closestPointData && closestPointData.dist < currentRadiusKM) {
-        const nowMs = Date.now();
-        const approachMs = nowMs + closestPointData.time * 1000;
-        const approachDate = new Date(approachMs);
-        const minutesUntil = Math.round(closestPointData.time / 60);
-        const minutesText = minutesUntil <= 0 ? '<1' : minutesUntil.toString();
-        passByStatus.textContent = `in ${minutesText} min (at ${approachDate.toLocaleTimeString()}) — ~${Math.round(closestPointData.dist)} km — TLE based.`;
-    } else {
-        passByStatus.textContent = `No close pass predicted within ${currentRadiusKM} km for the next ${MAX_SEARCH_DURATION_SEC/3600} hrs. Closest ~${closestDistVal.toFixed(0)} km. TLE based.`;
-    }
-}
-
-function updatePredictionLengthSlider(maxMinutes, currentMinutes) {
-    const slider = document.getElementById('predictionLengthSlider');
-    const valueSpan = document.getElementById('predictionLengthValue');
-
-    if (!slider) {
-        console.error("[ISSOrbitPredictor] predictionLengthSlider DOM element not found.");
-        return; // Gracefully exit if slider is missing
-    }
-    if (!valueSpan) {
-        console.error("[ISSOrbitPredictor] predictionLengthValue DOM element not found.");
-        // Depending on desired behavior, you might still want to update the slider if it exists,
-        // but for now, we'll also return if the valueSpan is missing.
-        return;
-    }
-
-    // Proceed with original logic only if both elements are found
-    if (typeof maxMinutes === 'number' && !isNaN(maxMinutes)) {
-        slider.max = maxMinutes.toString();
-    } else {
-        console.warn("[ISSOrbitPredictor] Invalid maxMinutes for predictionLengthSlider:", maxMinutes);
-    }
-
-    if (typeof currentMinutes === 'number' && !isNaN(currentMinutes)) {
-        slider.value = currentMinutes.toString();
-        valueSpan.textContent = currentMinutes.toString();
-    } else {
-        console.warn("[ISSOrbitPredictor] Invalid currentMinutes for predictionLengthSlider:", currentMinutes);
-        // Optionally set a default text for valueSpan if currentMinutes is invalid
-        // valueSpan.textContent = 'N/A';
-    }
 }
 
 function displaySlicedPath(displayDurationSeconds) {
     const pointsToDisplay = fullCalculatedPath.filter(p => p.time <= displayDurationSeconds);
-    // This is where the communication with the sketch happens.
-    // We'll need a way to pass this data back to the sketch.
-    // For now, we'll use a custom event.
-    const event = new CustomEvent('iss-path-update', { detail: pointsToDisplay });
-    window.dispatchEvent(event);
+    if (typeof onPathUpdateCallback === 'function') {
+        onPathUpdateCallback(pointsToDisplay);
+    }
+}
+
+export function setOnPathUpdate(callback) {
+    onPathUpdateCallback = callback;
+}
+
+export function setOnPredictionUpdate(callback) {
+    onPredictionUpdateCallback = callback;
 }
 
 export async function fetchAndPredict() {
@@ -289,7 +163,6 @@ export function setTargetLatLon(lat, lon) {
     if (typeof lat === 'number' && typeof lon === 'number') {
         targetLat = lat;
         targetLon = lon;
-        // Recalculate prediction for new target
         calculateFullPredictionAndDeterminePass();
     }
 }
@@ -298,8 +171,8 @@ export function getTargetLatLon() {
     return { lat: targetLat, lon: targetLon };
 }
 
-export async function refreshTLEAndPredict() {
-    const ok = await refreshTLE();
+export async function refreshTLE() {
+    const ok = await fetchTLE();
     if (ok) await calculateFullPredictionAndDeterminePass();
     return ok;
 }
@@ -307,14 +180,13 @@ export async function refreshTLEAndPredict() {
 export function setPredictionDurationSec(durationSeconds) {
     currentSliderDisplayDurationSec = durationSeconds;
     displaySlicedPath(currentSliderDisplayDurationSec);
-    // No need to call generatePredictedPath, just redisplay a portion of existing full path
 }
 
 export function setRadiusKM(radKM) {
-    if (typeof radKM === 'number' && radKM > 0) currentRadiusKM = radKM;
-    // Recalculate to find new timeToFirstClosePassSec and update slider/text
-    // This will re-use existing TLE if already fetched and satrec is valid.
-    calculateFullPredictionAndDeterminePass();
+    if (typeof radKM === 'number' && radKM > 0) {
+        currentRadiusKM = radKM;
+        calculateFullPredictionAndDeterminePass();
+    }
 }
 
 export function getClosestApproachDetails() {

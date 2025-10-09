@@ -1,9 +1,19 @@
-import issSketch from './issDetector.js';
 import * as predictor from './issOrbitPredictor.js';
+import { setOnPathUpdate } from './issOrbitPredictor.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize p5.js in instance mode
-    new p5(issSketch, 'sketch-holder');
+    // This is the bridge that connects the predictor's data to the sketch.
+    // It's set up before the sketch is initialized to avoid race conditions.
+    setOnPathUpdate((pathData) => {
+        if (window.p5SketchApi && typeof window.p5SketchApi.update3DPredictedPath === 'function') {
+            window.p5SketchApi.update3DPredictedPath(pathData);
+        }
+    });
+
+    // We need to dynamically import the sketch because it's not a default export anymore.
+    import('./issDetector.js').then(module => {
+        new p5(module.default, 'sketch-holder');
+    });
 
     const socket = io();
     socket.on('iss', (data) => {
@@ -24,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     pathLengthSlider.addEventListener('input', (e) => {
         pathLengthValueSpan.textContent = e.target.value;
-        window.p5SketchApi.set3DMaxHistoryPoints(parseInt(e.target.value));
+        if (window.p5SketchApi) window.p5SketchApi.set3DMaxHistoryPoints(parseInt(e.target.value));
     });
 
     predictionLengthSlider.addEventListener('input', (e) => {
@@ -35,19 +45,19 @@ document.addEventListener('DOMContentLoaded', () => {
     passByRadiusSlider.addEventListener('input', (e) => {
         passByRadiusValueSpan.textContent = e.target.value;
         predictor.setRadiusKM(parseInt(e.target.value));
-        window.p5SketchApi.setSketchPassByRadiusKM(parseInt(e.target.value));
+        if (window.p5SketchApi) window.p5SketchApi.setSketchPassByRadiusKM(parseInt(e.target.value));
     });
 
     showIssHistoricalPathCheckbox.addEventListener('change', (e) => {
-        window.p5SketchApi.setShowIssHistoricalPath(e.target.checked);
+        if (window.p5SketchApi) window.p5SketchApi.setShowIssHistoricalPath(e.target.checked);
     });
 
     showIssPredictedPathCheckbox.addEventListener('change', (e) => {
-        window.p5SketchApi.setShowIssPredictedPath(e.target.checked);
+        if (window.p5SketchApi) window.p5SketchApi.setShowIssPredictedPath(e.target.checked);
     });
 
     showQuakesCheckbox.addEventListener('change', (e) => {
-        window.p5SketchApi.setShowQuakes(e.target.checked);
+        if (window.p5SketchApi) window.p5SketchApi.setShowQuakes(e.target.checked);
     });
 
     refreshBtn.addEventListener('click', () => {

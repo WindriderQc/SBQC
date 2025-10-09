@@ -62,7 +62,7 @@ export default function(p) {
         setShowIssPredictedPath: (value) => { showIssPredictedPath = !!value; },
         setShowQuakes: (value) => { showQuakes = !!value; },
     };
-    window.p5SketchApi = sketchApi; // Bridge to make API available to iss-main.js
+    window.p5SketchApi = sketchApi;
 
     function normalizeLon(lon) {
         if (typeof lon !== 'number' || isNaN(lon)) return lon;
@@ -73,7 +73,7 @@ export default function(p) {
         if (responseData && responseData.data && Array.isArray(responseData.data) && responseData.data.length > 0) {
             const pointsToProcess = responseData.data.sort((a, b) => new Date(a.timeStamp).getTime() - new Date(b.timeStamp).getTime());
             originalLoadedIssHistory = pointsToProcess.map(pt => ({ lat: pt.latitude, lon: pt.longitude, timeStamp: pt.timeStamp }));
-            sketchApi.set3DMaxHistoryPoints(MAX_HISTORY_POINTS); // Apply initial limit
+            sketchApi.set3DMaxHistoryPoints(MAX_HISTORY_POINTS);
         }
     }
 
@@ -98,6 +98,31 @@ export default function(p) {
         const canvas = p.createCanvas(canvasWidth, canvasHeight, p.WEBGL);
         canvas.parent('sketch-holder');
         controlsOverlayElement = document.getElementById('controls-overlay');
+
+        try {
+            if (controlsOverlayElement) {
+                controlsOverlayElement.style.pointerEvents = 'auto';
+                controlsOverlayElement.style.zIndex = 2000;
+            }
+            if (canvas && canvas.elt) {
+                canvas.elt.style.zIndex = 1000;
+                canvas.elt.style.pointerEvents = 'auto';
+            }
+            const controlEls = controlsOverlayElement.querySelectorAll('input, button, label');
+            controlEls.forEach(el => {
+                el.addEventListener('pointerdown', (ev) => { ev.stopPropagation(); }, false);
+                el.addEventListener('pointermove', (ev) => { ev.stopPropagation(); }, false);
+                el.addEventListener('mousedown', (ev) => { ev.stopPropagation(); }, false);
+                el.addEventListener('touchstart', (ev) => { ev.stopPropagation(); }, false);
+                el.addEventListener('touchmove', (ev) => { ev.stopPropagation(); }, false);
+            });
+            controlsOverlayElement.addEventListener('pointerdown', (ev) => { ev.stopPropagation(); }, false);
+            controlsOverlayElement.addEventListener('mousedown', (ev) => { ev.stopPropagation(); }, false);
+            controlsOverlayElement.addEventListener('click', (ev) => { ev.stopPropagation(); }, false);
+        } catch (e) {
+            console.warn('Could not set up overlay event handlers:', e);
+        }
+
         quakeFromColor = p.color(0, 255, 0, 150);
         quakeToColor = p.color(255, 0, 0, 150);
     };
