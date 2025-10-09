@@ -254,9 +254,25 @@ export default function(p) {
                         return;
                     }
                     const details = predictor.getClosestApproachDetailsAsDate ? predictor.getClosestApproachDetailsAsDate() : predictor.getClosestApproachDetails();
+                    console.log('[iss-detector] updater got approach details:', details);
                     if (!details) {
                         approachInfoDiv.style.display = 'block';
                         approachInfoDiv.textContent = 'No upcoming approach detected';
+                        // try to trigger a prediction if we aren't already refreshing
+                        if (!approachIsRefreshing) {
+                            approachIsRefreshing = true;
+                            approachInfoDiv.textContent = 'Calculating upcoming approach...';
+                            console.log('[iss-detector] no approach found — triggering prediction');
+                            const doFetch = (typeof predictor.refreshTLE === 'function') ? predictor.refreshTLE() : (typeof predictor.fetchAndPredict === 'function' ? predictor.fetchAndPredict() : Promise.reject(new Error('no predictor method')));
+                            doFetch.then(() => {
+                                approachIsRefreshing = false;
+                                try { updateApproachInfo(); } catch (e) {}
+                            }).catch((err) => {
+                                approachIsRefreshing = false;
+                                console.warn('[iss-detector] prediction trigger failed', err);
+                                try { approachInfoDiv.textContent = 'No upcoming approach detected'; } catch (e) {}
+                            });
+                        }
                         return;
                     }
 
@@ -276,8 +292,18 @@ export default function(p) {
                     if (approachIsRefreshing) status = ' (refreshing...)';
                     else if (isStale) status = ' (STALE)';
 
+                    // compute live ISS position and instantaneous distance to target (if available)
+                    let liveDistText = '';
+                    try {
+                        const currentPos = (typeof predictor.getCurrentPosition === 'function') ? predictor.getCurrentPosition() : null;
+                        if (currentPos && typeof currentPos.lat === 'number' && typeof currentPos.lon === 'number') {
+                            const liveDist = haversineDistance(currentPos.lat, currentPos.lon, currentDisplayLat, currentDisplayLon);
+                            liveDistText = `Current: ${liveDist.toFixed(1)} km — `;
+                        }
+                    } catch (e) { /* ignore */ }
+
                     approachInfoDiv.style.display = 'block';
-                    approachInfoDiv.textContent = `Approach in ${formatHMS(remainingMs)} — Local: ${localStr} — UTC: ${utcStr}${status}`;
+                    approachInfoDiv.textContent = `${liveDistText}Approach in ${formatHMS(remainingMs)} — Local: ${localStr} — UTC: ${utcStr}${status}`;
 
                     // auto-refresh if stale and not already refreshing
                     if (isStale && !approachIsRefreshing) {
@@ -581,22 +607,7 @@ export default function(p) {
             p.endShape();
             p.pop();
 
-            // Update DOM approach info panel (avoids WEBGL text/font requirements)
-            try {
-                if (approachInfoDiv) {
-                    if (showApproachInfo && approachDetails.date instanceof Date) {
-                        const labelText = approachDetails.date.toLocaleString();
-                        const distText = (typeof approachDetails.dist === 'number') ? `${approachDetails.dist.toFixed(1)} km` : '';
-                        approachInfoDiv.style.display = 'block';
-                        approachInfoDiv.textContent = `Approach: ${labelText}` + (distText ? ` — ${distText}` : '');
-                    } else {
-                        approachInfoDiv.style.display = 'none';
-                        approachInfoDiv.textContent = '';
-                    }
-                }
-            } catch (e) {
-                // DOM ops may fail if controls overlay is unavailable; ignore silently
-            }
+            // (approachInfoDiv is updated by the periodic updater; avoid overwriting it every frame)
         }
 
         if (sketchPassByRadiusKM > 0) {

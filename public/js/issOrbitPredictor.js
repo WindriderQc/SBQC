@@ -212,3 +212,19 @@ export function getClosestApproachDetailsAsDate() {
     const date = details.absoluteTimeMs ? new Date(details.absoluteTimeMs) : new Date(Date.now() + (details.time || 0) * 1000);
     return Object.assign({}, details, { date });
 }
+
+/**
+ * Return the current ISS position propagated from the loaded TLE (if available).
+ * Useful to compare the moving ISS position to the fixed closest-approach point.
+ * Returns null if satrec or propagation is not available.
+ */
+export function getCurrentPosition() {
+    try {
+        const now = new Date();
+        if (!satrec) return null;
+        const pos = positionAt(now);
+        return pos; // { lat, lon, alt }
+    } catch (e) {
+        return null;
+    }
+}
