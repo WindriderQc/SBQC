@@ -41,10 +41,14 @@ export default function(p) {
     const CYLINDER_VISUAL_LENGTH = 150; // Keep a fixed visual length for the detection cylinder
     const MARKER_COLOR_TEAL = [255, 255, 0]; // changed to yellow to match request
     const MARKER_COLOR_GREEN = [0, 200, 0];
+    const DISK_ELEVATION = 0.0; // no elevation: disk lies flush with the globe surface
+    const DISK_GRADIENT_STEPS = 6; // number of concentric rings to approximate a radial gradient
     const USER_LOCATION_MARKER_SIZE = gpsSize;
     const CLOSEST_APPROACH_MARKER_SIZE = USER_LOCATION_MARKER_SIZE / 2; // half size of user marker
     const END_OF_PATH_MARKER_SIZE = USER_LOCATION_MARKER_SIZE / 2;
     let sketchPassByRadiusKM = 1500;
+    const PASS_IMMINENT_MINUTES = 5; // if approach is within this many minutes, treat as imminent
+    const PULSE_PERIOD_SEC = 1.4; // pulse period in seconds
     let showAxis = false;
     let initialPinchDistance = 0;
 
@@ -178,21 +182,56 @@ export default function(p) {
 
         // create a small DOM container to show approach time/details (avoids drawing text in WEBGL)
         try {
-            if (controlsOverlayElement) {
-                approachInfoDiv = document.createElement('div');
-                approachInfoDiv.id = 'approach-info';
-                approachInfoDiv.style.marginTop = '6px';
-                approachInfoDiv.style.padding = '6px 8px';
-                approachInfoDiv.style.background = 'rgba(0,0,0,0.6)';
-                approachInfoDiv.style.color = '#fff';
-                approachInfoDiv.style.fontSize = '12px';
-                approachInfoDiv.style.borderRadius = '4px';
-                approachInfoDiv.style.display = showApproachInfo ? 'block' : 'none';
-                approachInfoDiv.textContent = '';
-                controlsOverlayElement.appendChild(approachInfoDiv);
-            }
+            approachInfoDiv = document.createElement('div');
+            approachInfoDiv.id = 'approach-info';
+            approachInfoDiv.style.marginTop = '6px';
+            approachInfoDiv.style.padding = '8px 10px';
+            approachInfoDiv.style.background = 'rgba(0,0,0,0.75)';
+            approachInfoDiv.style.color = '#fff';
+            approachInfoDiv.style.fontSize = '13px';
+            approachInfoDiv.style.borderRadius = '6px';
+            approachInfoDiv.style.display = showApproachInfo ? 'block' : 'none';
+            approachInfoDiv.style.minWidth = '220px';
+            approachInfoDiv.style.textAlign = 'center';
+            approachInfoDiv.style.boxShadow = '0 2px 8px rgba(0,0,0,0.6)';
+            approachInfoDiv.style.pointerEvents = 'auto';
+            approachInfoDiv.textContent = '';
+                if (controlsOverlayElement) {
+                    controlsOverlayElement.appendChild(approachInfoDiv);
+                } else {
+                // fallback: create a floating panel in the top-right so the user sees the countdown
+                approachInfoDiv.style.position = 'fixed';
+                approachInfoDiv.style.top = '12px';
+                approachInfoDiv.style.right = '12px';
+                approachInfoDiv.style.zIndex = 99999;
+                approachInfoDiv.style.pointerEvents = 'auto';
+                    document.body.appendChild(approachInfoDiv);
+                }
+
+            // Add a small Refresh button into the panel so the user can force a re-predict
+            try {
+                const btn = document.createElement('button');
+                btn.textContent = 'Refresh prediction';
+                btn.style.marginTop = '8px';
+                btn.style.padding = '6px 8px';
+                btn.style.fontSize = '12px';
+                btn.style.cursor = 'pointer';
+                btn.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    try {
+                        if (typeof predictor.refreshTLE === 'function') {
+                            predictor.refreshTLE().then(() => {}).catch(() => {});
+                        } else if (typeof predictor.fetchAndPredict === 'function') {
+                            predictor.fetchAndPredict().then(() => {}).catch(() => {});
+                        }
+                    } catch (e) { console.warn('Refresh failed', e); }
+                });
+                approachInfoDiv.appendChild(document.createElement('br'));
+                approachInfoDiv.appendChild(btn);
+            } catch (e) { /* ignore */ }
         } catch (e) {
             console.warn('Could not create approach info element:', e);
+            approachInfoDiv = null;
         }
 
         // start a 1s interval to update countdown and timestamps
@@ -266,6 +305,20 @@ export default function(p) {
             approachInfoIntervalId = setInterval(updateApproachInfo, 1000);
             // initial update
             updateApproachInfo();
+            // if there's no data yet, trigger an initial prediction/fetch so the countdown appears
+            try {
+                const detailsNow = predictor.getClosestApproachDetailsAsDate ? predictor.getClosestApproachDetailsAsDate() : predictor.getClosestApproachDetails();
+                if (!detailsNow) {
+                    if (approachInfoDiv) approachInfoDiv.textContent = 'Calculating upcoming approach...';
+                    if (typeof predictor.refreshTLE === 'function') {
+                        approachIsRefreshing = true;
+                        predictor.refreshTLE().then(() => { approachIsRefreshing = false; try { updateApproachInfo(); } catch (e) {} }).catch(() => { approachIsRefreshing = false; });
+                    } else if (typeof predictor.fetchAndPredict === 'function') {
+                        approachIsRefreshing = true;
+                        predictor.fetchAndPredict().then(() => { approachIsRefreshing = false; try { updateApproachInfo(); } catch (e) {} }).catch(() => { approachIsRefreshing = false; });
+                    }
+                }
+            } catch (e) { /* ignore */ }
         } catch (e) {
             console.warn('Could not start approach info updater:', e);
         }
@@ -553,14 +606,79 @@ export default function(p) {
             const rotationAxis = defaultCylinderAxis.cross(upVector);
             let rotationAngle = defaultCylinderAxis.angleBetween(upVector);
 
+            // Draw a ground-projected translucent disk (visibility horizon) and an outline ring
             p.push();
             p.translate(pClientLoc.x, pClientLoc.y, pClientLoc.z);
             if (rotationAngle !== 0 && rotationAxis.magSq() > 0) {
                 p.rotate(rotationAngle, rotationAxis);
             }
-            p.fill(0, 100, 255, 30);
+
+            // Translucent filled disk with radial gradient approximation (concentric fans)
+            const diskSegments = 64;
+            // translate a little along the upVector to avoid z-fighting with the globe surface
+            const elevation = DISK_ELEVATION;
+            p.push();
+            p.translate(upVector.x * elevation, upVector.y * elevation, upVector.z * elevation);
+            p.rotateX(Math.PI / 2); // make the disk lie tangent to the sphere at the user location
             p.noStroke();
-            p.cylinder(detectionRadius3DUnits, CYLINDER_VISUAL_LENGTH);
+            // draw concentric rings from inner (more opaque) to outer (more transparent)
+            for (let step = 0; step < DISK_GRADIENT_STEPS; step++) {
+                const tInner = step / DISK_GRADIENT_STEPS;
+                const tOuter = (step + 1) / DISK_GRADIENT_STEPS;
+                const rInner = detectionRadius3DUnits * tInner;
+                const rOuter = detectionRadius3DUnits * tOuter;
+                // alpha ramps down for outer rings
+                const baseAlpha = 100; // 0-255 scale
+                const alpha = Math.max(0, Math.floor(baseAlpha * (1 - tOuter)));
+                // orange gradient
+                p.fill(255, 140, 0, alpha);
+                p.beginShape(p.TRIANGLE_FAN);
+                p.vertex(0, 0, 0);
+                // outer arc for this ring
+                const ringSegments = diskSegments;
+                for (let i = 0; i <= ringSegments; i++) {
+                    const theta = (i / ringSegments) * Math.PI * 2;
+                    const x = Math.cos(theta) * rOuter;
+                    const y = Math.sin(theta) * rOuter;
+                    p.vertex(x, y, 0);
+                }
+                p.endShape();
+            }
+            p.pop();
+
+            // Outline ring for better visibility
+            // compute pulse alpha if an approach is imminent
+            let ringAlpha = 220;
+            try {
+                const details = predictor.getClosestApproachDetailsAsDate ? predictor.getClosestApproachDetailsAsDate() : predictor.getClosestApproachDetails();
+                if (details && (details.absoluteTimeMs || details.time)) {
+                    const absMs = details.absoluteTimeMs || (details.date instanceof Date ? details.date.getTime() : (Date.now() + (details.time || 0) * 1000));
+                    const remainingMs = absMs - Date.now();
+                    if (remainingMs <= PASS_IMMINENT_MINUTES * 60 * 1000 && remainingMs > -60 * 1000) {
+                        const t = (Date.now() / 1000) % PULSE_PERIOD_SEC;
+                        const phase = (t / PULSE_PERIOD_SEC) * Math.PI * 2;
+                        const pulse = (Math.sin(phase) + 1) / 2; // 0..1
+                        ringAlpha = Math.floor(160 + pulse * 95); // vary between 160 and 255
+                    }
+                }
+            } catch (e) { /* ignore */ }
+
+            p.push();
+            p.translate(upVector.x * elevation, upVector.y * elevation, upVector.z * elevation);
+            p.rotateX(Math.PI / 2);
+            p.noFill();
+            p.stroke(255, 165, 0, ringAlpha);
+            p.strokeWeight(2);
+            p.beginShape();
+            for (let i = 0; i <= diskSegments; i++) {
+                const theta = (i / diskSegments) * Math.PI * 2;
+                const x = Math.cos(theta) * detectionRadius3DUnits;
+                const y = Math.sin(theta) * detectionRadius3DUnits;
+                p.vertex(x, y, 0);
+            }
+            p.endShape();
+            p.pop();
+
             p.pop();
         }
 
