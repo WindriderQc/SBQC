@@ -25,16 +25,21 @@ export default function(p) {
     let showIssHistoricalPath = true;
     let showIssPredictedPath = true;
     let showQuakes = false;
+    let showIssCamera = false;
+    let issCameraView;
+    let issFov = 60;
+    let showApproachInfo = true; // UI toggle: show/hide great-circle path and approach time label
+    let approachInfoDiv = null;
     const earthSize = 300;
     const earthActualRadiusKM = 6371;
     const issDistanceToEarth = 50;
     const gpsSize = 5;
     const issSize = 6;
-    const CYLINDER_VISUAL_LENGTH = issDistanceToEarth * 3;
-    const MARKER_COLOR_TEAL = [0, 128, 128];
+    const CYLINDER_VISUAL_LENGTH = 150; // Keep a fixed visual length for the detection cylinder
+    const MARKER_COLOR_TEAL = [255, 255, 0]; // changed to yellow to match request
     const MARKER_COLOR_GREEN = [0, 200, 0];
     const USER_LOCATION_MARKER_SIZE = gpsSize;
-    const CLOSEST_APPROACH_MARKER_SIZE = USER_LOCATION_MARKER_SIZE;
+    const CLOSEST_APPROACH_MARKER_SIZE = USER_LOCATION_MARKER_SIZE / 2; // half size of user marker
     const END_OF_PATH_MARKER_SIZE = USER_LOCATION_MARKER_SIZE / 2;
     let sketchPassByRadiusKM = 1500;
     let showAxis = false;
@@ -125,6 +130,66 @@ export default function(p) {
             controlsOverlayElement.addEventListener('click', (ev) => { ev.stopPropagation(); }, false);
         } catch (e) {
             console.warn('Could not set up overlay event handlers:', e);
+        }
+
+        // Add a small UI toggle to show/hide the great-circle approach path and approach time label
+        try {
+            if (controlsOverlayElement) {
+                const toggleDiv = document.createElement('div');
+                toggleDiv.style.marginTop = '6px';
+                toggleDiv.style.display = 'flex';
+                toggleDiv.style.alignItems = 'center';
+
+                const chk = document.createElement('input');
+                chk.type = 'checkbox';
+                chk.id = 'show-approach-info';
+                chk.checked = showApproachInfo;
+                chk.style.marginRight = '6px';
+
+                const lbl = document.createElement('label');
+                lbl.htmlFor = chk.id;
+                lbl.textContent = 'Show approach path/time';
+                lbl.style.color = '#fff';
+                lbl.style.userSelect = 'none';
+
+                // stop propagation on these controls so they don't interfere with globe dragging
+                ['pointerdown', 'pointermove', 'mousedown', 'touchstart', 'touchmove'].forEach(evt => {
+                    chk.addEventListener(evt, (ev) => ev.stopPropagation(), false);
+                    lbl.addEventListener(evt, (ev) => ev.stopPropagation(), false);
+                });
+
+                chk.addEventListener('change', (ev) => {
+                    showApproachInfo = !!ev.target.checked;
+                    try {
+                        if (approachInfoDiv) approachInfoDiv.style.display = showApproachInfo ? 'block' : 'none';
+                    } catch (e) { /* ignore */ }
+                });
+
+                toggleDiv.appendChild(chk);
+                toggleDiv.appendChild(lbl);
+                controlsOverlayElement.appendChild(toggleDiv);
+            }
+        } catch (e) {
+            console.warn('Could not add approach toggle control:', e);
+        }
+
+        // create a small DOM container to show approach time/details (avoids drawing text in WEBGL)
+        try {
+            if (controlsOverlayElement) {
+                approachInfoDiv = document.createElement('div');
+                approachInfoDiv.id = 'approach-info';
+                approachInfoDiv.style.marginTop = '6px';
+                approachInfoDiv.style.padding = '6px 8px';
+                approachInfoDiv.style.background = 'rgba(0,0,0,0.6)';
+                approachInfoDiv.style.color = '#fff';
+                approachInfoDiv.style.fontSize = '12px';
+                approachInfoDiv.style.borderRadius = '4px';
+                approachInfoDiv.style.display = showApproachInfo ? 'block' : 'none';
+                approachInfoDiv.textContent = '';
+                controlsOverlayElement.appendChild(approachInfoDiv);
+            }
+        } catch (e) {
+            console.warn('Could not create approach info element:', e);
         }
 
         quakeFromColor = p.color(0, 255, 0, 150);
@@ -319,20 +384,88 @@ export default function(p) {
         p.sphere(gpsSize);
         p.pop();
 
-        const approachDetails = predictor.getClosestApproachDetails();
+        // Prefer the API that returns an absolute Date for the approach time
+        const approachDetails = predictor.getClosestApproachDetailsAsDate ? predictor.getClosestApproachDetailsAsDate() : predictor.getClosestApproachDetails();
+        // make vApproach available to the following blocks (label drawing, etc.)
+        let vApproach = null;
         if (approachDetails) {
             let useRadius = earthSize + issDistanceToEarth;
             if (typeof approachDetails.alt === 'number' && !isNaN(approachDetails.alt)) {
                 useRadius = earthSize + (approachDetails.alt / earthActualRadiusKM) * earthSize;
             }
             const normLon = normalizeLon(approachDetails.lon);
-            const vApproach = getSphereCoord(p, useRadius, approachDetails.lat, normLon);
+            vApproach = getSphereCoord(p, useRadius, approachDetails.lat, normLon);
             p.push();
             p.translate(vApproach.x, vApproach.y, vApproach.z);
             p.noStroke();
             p.fill(MARKER_COLOR_TEAL[0], MARKER_COLOR_TEAL[1], MARKER_COLOR_TEAL[2]);
             p.sphere(CLOSEST_APPROACH_MARKER_SIZE);
             p.pop();
+        }
+
+    // If we have an approach and a user location, draw a great-circle path between them (conditionally)
+    if (showApproachInfo && approachDetails && typeof currentDisplayLat === 'number' && typeof currentDisplayLon === 'number') {
+            // Helper: compute n interpolated points along the great-circle between two lat/lon points
+            function interpolateGreatCircle(lat1, lon1, lat2, lon2, n) {
+                // convert to radians
+                const toRad = (d) => d * Math.PI / 180;
+                const toDeg = (r) => r * 180 / Math.PI;
+                const φ1 = toRad(lat1);
+                const λ1 = toRad(lon1);
+                const φ2 = toRad(lat2);
+                const λ2 = toRad(lon2);
+                const sinφ1 = Math.sin(φ1), cosφ1 = Math.cos(φ1);
+                const sinφ2 = Math.sin(φ2), cosφ2 = Math.cos(φ2);
+                const Δλ = λ2 - λ1;
+                const d = 2 * Math.asin(Math.sqrt(Math.sin((φ2 - φ1) / 2) ** 2 + cosφ1 * cosφ2 * Math.sin(Δλ / 2) ** 2));
+                const points = [];
+                if (d === 0 || isNaN(d)) {
+                    for (let i = 0; i <= n; i++) points.push({ lat: lat1, lon: lon1 });
+                    return points;
+                }
+                for (let i = 0; i <= n; i++) {
+                    const f = i / n;
+                    const A = Math.sin((1 - f) * d) / Math.sin(d);
+                    const B = Math.sin(f * d) / Math.sin(d);
+                    const x = A * cosφ1 * Math.cos(λ1) + B * cosφ2 * Math.cos(λ2);
+                    const y = A * cosφ1 * Math.sin(λ1) + B * cosφ2 * Math.sin(λ2);
+                    const z = A * sinφ1 + B * sinφ2;
+                    const φi = Math.atan2(z, Math.sqrt(x * x + y * y));
+                    const λi = Math.atan2(y, x);
+                    points.push({ lat: toDeg(φi), lon: toDeg(λi) });
+                }
+                return points;
+            }
+
+            const gcPoints = interpolateGreatCircle(currentDisplayLat, currentDisplayLon, approachDetails.lat, approachDetails.lon, 64);
+            p.push();
+            p.noFill();
+            p.stroke(255, 255, 0, 200);
+            p.strokeWeight(2);
+            p.beginShape();
+            for (const pt of gcPoints) {
+                const v = getSphereCoord(p, earthSize + issDistanceToEarth, pt.lat, normalizeLon(pt.lon));
+                p.vertex(v.x, v.y, v.z);
+            }
+            p.endShape();
+            p.pop();
+
+            // Update DOM approach info panel (avoids WEBGL text/font requirements)
+            try {
+                if (approachInfoDiv) {
+                    if (showApproachInfo && approachDetails.date instanceof Date) {
+                        const labelText = approachDetails.date.toLocaleString();
+                        const distText = (typeof approachDetails.dist === 'number') ? `${approachDetails.dist.toFixed(1)} km` : '';
+                        approachInfoDiv.style.display = 'block';
+                        approachInfoDiv.textContent = `Approach: ${labelText}` + (distText ? ` — ${distText}` : '');
+                    } else {
+                        approachInfoDiv.style.display = 'none';
+                        approachInfoDiv.textContent = '';
+                    }
+                }
+            } catch (e) {
+                // DOM ops may fail if controls overlay is unavailable; ignore silently
+            }
         }
 
         if (sketchPassByRadiusKM > 0) {
