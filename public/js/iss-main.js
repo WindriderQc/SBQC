@@ -1,12 +1,31 @@
-import * as predictor from './issOrbitPredictor.js';
-import { setOnPathUpdate } from './issOrbitPredictor.js';
+import {
+    fetchAndPredict,
+    setOnPathUpdate,
+    setOnPredictionUpdate,
+    setPredictionDurationSec,
+    setRadiusKM,
+    refreshTLE
+} from './issOrbitPredictor.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+    const passbyTimeSpan = document.getElementById('iss-passby-time');
+
     // This is the bridge that connects the predictor's data to the sketch.
     // It's set up before the sketch is initialized to avoid race conditions.
     setOnPathUpdate((pathData) => {
         if (window.p5SketchApi && typeof window.p5SketchApi.update3DPredictedPath === 'function') {
             window.p5SketchApi.update3DPredictedPath(pathData);
+        }
+    });
+
+    // Set up the callback for when the prediction data is updated
+    setOnPredictionUpdate((details) => {
+        if (details.closestPoint && details.closestPoint.time) {
+            const passDate = new Date(Date.now() + details.closestPoint.time * 1000);
+            // Using toLocaleString for a user-friendly format
+            passbyTimeSpan.textContent = `${passDate.toLocaleString()}`;
+        } else {
+            passbyTimeSpan.textContent = 'No pass soon';
         }
     });
 
@@ -39,12 +58,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     predictionLengthSlider.addEventListener('input', (e) => {
         predictionLengthValueSpan.textContent = e.target.value;
-        predictor.setPredictionDurationSec(parseInt(e.target.value) * 60);
+        setPredictionDurationSec(parseInt(e.target.value) * 60);
     });
 
     passByRadiusSlider.addEventListener('input', (e) => {
         passByRadiusValueSpan.textContent = e.target.value;
-        predictor.setRadiusKM(parseInt(e.target.value));
+        setRadiusKM(parseInt(e.target.value));
         if (window.p5SketchApi) window.p5SketchApi.setSketchPassByRadiusKM(parseInt(e.target.value));
     });
 
@@ -61,9 +80,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     refreshBtn.addEventListener('click', () => {
-        predictor.refreshTLE();
+        refreshTLE();
     });
 
     // Initial prediction
-    predictor.fetchAndPredict();
+    fetchAndPredict();
 });
