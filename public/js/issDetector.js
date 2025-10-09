@@ -25,10 +25,12 @@ export default function(p) {
     let showQuakes = false;
     const earthSize = 300;
     const earthActualRadiusKM = 6371;
-    const issDistanceToEarth = 50;
+    // The visual distance of the ISS from Earth, scaled to the model's size.
+    // Real-world ratio: (ISS Altitude ~408km / Earth Radius 6371km) * earthSize
+    const issDistanceToEarth = 19.22;
     const gpsSize = 5;
     const issSize = 6;
-    const CYLINDER_VISUAL_LENGTH = issDistanceToEarth * 3;
+    const CYLINDER_VISUAL_LENGTH = 150; // Keep a fixed visual length for the detection cylinder
     const MARKER_COLOR_TEAL = [0, 128, 128];
     const MARKER_COLOR_GREEN = [0, 200, 0];
     const USER_LOCATION_MARKER_SIZE = gpsSize;
