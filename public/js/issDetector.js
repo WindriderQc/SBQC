@@ -27,6 +27,7 @@ export default function(p) {
     let issCameraView;
     let issFov = 60;
     let showApproachInfo = true; // UI toggle: show/hide great-circle path and approach time label
+    let approachInfoDiv = null;
     const earthSize = 300;
     const earthActualRadiusKM = 6371;
     // The visual distance of the ISS from Earth, scaled to the model's size.
@@ -35,10 +36,10 @@ export default function(p) {
     const gpsSize = 5;
     const issSize = 6;
     const CYLINDER_VISUAL_LENGTH = 150; // Keep a fixed visual length for the detection cylinder
-    const MARKER_COLOR_TEAL = [0, 128, 128];
+    const MARKER_COLOR_TEAL = [255, 255, 0]; // changed to yellow to match request
     const MARKER_COLOR_GREEN = [0, 200, 0];
     const USER_LOCATION_MARKER_SIZE = gpsSize;
-    const CLOSEST_APPROACH_MARKER_SIZE = USER_LOCATION_MARKER_SIZE;
+    const CLOSEST_APPROACH_MARKER_SIZE = USER_LOCATION_MARKER_SIZE / 2; // half size of user marker
     const END_OF_PATH_MARKER_SIZE = USER_LOCATION_MARKER_SIZE / 2;
     let sketchPassByRadiusKM = 1500;
     let showAxis = false;
@@ -162,6 +163,9 @@ export default function(p) {
 
                 chk.addEventListener('change', (ev) => {
                     showApproachInfo = !!ev.target.checked;
+                    try {
+                        if (approachInfoDiv) approachInfoDiv.style.display = showApproachInfo ? 'block' : 'none';
+                    } catch (e) { /* ignore */ }
                 });
 
                 toggleDiv.appendChild(chk);
@@ -170,6 +174,25 @@ export default function(p) {
             }
         } catch (e) {
             console.warn('Could not add approach toggle control:', e);
+        }
+
+        // create a small DOM container to show approach time/details (avoids drawing text in WEBGL)
+        try {
+            if (controlsOverlayElement) {
+                approachInfoDiv = document.createElement('div');
+                approachInfoDiv.id = 'approach-info';
+                approachInfoDiv.style.marginTop = '6px';
+                approachInfoDiv.style.padding = '6px 8px';
+                approachInfoDiv.style.background = 'rgba(0,0,0,0.6)';
+                approachInfoDiv.style.color = '#fff';
+                approachInfoDiv.style.fontSize = '12px';
+                approachInfoDiv.style.borderRadius = '4px';
+                approachInfoDiv.style.display = showApproachInfo ? 'block' : 'none';
+                approachInfoDiv.textContent = '';
+                controlsOverlayElement.appendChild(approachInfoDiv);
+            }
+        } catch (e) {
+            console.warn('Could not create approach info element:', e);
         }
 
         quakeFromColor = p.color(0, 255, 0, 150);
@@ -364,13 +387,15 @@ export default function(p) {
 
         // Prefer the API that returns an absolute Date for the approach time
         const approachDetails = predictor.getClosestApproachDetailsAsDate ? predictor.getClosestApproachDetailsAsDate() : predictor.getClosestApproachDetails();
+        // make vApproach available to the following blocks (label drawing, etc.)
+        let vApproach = null;
         if (approachDetails) {
             let useRadius = earthSize + issDistanceToEarth;
             if (typeof approachDetails.alt === 'number' && !isNaN(approachDetails.alt)) {
                 useRadius = earthSize + (approachDetails.alt / earthActualRadiusKM) * earthSize;
             }
             const normLon = normalizeLon(approachDetails.lon);
-            const vApproach = getSphereCoord(p, useRadius, approachDetails.lat, normLon);
+            vApproach = getSphereCoord(p, useRadius, approachDetails.lat, normLon);
             p.push();
             p.translate(vApproach.x, vApproach.y, vApproach.z);
             p.noStroke();
@@ -426,21 +451,21 @@ export default function(p) {
             p.endShape();
             p.pop();
 
-            // Show approach time label near the approach marker if a Date is available
-            if (showApproachInfo && approachDetails.date instanceof Date) {
-                const labelText = approachDetails.date.toLocaleString();
-                // position slightly above the marker
-                p.push();
-                p.translate(vApproach.x, vApproach.y, vApproach.z);
-                // billboard the text toward the camera by undoing rotations
-                p.rotateX(-angleX);
-                p.rotateY(-angleY);
-                p.fill(255);
-                p.noStroke();
-                p.textSize(10);
-                p.textAlign(p.CENTER, p.BOTTOM);
-                p.text(labelText, 0, -CLOSEST_APPROACH_MARKER_SIZE - 6);
-                p.pop();
+            // Update DOM approach info panel (avoids WEBGL text/font requirements)
+            try {
+                if (approachInfoDiv) {
+                    if (showApproachInfo && approachDetails.date instanceof Date) {
+                        const labelText = approachDetails.date.toLocaleString();
+                        const distText = (typeof approachDetails.dist === 'number') ? `${approachDetails.dist.toFixed(1)} km` : '';
+                        approachInfoDiv.style.display = 'block';
+                        approachInfoDiv.textContent = `Approach: ${labelText}` + (distText ? ` — ${distText}` : '');
+                    } else {
+                        approachInfoDiv.style.display = 'none';
+                        approachInfoDiv.textContent = '';
+                    }
+                }
+            } catch (e) {
+                // DOM ops may fail if controls overlay is unavailable; ignore silently
             }
         }
 
