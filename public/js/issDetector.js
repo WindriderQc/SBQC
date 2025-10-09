@@ -30,6 +30,9 @@ export default function(p) {
     let issFov = 60;
     let showApproachInfo = true; // UI toggle: show/hide great-circle path and approach time label
     let approachInfoDiv = null;
+    const APPROACH_STALE_MINUTES = 5; // consider a prediction stale after this many minutes
+    let approachInfoIntervalId = null;
+    let approachIsRefreshing = false;
     const earthSize = 300;
     const earthActualRadiusKM = 6371;
     const issDistanceToEarth = 50;
@@ -190,6 +193,81 @@ export default function(p) {
             }
         } catch (e) {
             console.warn('Could not create approach info element:', e);
+        }
+
+        // start a 1s interval to update countdown and timestamps
+        try {
+            const pad = (n) => (n < 10 ? '0' + n : '' + n);
+            const formatHMS = (ms) => {
+                const sign = ms < 0 ? '-' : '';
+                ms = Math.abs(ms);
+                const s = Math.floor(ms / 1000) % 60;
+                const m = Math.floor(ms / (60 * 1000)) % 60;
+                const h = Math.floor(ms / (3600 * 1000));
+                return sign + pad(h) + ':' + pad(m) + ':' + pad(s);
+            };
+
+            function updateApproachInfo() {
+                try {
+                    if (!approachInfoDiv) return;
+                    if (!showApproachInfo) {
+                        approachInfoDiv.style.display = 'none';
+                        return;
+                    }
+                    const details = predictor.getClosestApproachDetailsAsDate ? predictor.getClosestApproachDetailsAsDate() : predictor.getClosestApproachDetails();
+                    if (!details) {
+                        approachInfoDiv.style.display = 'block';
+                        approachInfoDiv.textContent = 'No upcoming approach detected';
+                        return;
+                    }
+
+                    // determine absolute approach time
+                    const absMs = details.absoluteTimeMs || (details.date instanceof Date ? details.date.getTime() : (Date.now() + (details.time || 0) * 1000));
+                    const nowMs = Date.now();
+                    const remainingMs = absMs - nowMs;
+                    const localStr = new Date(absMs).toLocaleString();
+                    const utcStr = new Date(absMs).toISOString();
+
+                    // stale detection
+                    const computedAtMs = details.computedAtMs || null;
+                    const ageMs = computedAtMs ? (nowMs - computedAtMs) : 0;
+                    const isStale = computedAtMs ? (ageMs > APPROACH_STALE_MINUTES * 60 * 1000) : false;
+
+                    let status = '';
+                    if (approachIsRefreshing) status = ' (refreshing...)';
+                    else if (isStale) status = ' (STALE)';
+
+                    approachInfoDiv.style.display = 'block';
+                    approachInfoDiv.textContent = `Approach in ${formatHMS(remainingMs)} — Local: ${localStr} — UTC: ${utcStr}${status}`;
+
+                    // auto-refresh if stale and not already refreshing
+                    if (isStale && !approachIsRefreshing) {
+                        approachIsRefreshing = true;
+                        // call refreshTLE which will re-run prediction if successful
+                        if (typeof predictor.refreshTLE === 'function') {
+                            predictor.refreshTLE().then((ok) => {
+                                approachIsRefreshing = false;
+                                // trigger immediate update after refresh
+                                try { updateApproachInfo(); } catch (e) { /* ignore */ }
+                            }).catch(() => { approachIsRefreshing = false; });
+                        } else if (typeof predictor.fetchAndPredict === 'function') {
+                            predictor.fetchAndPredict().then(() => { approachIsRefreshing = false; try { updateApproachInfo(); } catch (e) {} }).catch(() => { approachIsRefreshing = false; });
+                        } else {
+                            approachIsRefreshing = false;
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Error updating approach info:', err);
+                }
+            }
+
+            // clear any existing interval then start a new one
+            if (approachInfoIntervalId) clearInterval(approachInfoIntervalId);
+            approachInfoIntervalId = setInterval(updateApproachInfo, 1000);
+            // initial update
+            updateApproachInfo();
+        } catch (e) {
+            console.warn('Could not start approach info updater:', e);
         }
 
         quakeFromColor = p.color(0, 255, 0, 150);
