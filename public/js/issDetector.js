@@ -1,9 +1,11 @@
 import { haversineDistance, getSphereCoord } from './utils.js';
 import * as predictor from './issOrbitPredictor.js';
+import IssCamera from './issCamera.js';
 
 // This function will be the main sketch. It's exported and passed to the p5 constructor.
 export default function(p) {
     // Sketch-specific variables
+    let issCam;
     let internalIssPathHistory = [];
     let MAX_HISTORY_POINTS = 4200;
     let originalLoadedIssHistory = [];
@@ -30,9 +32,7 @@ export default function(p) {
     let approachInfoDiv = null;
     const earthSize = 300;
     const earthActualRadiusKM = 6371;
-    // The visual distance of the ISS from Earth, scaled to the model's size.
-    // Real-world ratio: (ISS Altitude ~408km / Earth Radius 6371km) * earthSize
-    const issDistanceToEarth = 19.22;
+    const issDistanceToEarth = 50;
     const gpsSize = 5;
     const issSize = 6;
     const CYLINDER_VISUAL_LENGTH = 150; // Keep a fixed visual length for the detection cylinder
@@ -68,8 +68,8 @@ export default function(p) {
         setShowIssHistoricalPath: (value) => { showIssHistoricalPath = !!value; },
         setShowIssPredictedPath: (value) => { showIssPredictedPath = !!value; },
         setShowQuakes: (value) => { showQuakes = !!value; },
-        setShowIssCamera: (value) => { showIssCamera = !!value; },
-        setIssFov: (value) => { issFov = value; },
+        setShowIssCamera: (value) => { if (issCam) issCam.setShow(value); },
+        setIssFov: (value) => { if (issCam) issCam.setFov(value); },
     };
     window.p5SketchApi = sketchApi;
 
@@ -107,9 +107,6 @@ export default function(p) {
         const canvas = p.createCanvas(canvasWidth, canvasHeight, p.WEBGL);
         canvas.parent('sketch-holder');
         controlsOverlayElement = document.getElementById('controls-overlay');
-
-        // Create a separate graphics buffer for the ISS camera view
-        issCameraView = p.createGraphics(canvasWidth / 4, (canvasWidth / 4) * (9 / 16), p.WEBGL);
 
         try {
             if (controlsOverlayElement) {
@@ -197,6 +194,8 @@ export default function(p) {
 
         quakeFromColor = p.color(0, 255, 0, 150);
         quakeToColor = p.color(255, 0, 0, 150);
+
+        issCam = new IssCamera(p, cloudyEarth, earthSize, issDistanceToEarth);
     };
 
     p.windowResized = () => {
@@ -204,8 +203,8 @@ export default function(p) {
         const canvasWidth = sketchHolder.offsetWidth;
         const canvasHeight = canvasWidth * (9 / 16);
         p.resizeCanvas(canvasWidth, canvasHeight);
-        if (issCameraView) {
-            issCameraView.resizeCanvas(canvasWidth / 4, (canvasWidth / 4) * (9/16));
+        if (issCam) {
+            issCam.resize();
         }
     };
 
@@ -476,92 +475,25 @@ export default function(p) {
             const rotationAxis = defaultCylinderAxis.cross(upVector);
             let rotationAngle = defaultCylinderAxis.angleBetween(upVector);
 
-            // Draw a ground-projected translucent disk (visibility horizon) and an outline ring
             p.push();
             p.translate(pClientLoc.x, pClientLoc.y, pClientLoc.z);
             if (rotationAngle !== 0 && rotationAxis.magSq() > 0) {
                 p.rotate(rotationAngle, rotationAxis);
             }
-
-            // Translucent filled disk (triangle fan)
-            const diskSegments = 64;
-            p.push();
-            p.rotateX(Math.PI / 2); // make the disk lie tangent to the sphere at the user location
-            p.noStroke();
             p.fill(0, 100, 255, 30);
-            p.beginShape(p.TRIANGLE_FAN);
-            p.vertex(0, 0, 0);
-            for (let i = 0; i <= diskSegments; i++) {
-                const theta = (i / diskSegments) * Math.PI * 2;
-                const x = Math.cos(theta) * detectionRadius3DUnits;
-                const y = Math.sin(theta) * detectionRadius3DUnits;
-                p.vertex(x, y, 0);
-            }
-            p.endShape();
-            p.pop();
-
-            // Outline ring for better visibility
-            p.push();
-            p.rotateX(Math.PI / 2);
-            p.noFill();
-            p.stroke(0, 180, 255, 180);
-            p.strokeWeight(2);
-            p.beginShape();
-            for (let i = 0; i <= diskSegments; i++) {
-                const theta = (i / diskSegments) * Math.PI * 2;
-                const x = Math.cos(theta) * detectionRadius3DUnits;
-                const y = Math.sin(theta) * detectionRadius3DUnits;
-                p.vertex(x, y, 0);
-            }
-            p.endShape();
-            p.pop();
-
+            p.noStroke();
+            p.cylinder(detectionRadius3DUnits, CYLINDER_VISUAL_LENGTH);
             p.pop();
         }
 
         if (showQuakes) show3DQuakes();
         p.pop();
 
-        if (showIssCamera) {
-            drawIssCameraView();
-            // Display the camera view as an overlay
-            p.push();
-            p.resetMatrix(); // Reset transformations to draw in 2D screen space
-            p.image(issCameraView, p.width - issCameraView.width - 10, p.height - issCameraView.height - 10);
-            p.stroke(255);
-            p.noFill();
-            p.rect(p.width - issCameraView.width - 10, p.height - issCameraView.height - 10, issCameraView.width, issCameraView.height);
-            p.pop();
+        if (issCam) {
+            issCam.update(window.iss);
+            issCam.display();
         }
     };
-
-    function drawIssCameraView() {
-        if (!window.iss || typeof window.iss.latitude !== 'number' || typeof window.iss.longitude !== 'number') {
-            return;
-        }
-
-        const cam = issCameraView;
-        cam.background(10, 10, 20); // Deep space color
-
-        // Set camera perspective based on FOV slider
-        const fovRadians = p.radians(issFov);
-        cam.perspective(fovRadians, cam.width / cam.height, 0.1, earthSize * 10);
-
-        // Position the camera at the ISS location
-        const issPos = getSphereCoord(p, earthSize + issDistanceToEarth, window.iss.latitude, window.iss.longitude);
-
-        // Point the camera towards the center of the Earth
-        cam.camera(issPos.x, issPos.y, issPos.z, 0, 0, 0, 0, 1, 0);
-
-        cam.ambientLight(250);
-
-        // Draw the Earth
-        cam.push();
-        cam.texture(cloudyEarth);
-        cam.noStroke();
-        cam.sphere(earthSize);
-        cam.pop();
-    }
 
     p.mouseDragged = () => {
         if (p.mouseX > 0 && p.mouseX < p.width && p.mouseY > 0 && p.mouseY < p.height) {
