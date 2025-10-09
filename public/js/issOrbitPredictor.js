@@ -4,7 +4,7 @@ const TLE_URL = '/api/tle';
 const TLE_CACHE_KEY = 'tleDataCache';
 const CACHE_DURATION_MS = 2 * 60 * 60 * 1000;
 const PREDICTION_INTERVAL_SEC = 10;
-const MAX_SEARCH_DURATION_SEC = 36 * 3600;
+const MAX_SEARCH_DURATION_SEC = 108 * 3600;
 const DEFAULT_SLIDER_MAX_DURATION_SEC = 6 * 3600;
 
 let currentRadiusKM = 1500;
