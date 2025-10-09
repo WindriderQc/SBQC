@@ -1,9 +1,11 @@
 import { haversineDistance, getSphereCoord } from './utils.js';
 import * as predictor from './issOrbitPredictor.js';
+import IssCamera from './issCamera.js';
 
 // This function will be the main sketch. It's exported and passed to the p5 constructor.
 export default function(p) {
     // Sketch-specific variables
+    let issCam;
     let internalIssPathHistory = [];
     let MAX_HISTORY_POINTS = 4200;
     let originalLoadedIssHistory = [];
@@ -23,18 +25,12 @@ export default function(p) {
     let showIssHistoricalPath = true;
     let showIssPredictedPath = true;
     let showQuakes = false;
-    let showIssCamera = false;
-    let issCameraView;
-    let issFov = 60;
-    let showApproachInfo = true; // UI toggle: show/hide great-circle path and approach time label
     const earthSize = 300;
     const earthActualRadiusKM = 6371;
-    // The visual distance of the ISS from Earth, scaled to the model's size.
-    // Real-world ratio: (ISS Altitude ~408km / Earth Radius 6371km) * earthSize
-    const issDistanceToEarth = 19.22;
+    const issDistanceToEarth = 50;
     const gpsSize = 5;
     const issSize = 6;
-    const CYLINDER_VISUAL_LENGTH = 150; // Keep a fixed visual length for the detection cylinder
+    const CYLINDER_VISUAL_LENGTH = issDistanceToEarth * 3;
     const MARKER_COLOR_TEAL = [0, 128, 128];
     const MARKER_COLOR_GREEN = [0, 200, 0];
     const USER_LOCATION_MARKER_SIZE = gpsSize;
@@ -67,8 +63,8 @@ export default function(p) {
         setShowIssHistoricalPath: (value) => { showIssHistoricalPath = !!value; },
         setShowIssPredictedPath: (value) => { showIssPredictedPath = !!value; },
         setShowQuakes: (value) => { showQuakes = !!value; },
-        setShowIssCamera: (value) => { showIssCamera = !!value; },
-        setIssFov: (value) => { issFov = value; },
+        setShowIssCamera: (value) => { if (issCam) issCam.setShow(value); },
+        setIssFov: (value) => { if (issCam) issCam.setFov(value); },
     };
     window.p5SketchApi = sketchApi;
 
@@ -107,9 +103,6 @@ export default function(p) {
         canvas.parent('sketch-holder');
         controlsOverlayElement = document.getElementById('controls-overlay');
 
-        // Create a separate graphics buffer for the ISS camera view
-        issCameraView = p.createGraphics(canvasWidth / 4, (canvasWidth / 4) * (9 / 16), p.WEBGL);
-
         try {
             if (controlsOverlayElement) {
                 controlsOverlayElement.style.pointerEvents = 'auto';
@@ -134,46 +127,10 @@ export default function(p) {
             console.warn('Could not set up overlay event handlers:', e);
         }
 
-        // Add a small UI toggle to show/hide the great-circle approach path and approach time label
-        try {
-            if (controlsOverlayElement) {
-                const toggleDiv = document.createElement('div');
-                toggleDiv.style.marginTop = '6px';
-                toggleDiv.style.display = 'flex';
-                toggleDiv.style.alignItems = 'center';
-
-                const chk = document.createElement('input');
-                chk.type = 'checkbox';
-                chk.id = 'show-approach-info';
-                chk.checked = showApproachInfo;
-                chk.style.marginRight = '6px';
-
-                const lbl = document.createElement('label');
-                lbl.htmlFor = chk.id;
-                lbl.textContent = 'Show approach path/time';
-                lbl.style.color = '#fff';
-                lbl.style.userSelect = 'none';
-
-                // stop propagation on these controls so they don't interfere with globe dragging
-                ['pointerdown', 'pointermove', 'mousedown', 'touchstart', 'touchmove'].forEach(evt => {
-                    chk.addEventListener(evt, (ev) => ev.stopPropagation(), false);
-                    lbl.addEventListener(evt, (ev) => ev.stopPropagation(), false);
-                });
-
-                chk.addEventListener('change', (ev) => {
-                    showApproachInfo = !!ev.target.checked;
-                });
-
-                toggleDiv.appendChild(chk);
-                toggleDiv.appendChild(lbl);
-                controlsOverlayElement.appendChild(toggleDiv);
-            }
-        } catch (e) {
-            console.warn('Could not add approach toggle control:', e);
-        }
-
         quakeFromColor = p.color(0, 255, 0, 150);
         quakeToColor = p.color(255, 0, 0, 150);
+
+        issCam = new IssCamera(p, cloudyEarth, earthSize, issDistanceToEarth);
     };
 
     p.windowResized = () => {
@@ -181,8 +138,8 @@ export default function(p) {
         const canvasWidth = sketchHolder.offsetWidth;
         const canvasHeight = canvasWidth * (9 / 16);
         p.resizeCanvas(canvasWidth, canvasHeight);
-        if (issCameraView) {
-            issCameraView.resizeCanvas(canvasWidth / 4, (canvasWidth / 4) * (9/16));
+        if (issCam) {
+            issCam.resize();
         }
     };
 
@@ -362,8 +319,7 @@ export default function(p) {
         p.sphere(gpsSize);
         p.pop();
 
-        // Prefer the API that returns an absolute Date for the approach time
-        const approachDetails = predictor.getClosestApproachDetailsAsDate ? predictor.getClosestApproachDetailsAsDate() : predictor.getClosestApproachDetails();
+        const approachDetails = predictor.getClosestApproachDetails();
         if (approachDetails) {
             let useRadius = earthSize + issDistanceToEarth;
             if (typeof approachDetails.alt === 'number' && !isNaN(approachDetails.alt)) {
@@ -379,71 +335,6 @@ export default function(p) {
             p.pop();
         }
 
-    // If we have an approach and a user location, draw a great-circle path between them (conditionally)
-    if (showApproachInfo && approachDetails && typeof currentDisplayLat === 'number' && typeof currentDisplayLon === 'number') {
-            // Helper: compute n interpolated points along the great-circle between two lat/lon points
-            function interpolateGreatCircle(lat1, lon1, lat2, lon2, n) {
-                // convert to radians
-                const toRad = (d) => d * Math.PI / 180;
-                const toDeg = (r) => r * 180 / Math.PI;
-                const φ1 = toRad(lat1);
-                const λ1 = toRad(lon1);
-                const φ2 = toRad(lat2);
-                const λ2 = toRad(lon2);
-                const sinφ1 = Math.sin(φ1), cosφ1 = Math.cos(φ1);
-                const sinφ2 = Math.sin(φ2), cosφ2 = Math.cos(φ2);
-                const Δλ = λ2 - λ1;
-                const d = 2 * Math.asin(Math.sqrt(Math.sin((φ2 - φ1) / 2) ** 2 + cosφ1 * cosφ2 * Math.sin(Δλ / 2) ** 2));
-                const points = [];
-                if (d === 0 || isNaN(d)) {
-                    for (let i = 0; i <= n; i++) points.push({ lat: lat1, lon: lon1 });
-                    return points;
-                }
-                for (let i = 0; i <= n; i++) {
-                    const f = i / n;
-                    const A = Math.sin((1 - f) * d) / Math.sin(d);
-                    const B = Math.sin(f * d) / Math.sin(d);
-                    const x = A * cosφ1 * Math.cos(λ1) + B * cosφ2 * Math.cos(λ2);
-                    const y = A * cosφ1 * Math.sin(λ1) + B * cosφ2 * Math.sin(λ2);
-                    const z = A * sinφ1 + B * sinφ2;
-                    const φi = Math.atan2(z, Math.sqrt(x * x + y * y));
-                    const λi = Math.atan2(y, x);
-                    points.push({ lat: toDeg(φi), lon: toDeg(λi) });
-                }
-                return points;
-            }
-
-            const gcPoints = interpolateGreatCircle(currentDisplayLat, currentDisplayLon, approachDetails.lat, approachDetails.lon, 64);
-            p.push();
-            p.noFill();
-            p.stroke(255, 255, 0, 200);
-            p.strokeWeight(2);
-            p.beginShape();
-            for (const pt of gcPoints) {
-                const v = getSphereCoord(p, earthSize + issDistanceToEarth, pt.lat, normalizeLon(pt.lon));
-                p.vertex(v.x, v.y, v.z);
-            }
-            p.endShape();
-            p.pop();
-
-            // Show approach time label near the approach marker if a Date is available
-            if (showApproachInfo && approachDetails.date instanceof Date) {
-                const labelText = approachDetails.date.toLocaleString();
-                // position slightly above the marker
-                p.push();
-                p.translate(vApproach.x, vApproach.y, vApproach.z);
-                // billboard the text toward the camera by undoing rotations
-                p.rotateX(-angleX);
-                p.rotateY(-angleY);
-                p.fill(255);
-                p.noStroke();
-                p.textSize(10);
-                p.textAlign(p.CENTER, p.BOTTOM);
-                p.text(labelText, 0, -CLOSEST_APPROACH_MARKER_SIZE - 6);
-                p.pop();
-            }
-        }
-
         if (sketchPassByRadiusKM > 0) {
             const detectionRadius3DUnits = (sketchPassByRadiusKM / earthActualRadiusKM) * earthSize;
             const upVector = pClientLoc.copy().normalize();
@@ -451,92 +342,25 @@ export default function(p) {
             const rotationAxis = defaultCylinderAxis.cross(upVector);
             let rotationAngle = defaultCylinderAxis.angleBetween(upVector);
 
-            // Draw a ground-projected translucent disk (visibility horizon) and an outline ring
             p.push();
             p.translate(pClientLoc.x, pClientLoc.y, pClientLoc.z);
             if (rotationAngle !== 0 && rotationAxis.magSq() > 0) {
                 p.rotate(rotationAngle, rotationAxis);
             }
-
-            // Translucent filled disk (triangle fan)
-            const diskSegments = 64;
-            p.push();
-            p.rotateX(Math.PI / 2); // make the disk lie tangent to the sphere at the user location
-            p.noStroke();
             p.fill(0, 100, 255, 30);
-            p.beginShape(p.TRIANGLE_FAN);
-            p.vertex(0, 0, 0);
-            for (let i = 0; i <= diskSegments; i++) {
-                const theta = (i / diskSegments) * Math.PI * 2;
-                const x = Math.cos(theta) * detectionRadius3DUnits;
-                const y = Math.sin(theta) * detectionRadius3DUnits;
-                p.vertex(x, y, 0);
-            }
-            p.endShape();
-            p.pop();
-
-            // Outline ring for better visibility
-            p.push();
-            p.rotateX(Math.PI / 2);
-            p.noFill();
-            p.stroke(0, 180, 255, 180);
-            p.strokeWeight(2);
-            p.beginShape();
-            for (let i = 0; i <= diskSegments; i++) {
-                const theta = (i / diskSegments) * Math.PI * 2;
-                const x = Math.cos(theta) * detectionRadius3DUnits;
-                const y = Math.sin(theta) * detectionRadius3DUnits;
-                p.vertex(x, y, 0);
-            }
-            p.endShape();
-            p.pop();
-
+            p.noStroke();
+            p.cylinder(detectionRadius3DUnits, CYLINDER_VISUAL_LENGTH);
             p.pop();
         }
 
         if (showQuakes) show3DQuakes();
         p.pop();
 
-        if (showIssCamera) {
-            drawIssCameraView();
-            // Display the camera view as an overlay
-            p.push();
-            p.resetMatrix(); // Reset transformations to draw in 2D screen space
-            p.image(issCameraView, p.width - issCameraView.width - 10, p.height - issCameraView.height - 10);
-            p.stroke(255);
-            p.noFill();
-            p.rect(p.width - issCameraView.width - 10, p.height - issCameraView.height - 10, issCameraView.width, issCameraView.height);
-            p.pop();
+        if (issCam) {
+            issCam.update(window.iss);
+            issCam.display();
         }
     };
-
-    function drawIssCameraView() {
-        if (!window.iss || typeof window.iss.latitude !== 'number' || typeof window.iss.longitude !== 'number') {
-            return;
-        }
-
-        const cam = issCameraView;
-        cam.background(10, 10, 20); // Deep space color
-
-        // Set camera perspective based on FOV slider
-        const fovRadians = p.radians(issFov);
-        cam.perspective(fovRadians, cam.width / cam.height, 0.1, earthSize * 10);
-
-        // Position the camera at the ISS location
-        const issPos = getSphereCoord(p, earthSize + issDistanceToEarth, window.iss.latitude, window.iss.longitude);
-
-        // Point the camera towards the center of the Earth
-        cam.camera(issPos.x, issPos.y, issPos.z, 0, 0, 0, 0, 1, 0);
-
-        cam.ambientLight(250);
-
-        // Draw the Earth
-        cam.push();
-        cam.texture(cloudyEarth);
-        cam.noStroke();
-        cam.sphere(earthSize);
-        cam.pop();
-    }
 
     p.mouseDragged = () => {
         if (p.mouseX > 0 && p.mouseX < p.width && p.mouseY > 0 && p.mouseY < p.height) {
