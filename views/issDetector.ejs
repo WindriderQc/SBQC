@@ -54,6 +54,14 @@
                             <input type="checkbox" id="showQuakes" checked>
                             <label for="showQuakes" style="margin-left: 4px;">Show Quakes</label>
                         </div>
+                        <div style="margin-top: 4px;">
+                            <input type="checkbox" id="showIssCamera" >
+                            <label for="showIssCamera" style="margin-left: 4px;">ISS Camera</label>
+                        </div>
+                    </div>
+                    <div id="iss-camera-controls" style="display: none; margin-top: 8px;">
+                        <label for="issFovSlider" style="font-size: 0.85em; display: block; margin-bottom: 2px;">Cam FOV: <span id="issFovValue">60</span>&deg;</label>
+                        <input type="range" id="issFovSlider" min="20" max="120" step="1" value="60" style="width: 100%; margin-top: -2px;">
                     </div>
                 </div>
             </div>
