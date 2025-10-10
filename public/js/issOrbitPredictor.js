@@ -122,7 +122,13 @@ async function calculateFullPredictionAndDeterminePass() {
         return Math.min(min, dist);
     }, Infinity) : Infinity;
 
-    exposedClosestApproachDetails = closestPointInNextPass;
+    // Store the closest approach details and also save an absolute timestamp (ms since epoch)
+    if (closestPointInNextPass) {
+        const absoluteMs = now.getTime() + (closestPointInNextPass.time || 0) * 1000;
+        exposedClosestApproachDetails = Object.assign({}, closestPointInNextPass, { computedAtMs: now.getTime(), absoluteTimeMs: absoluteMs });
+    } else {
+        exposedClosestApproachDetails = null;
+    }
 
     let sliderMaxDurationSec = timeToFirstClosePassSec !== null ? timeToFirstClosePassSec : DEFAULT_SLIDER_MAX_DURATION_SEC;
     sliderMaxDurationSec = Math.max(5 * 60, Math.min(sliderMaxDurationSec, MAX_SEARCH_DURATION_SEC));
@@ -191,4 +197,34 @@ export function setRadiusKM(radKM) {
 
 export function getClosestApproachDetails() {
     return exposedClosestApproachDetails;
+}
+
+/**
+ * Returns the closest approach details but converts the relative time (seconds from now)
+ * into an absolute Date object (local time). If there is no closest approach, returns null.
+ *
+ * Returned shape (if present): { time: <seconds from now>, dist, lat, lon, alt, date: <Date> }
+ */
+export function getClosestApproachDetailsAsDate() {
+    const details = exposedClosestApproachDetails;
+    if (!details) return null;
+    // Prefer the absolute timestamp if it was recorded at prediction time to avoid drift.
+    const date = details.absoluteTimeMs ? new Date(details.absoluteTimeMs) : new Date(Date.now() + (details.time || 0) * 1000);
+    return Object.assign({}, details, { date });
+}
+
+/**
+ * Return the current ISS position propagated from the loaded TLE (if available).
+ * Useful to compare the moving ISS position to the fixed closest-approach point.
+ * Returns null if satrec or propagation is not available.
+ */
+export function getCurrentPosition() {
+    try {
+        const now = new Date();
+        if (!satrec) return null;
+        const pos = positionAt(now);
+        return pos; // { lat, lon, alt }
+    } catch (e) {
+        return null;
+    }
 }

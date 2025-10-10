@@ -25,6 +25,14 @@ export default function(p) {
     let showIssHistoricalPath = true;
     let showIssPredictedPath = true;
     let showQuakes = false;
+    let showIssCamera = false;
+    let issCameraView;
+    let issFov = 60;
+    let showApproachInfo = true; // UI toggle: show/hide great-circle path and approach time label
+    let approachInfoDiv = null;
+    const APPROACH_STALE_MINUTES = 5; // consider a prediction stale after this many minutes
+    let approachInfoIntervalId = null;
+    let approachIsRefreshing = false;
     const earthSize = 300;
     const earthActualRadiusKM = 6371;
     const issDistanceToEarth = 50;
@@ -33,10 +41,14 @@ export default function(p) {
     const CYLINDER_VISUAL_LENGTH = issDistanceToEarth * 3;
     const MARKER_COLOR_TEAL = [0, 128, 128];
     const MARKER_COLOR_GREEN = [0, 200, 0];
+    const DISK_ELEVATION = 0.0; // no elevation: disk lies flush with the globe surface
+    const DISK_GRADIENT_STEPS = 6; // number of concentric rings to approximate a radial gradient
     const USER_LOCATION_MARKER_SIZE = gpsSize;
     const CLOSEST_APPROACH_MARKER_SIZE = USER_LOCATION_MARKER_SIZE;
     const END_OF_PATH_MARKER_SIZE = USER_LOCATION_MARKER_SIZE / 2;
     let sketchPassByRadiusKM = 1500;
+    const PASS_IMMINENT_MINUTES = 5; // if approach is within this many minutes, treat as imminent
+    const PULSE_PERIOD_SEC = 1.4; // pulse period in seconds
     let showAxis = false;
     let initialPinchDistance = 0;
 
@@ -125,6 +137,216 @@ export default function(p) {
             controlsOverlayElement.addEventListener('click', (ev) => { ev.stopPropagation(); }, false);
         } catch (e) {
             console.warn('Could not set up overlay event handlers:', e);
+        }
+
+        // Add a small UI toggle to show/hide the great-circle approach path and approach time label
+        try {
+            if (controlsOverlayElement) {
+                const toggleDiv = document.createElement('div');
+                toggleDiv.style.marginTop = '6px';
+                toggleDiv.style.display = 'flex';
+                toggleDiv.style.alignItems = 'center';
+
+                const chk = document.createElement('input');
+                chk.type = 'checkbox';
+                chk.id = 'show-approach-info';
+                chk.checked = showApproachInfo;
+                chk.style.marginRight = '6px';
+
+                const lbl = document.createElement('label');
+                lbl.htmlFor = chk.id;
+                lbl.textContent = 'Show approach path/time';
+                lbl.style.color = '#fff';
+                lbl.style.userSelect = 'none';
+
+                // stop propagation on these controls so they don't interfere with globe dragging
+                ['pointerdown', 'pointermove', 'mousedown', 'touchstart', 'touchmove'].forEach(evt => {
+                    chk.addEventListener(evt, (ev) => ev.stopPropagation(), false);
+                    lbl.addEventListener(evt, (ev) => ev.stopPropagation(), false);
+                });
+
+                chk.addEventListener('change', (ev) => {
+                    showApproachInfo = !!ev.target.checked;
+                    try {
+                        if (approachInfoDiv) approachInfoDiv.style.display = showApproachInfo ? 'block' : 'none';
+                    } catch (e) { /* ignore */ }
+                });
+
+                toggleDiv.appendChild(chk);
+                toggleDiv.appendChild(lbl);
+                controlsOverlayElement.appendChild(toggleDiv);
+            }
+        } catch (e) {
+            console.warn('Could not add approach toggle control:', e);
+        }
+
+        // create a small DOM container to show approach time/details (avoids drawing text in WEBGL)
+        try {
+            approachInfoDiv = document.createElement('div');
+            approachInfoDiv.id = 'approach-info';
+            approachInfoDiv.style.marginTop = '6px';
+            approachInfoDiv.style.padding = '8px 10px';
+            approachInfoDiv.style.background = 'rgba(0,0,0,0.75)';
+            approachInfoDiv.style.color = '#fff';
+            approachInfoDiv.style.fontSize = '13px';
+            approachInfoDiv.style.borderRadius = '6px';
+            approachInfoDiv.style.display = showApproachInfo ? 'block' : 'none';
+            approachInfoDiv.style.minWidth = '220px';
+            approachInfoDiv.style.textAlign = 'center';
+            approachInfoDiv.style.boxShadow = '0 2px 8px rgba(0,0,0,0.6)';
+            approachInfoDiv.style.pointerEvents = 'auto';
+            approachInfoDiv.textContent = '';
+                if (controlsOverlayElement) {
+                    controlsOverlayElement.appendChild(approachInfoDiv);
+                } else {
+                // fallback: create a floating panel in the top-right so the user sees the countdown
+                approachInfoDiv.style.position = 'fixed';
+                approachInfoDiv.style.top = '12px';
+                approachInfoDiv.style.right = '12px';
+                approachInfoDiv.style.zIndex = 99999;
+                approachInfoDiv.style.pointerEvents = 'auto';
+                    document.body.appendChild(approachInfoDiv);
+                }
+
+            // Add a small Refresh button into the panel so the user can force a re-predict
+            try {
+                const btn = document.createElement('button');
+                btn.textContent = 'Refresh prediction';
+                btn.style.marginTop = '8px';
+                btn.style.padding = '6px 8px';
+                btn.style.fontSize = '12px';
+                btn.style.cursor = 'pointer';
+                btn.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    try {
+                        if (typeof predictor.refreshTLE === 'function') {
+                            predictor.refreshTLE().then(() => {}).catch(() => {});
+                        } else if (typeof predictor.fetchAndPredict === 'function') {
+                            predictor.fetchAndPredict().then(() => {}).catch(() => {});
+                        }
+                    } catch (e) { console.warn('Refresh failed', e); }
+                });
+                approachInfoDiv.appendChild(document.createElement('br'));
+                approachInfoDiv.appendChild(btn);
+            } catch (e) { /* ignore */ }
+        } catch (e) {
+            console.warn('Could not create approach info element:', e);
+            approachInfoDiv = null;
+        }
+
+        // start a 1s interval to update countdown and timestamps
+        try {
+            const pad = (n) => (n < 10 ? '0' + n : '' + n);
+            const formatHMS = (ms) => {
+                const sign = ms < 0 ? '-' : '';
+                ms = Math.abs(ms);
+                const s = Math.floor(ms / 1000) % 60;
+                const m = Math.floor(ms / (60 * 1000)) % 60;
+                const h = Math.floor(ms / (3600 * 1000));
+                return sign + pad(h) + ':' + pad(m) + ':' + pad(s);
+            };
+
+            function updateApproachInfo() {
+                try {
+                    if (!approachInfoDiv) return;
+                    if (!showApproachInfo) {
+                        approachInfoDiv.style.display = 'none';
+                        return;
+                    }
+                    const details = predictor.getClosestApproachDetailsAsDate ? predictor.getClosestApproachDetailsAsDate() : predictor.getClosestApproachDetails();
+                    console.log('[iss-detector] updater got approach details:', details);
+                    if (!details) {
+                        approachInfoDiv.style.display = 'block';
+                        approachInfoDiv.textContent = 'No upcoming approach detected';
+                        // try to trigger a prediction if we aren't already refreshing
+                        if (!approachIsRefreshing) {
+                            approachIsRefreshing = true;
+                            approachInfoDiv.textContent = 'Calculating upcoming approach...';
+                            console.log('[iss-detector] no approach found — triggering prediction');
+                            const doFetch = (typeof predictor.refreshTLE === 'function') ? predictor.refreshTLE() : (typeof predictor.fetchAndPredict === 'function' ? predictor.fetchAndPredict() : Promise.reject(new Error('no predictor method')));
+                            doFetch.then(() => {
+                                approachIsRefreshing = false;
+                                try { updateApproachInfo(); } catch (e) {}
+                            }).catch((err) => {
+                                approachIsRefreshing = false;
+                                console.warn('[iss-detector] prediction trigger failed', err);
+                                try { approachInfoDiv.textContent = 'No upcoming approach detected'; } catch (e) {}
+                            });
+                        }
+                        return;
+                    }
+
+                    // determine absolute approach time
+                    const absMs = details.absoluteTimeMs || (details.date instanceof Date ? details.date.getTime() : (Date.now() + (details.time || 0) * 1000));
+                    const nowMs = Date.now();
+                    const remainingMs = absMs - nowMs;
+                    const localStr = new Date(absMs).toLocaleString();
+                    const utcStr = new Date(absMs).toISOString();
+
+                    // stale detection
+                    const computedAtMs = details.computedAtMs || null;
+                    const ageMs = computedAtMs ? (nowMs - computedAtMs) : 0;
+                    const isStale = computedAtMs ? (ageMs > APPROACH_STALE_MINUTES * 60 * 1000) : false;
+
+                    let status = '';
+                    if (approachIsRefreshing) status = ' (refreshing...)';
+                    else if (isStale) status = ' (STALE)';
+
+                    // compute live ISS position and instantaneous distance to target (if available)
+                    let liveDistText = '';
+                    try {
+                        const currentPos = (typeof predictor.getCurrentPosition === 'function') ? predictor.getCurrentPosition() : null;
+                        if (currentPos && typeof currentPos.lat === 'number' && typeof currentPos.lon === 'number') {
+                            const liveDist = haversineDistance(currentPos.lat, currentPos.lon, currentDisplayLat, currentDisplayLon);
+                            liveDistText = `Current: ${liveDist.toFixed(1)} km — `;
+                        }
+                    } catch (e) { /* ignore */ }
+
+                    approachInfoDiv.style.display = 'block';
+                    approachInfoDiv.textContent = `${liveDistText}Approach in ${formatHMS(remainingMs)} — Local: ${localStr} — UTC: ${utcStr}${status}`;
+
+                    // auto-refresh if stale and not already refreshing
+                    if (isStale && !approachIsRefreshing) {
+                        approachIsRefreshing = true;
+                        // call refreshTLE which will re-run prediction if successful
+                        if (typeof predictor.refreshTLE === 'function') {
+                            predictor.refreshTLE().then((ok) => {
+                                approachIsRefreshing = false;
+                                // trigger immediate update after refresh
+                                try { updateApproachInfo(); } catch (e) { /* ignore */ }
+                            }).catch(() => { approachIsRefreshing = false; });
+                        } else if (typeof predictor.fetchAndPredict === 'function') {
+                            predictor.fetchAndPredict().then(() => { approachIsRefreshing = false; try { updateApproachInfo(); } catch (e) {} }).catch(() => { approachIsRefreshing = false; });
+                        } else {
+                            approachIsRefreshing = false;
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Error updating approach info:', err);
+                }
+            }
+
+            // clear any existing interval then start a new one
+            if (approachInfoIntervalId) clearInterval(approachInfoIntervalId);
+            approachInfoIntervalId = setInterval(updateApproachInfo, 1000);
+            // initial update
+            updateApproachInfo();
+            // if there's no data yet, trigger an initial prediction/fetch so the countdown appears
+            try {
+                const detailsNow = predictor.getClosestApproachDetailsAsDate ? predictor.getClosestApproachDetailsAsDate() : predictor.getClosestApproachDetails();
+                if (!detailsNow) {
+                    if (approachInfoDiv) approachInfoDiv.textContent = 'Calculating upcoming approach...';
+                    if (typeof predictor.refreshTLE === 'function') {
+                        approachIsRefreshing = true;
+                        predictor.refreshTLE().then(() => { approachIsRefreshing = false; try { updateApproachInfo(); } catch (e) {} }).catch(() => { approachIsRefreshing = false; });
+                    } else if (typeof predictor.fetchAndPredict === 'function') {
+                        approachIsRefreshing = true;
+                        predictor.fetchAndPredict().then(() => { approachIsRefreshing = false; try { updateApproachInfo(); } catch (e) {} }).catch(() => { approachIsRefreshing = false; });
+                    }
+                }
+            } catch (e) { /* ignore */ }
+        } catch (e) {
+            console.warn('Could not start approach info updater:', e);
         }
 
         quakeFromColor = p.color(0, 255, 0, 150);
@@ -335,6 +557,56 @@ export default function(p) {
             p.pop();
         }
 
+    // If we have an approach and a user location, draw a great-circle path between them (conditionally)
+    if (showApproachInfo && approachDetails && typeof currentDisplayLat === 'number' && typeof currentDisplayLon === 'number') {
+            // Helper: compute n interpolated points along the great-circle between two lat/lon points
+            function interpolateGreatCircle(lat1, lon1, lat2, lon2, n) {
+                // convert to radians
+                const toRad = (d) => d * Math.PI / 180;
+                const toDeg = (r) => r * 180 / Math.PI;
+                const φ1 = toRad(lat1);
+                const λ1 = toRad(lon1);
+                const φ2 = toRad(lat2);
+                const λ2 = toRad(lon2);
+                const sinφ1 = Math.sin(φ1), cosφ1 = Math.cos(φ1);
+                const sinφ2 = Math.sin(φ2), cosφ2 = Math.cos(φ2);
+                const Δλ = λ2 - λ1;
+                const d = 2 * Math.asin(Math.sqrt(Math.sin((φ2 - φ1) / 2) ** 2 + cosφ1 * cosφ2 * Math.sin(Δλ / 2) ** 2));
+                const points = [];
+                if (d === 0 || isNaN(d)) {
+                    for (let i = 0; i <= n; i++) points.push({ lat: lat1, lon: lon1 });
+                    return points;
+                }
+                for (let i = 0; i <= n; i++) {
+                    const f = i / n;
+                    const A = Math.sin((1 - f) * d) / Math.sin(d);
+                    const B = Math.sin(f * d) / Math.sin(d);
+                    const x = A * cosφ1 * Math.cos(λ1) + B * cosφ2 * Math.cos(λ2);
+                    const y = A * cosφ1 * Math.sin(λ1) + B * cosφ2 * Math.sin(λ2);
+                    const z = A * sinφ1 + B * sinφ2;
+                    const φi = Math.atan2(z, Math.sqrt(x * x + y * y));
+                    const λi = Math.atan2(y, x);
+                    points.push({ lat: toDeg(φi), lon: toDeg(λi) });
+                }
+                return points;
+            }
+
+            const gcPoints = interpolateGreatCircle(currentDisplayLat, currentDisplayLon, approachDetails.lat, approachDetails.lon, 64);
+            p.push();
+            p.noFill();
+            p.stroke(255, 255, 0, 200);
+            p.strokeWeight(2);
+            p.beginShape();
+            for (const pt of gcPoints) {
+                const v = getSphereCoord(p, earthSize + issDistanceToEarth, pt.lat, normalizeLon(pt.lon));
+                p.vertex(v.x, v.y, v.z);
+            }
+            p.endShape();
+            p.pop();
+
+            // (approachInfoDiv is updated by the periodic updater; avoid overwriting it every frame)
+        }
+
         if (sketchPassByRadiusKM > 0) {
             const detectionRadius3DUnits = (sketchPassByRadiusKM / earthActualRadiusKM) * earthSize;
             const upVector = pClientLoc.copy().normalize();
@@ -342,14 +614,79 @@ export default function(p) {
             const rotationAxis = defaultCylinderAxis.cross(upVector);
             let rotationAngle = defaultCylinderAxis.angleBetween(upVector);
 
+            // Draw a ground-projected translucent disk (visibility horizon) and an outline ring
             p.push();
             p.translate(pClientLoc.x, pClientLoc.y, pClientLoc.z);
             if (rotationAngle !== 0 && rotationAxis.magSq() > 0) {
                 p.rotate(rotationAngle, rotationAxis);
             }
-            p.fill(0, 100, 255, 30);
+
+            // Translucent filled disk with radial gradient approximation (concentric fans)
+            const diskSegments = 64;
+            // translate a little along the upVector to avoid z-fighting with the globe surface
+            const elevation = DISK_ELEVATION;
+            p.push();
+            p.translate(upVector.x * elevation, upVector.y * elevation, upVector.z * elevation);
+            p.rotateX(Math.PI / 2); // make the disk lie tangent to the sphere at the user location
             p.noStroke();
-            p.cylinder(detectionRadius3DUnits, CYLINDER_VISUAL_LENGTH);
+            // draw concentric rings from inner (more opaque) to outer (more transparent)
+            for (let step = 0; step < DISK_GRADIENT_STEPS; step++) {
+                const tInner = step / DISK_GRADIENT_STEPS;
+                const tOuter = (step + 1) / DISK_GRADIENT_STEPS;
+                const rInner = detectionRadius3DUnits * tInner;
+                const rOuter = detectionRadius3DUnits * tOuter;
+                // alpha ramps down for outer rings
+                const baseAlpha = 100; // 0-255 scale
+                const alpha = Math.max(0, Math.floor(baseAlpha * (1 - tOuter)));
+                // orange gradient
+                p.fill(255, 140, 0, alpha);
+                p.beginShape(p.TRIANGLE_FAN);
+                p.vertex(0, 0, 0);
+                // outer arc for this ring
+                const ringSegments = diskSegments;
+                for (let i = 0; i <= ringSegments; i++) {
+                    const theta = (i / ringSegments) * Math.PI * 2;
+                    const x = Math.cos(theta) * rOuter;
+                    const y = Math.sin(theta) * rOuter;
+                    p.vertex(x, y, 0);
+                }
+                p.endShape();
+            }
+            p.pop();
+
+            // Outline ring for better visibility
+            // compute pulse alpha if an approach is imminent
+            let ringAlpha = 220;
+            try {
+                const details = predictor.getClosestApproachDetailsAsDate ? predictor.getClosestApproachDetailsAsDate() : predictor.getClosestApproachDetails();
+                if (details && (details.absoluteTimeMs || details.time)) {
+                    const absMs = details.absoluteTimeMs || (details.date instanceof Date ? details.date.getTime() : (Date.now() + (details.time || 0) * 1000));
+                    const remainingMs = absMs - Date.now();
+                    if (remainingMs <= PASS_IMMINENT_MINUTES * 60 * 1000 && remainingMs > -60 * 1000) {
+                        const t = (Date.now() / 1000) % PULSE_PERIOD_SEC;
+                        const phase = (t / PULSE_PERIOD_SEC) * Math.PI * 2;
+                        const pulse = (Math.sin(phase) + 1) / 2; // 0..1
+                        ringAlpha = Math.floor(160 + pulse * 95); // vary between 160 and 255
+                    }
+                }
+            } catch (e) { /* ignore */ }
+
+            p.push();
+            p.translate(upVector.x * elevation, upVector.y * elevation, upVector.z * elevation);
+            p.rotateX(Math.PI / 2);
+            p.noFill();
+            p.stroke(255, 165, 0, ringAlpha);
+            p.strokeWeight(2);
+            p.beginShape();
+            for (let i = 0; i <= diskSegments; i++) {
+                const theta = (i / diskSegments) * Math.PI * 2;
+                const x = Math.cos(theta) * detectionRadius3DUnits;
+                const y = Math.sin(theta) * detectionRadius3DUnits;
+                p.vertex(x, y, 0);
+            }
+            p.endShape();
+            p.pop();
+
             p.pop();
         }
 

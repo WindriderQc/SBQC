@@ -77,12 +77,6 @@
             <p id="default-location-msg" style="font-size: 0.8em; color: #777; display: none;">Using default client location as live geolocation is unavailable or denied.</p>
 
             <div style="padding: 10px; text-align: left; border-top: 1px solid #eee;">
-                <strong>Pass Details:</strong>
-                <p>Entry Time: <span id="pass-entry-time">N/A</span></p>
-                <p>Exit Time: <span id="pass-exit-time">N/A</span></p>
-            </div>
-
-            <div style="padding: 10px; text-align: left; border-top: 1px solid #eee;">
                 <strong>Legend (3D View):</strong>
                 <div style="margin-top: 5px;">
                     <span style="background-color: orange; display: inline-block; width: 20px; height: 10px; margin-right: 5px; border: 1px solid #555;"></span> Historical ISS Path
@@ -135,31 +129,9 @@
         </div>
     </div>
 
-    <!-- Next pass-by display moved to overlay on top of 3D viewer -->
 
-    <div class="card mb-3">
-        <div class="card-body">
-            <div class="row mb-4">
-                <div class="col">
-                    <div>Wind Speed: <span id="wind-speed">N/A</span> m/s</div>
-                    <div>Wind Gust: <span id="wind-gust">N/A</span> m/s</div>
-                        <p>
-                            At location: <span id="summary">N/A</span> with a temperature of <span id="temp">N/A</span>&deg; C. <br>
-                            Air Quality (<span id="aq_parameter">N/A</span>): <span id="aq_value">N/A</span> <span id="aq_units"></span>
-                            <small>(Last read on <span id="aq_date">N/A</span>)</small>
-                        </p>
-                </div>
-            </div>
-            <div class="row">
-                <%- include('partials/tides') %>
-            </div>
-            <hr>
-            <div class="row">
-                <%- include('partials/pressureGraph') %>
-            </div>
-        </div>
-    </div>
-    <%# Removed <div id="ip_id"></div> %>
+
+  
 </div>
 </div>
 </div>
