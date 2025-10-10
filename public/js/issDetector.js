@@ -38,13 +38,13 @@ export default function(p) {
     const issDistanceToEarth = 50;
     const gpsSize = 5;
     const issSize = 6;
-    const CYLINDER_VISUAL_LENGTH = 150; // Keep a fixed visual length for the detection cylinder
-    const MARKER_COLOR_TEAL = [255, 255, 0]; // changed to yellow to match request
+    const CYLINDER_VISUAL_LENGTH = issDistanceToEarth * 3;
+    const MARKER_COLOR_TEAL = [0, 128, 128];
     const MARKER_COLOR_GREEN = [0, 200, 0];
     const DISK_ELEVATION = 0.0; // no elevation: disk lies flush with the globe surface
     const DISK_GRADIENT_STEPS = 6; // number of concentric rings to approximate a radial gradient
     const USER_LOCATION_MARKER_SIZE = gpsSize;
-    const CLOSEST_APPROACH_MARKER_SIZE = USER_LOCATION_MARKER_SIZE / 2; // half size of user marker
+    const CLOSEST_APPROACH_MARKER_SIZE = USER_LOCATION_MARKER_SIZE;
     const END_OF_PATH_MARKER_SIZE = USER_LOCATION_MARKER_SIZE / 2;
     let sketchPassByRadiusKM = 1500;
     const PASS_IMMINENT_MINUTES = 5; // if approach is within this many minutes, treat as imminent
@@ -541,17 +541,14 @@ export default function(p) {
         p.sphere(gpsSize);
         p.pop();
 
-        // Prefer the API that returns an absolute Date for the approach time
-        const approachDetails = predictor.getClosestApproachDetailsAsDate ? predictor.getClosestApproachDetailsAsDate() : predictor.getClosestApproachDetails();
-        // make vApproach available to the following blocks (label drawing, etc.)
-        let vApproach = null;
+        const approachDetails = predictor.getClosestApproachDetails();
         if (approachDetails) {
             let useRadius = earthSize + issDistanceToEarth;
             if (typeof approachDetails.alt === 'number' && !isNaN(approachDetails.alt)) {
                 useRadius = earthSize + (approachDetails.alt / earthActualRadiusKM) * earthSize;
             }
             const normLon = normalizeLon(approachDetails.lon);
-            vApproach = getSphereCoord(p, useRadius, approachDetails.lat, normLon);
+            const vApproach = getSphereCoord(p, useRadius, approachDetails.lat, normLon);
             p.push();
             p.translate(vApproach.x, vApproach.y, vApproach.z);
             p.noStroke();

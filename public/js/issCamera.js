@@ -48,12 +48,33 @@ export default class IssCamera {
         if (!this.show) {
             return;
         }
+
+        // To display a WEBGL buffer on a WEBGL canvas, we must draw it as a texture on a 2D shape.
         this.p.push();
+
+        // Go into orthographic projection mode to draw 2D elements
+        this.p.ortho();
+        this.p.noLights();
+
+        // Reset transformation matrix to draw relative to the canvas corner
         this.p.resetMatrix();
-        this.p.image(this.buffer, this.p.width - this.buffer.width - 10, this.p.height - this.buffer.height - 10);
-        this.p.stroke(255);
+
+        const w = this.buffer.width;
+        const h = this.buffer.height;
+        const x = this.p.width / 2 - w / 2 - 10;
+        const y = this.p.height / 2 - h / 2 - 10;
+
+        this.p.translate(x, y);
+
+        this.p.noStroke();
+        this.p.texture(this.buffer);
+        this.p.plane(w, h);
+
+        // Draw a border around the overlay
         this.p.noFill();
-        this.p.rect(this.p.width - this.buffer.width - 10, this.p.height - this.buffer.height - 10, this.buffer.width, this.buffer.height);
+        this.p.stroke(255);
+        this.p.rect(-w/2, -h/2, w, h);
+
         this.p.pop();
     }
 
