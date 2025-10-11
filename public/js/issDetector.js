@@ -7,7 +7,7 @@ export default function(p) {
     // Sketch-specific variables
     let issCam;
     let internalIssPathHistory = [];
-    let MAX_HISTORY_POINTS = 4200;
+    let MAX_HISTORY_POINTS = 8400;
     let originalLoadedIssHistory = [];
     let internalPredictedPath = [];
     const pathPointSphereSize = 2;
@@ -15,7 +15,6 @@ export default function(p) {
     let angleY = 0;
     let angleX = 0;
     let zoomLevel = 1.0;
-    let controlsOverlayElement;
     let cloudyEarth;
     let earthquakes;
     let issGif;
@@ -35,10 +34,10 @@ export default function(p) {
     let approachIsRefreshing = false;
     const earthSize = 300;
     const earthActualRadiusKM = 6371;
-    const issDistanceToEarth = 50;
+    const issAltitudeKM = 408; // ISS orbital altitude
+    const issDistanceToEarth = (issAltitudeKM / earthActualRadiusKM) * earthSize; // ~19.2 units (accurate scale)
     const gpsSize = 5;
     const issSize = 6;
-    const CYLINDER_VISUAL_LENGTH = issDistanceToEarth * 3;
     const MARKER_COLOR_TEAL = [0, 128, 128];
     const MARKER_COLOR_GREEN = [0, 200, 0];
     const DISK_ELEVATION = 0.0; // no elevation: disk lies flush with the globe surface
@@ -62,6 +61,7 @@ export default function(p) {
                 internalIssPathHistory = originalLoadedIssHistory.slice(startIndex);
             }
         },
+        getLoadedHistoryCount: () => originalLoadedIssHistory.length,
         update3DPredictedPath: (pointsFrom2D) => {
             if (Array.isArray(pointsFrom2D)) {
                 internalPredictedPath = pointsFrom2D.map(pt => ({ lat: pt.lat, lon: pt.lng, time: pt.time }));
@@ -86,11 +86,126 @@ export default function(p) {
     }
 
     function populateInitialIssHistory(responseData) {
+        console.log('[issDetector] populateInitialIssHistory called with:', responseData);
+        
         if (responseData && responseData.data && Array.isArray(responseData.data) && responseData.data.length > 0) {
+            console.log('[issDetector] Raw data array length:', responseData.data.length);
+            console.log('[issDetector] Response meta:', responseData.meta);
+            
             const pointsToProcess = responseData.data.sort((a, b) => new Date(a.timeStamp).getTime() - new Date(b.timeStamp).getTime());
             originalLoadedIssHistory = pointsToProcess.map(pt => ({ lat: pt.latitude, lon: pt.longitude, timeStamp: pt.timeStamp }));
+            
+            console.log('[issDetector] After mapping, originalLoadedIssHistory.length:', originalLoadedIssHistory.length);
+            
+            // Update MAX_HISTORY_POINTS to match actual data count
+            const actualCount = originalLoadedIssHistory.length;
+            MAX_HISTORY_POINTS = actualCount;
+            
+            // Update the slider max to match actual data
+            try {
+                const pathLengthSlider = document.getElementById('pathLengthSlider');
+                if (pathLengthSlider) {
+                    pathLengthSlider.max = actualCount;
+                    pathLengthSlider.value = actualCount;
+                    const pathLengthValueSpan = document.getElementById('pathLengthValue');
+                    if (pathLengthValueSpan) {
+                        pathLengthValueSpan.textContent = actualCount;
+                    }
+                    console.log(`[issDetector] Loaded ${actualCount} historical ISS positions, slider max updated to ${actualCount}`);
+                }
+            } catch (e) {
+                console.warn('[issDetector] Could not update slider max:', e);
+            }
+            
             sketchApi.set3DMaxHistoryPoints(MAX_HISTORY_POINTS);
+        } else {
+            console.warn('[issDetector] Invalid or empty response data:', responseData);
         }
+    }
+
+    // Canvas interaction setup - uses standard DOM events instead of p5 event handlers
+    // This prevents p5 from interfering with page-level controls like sliders
+    function setupCanvasInteractions(canvasElement) {
+        let isDragging = false;
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+        let touchStartDist = 0;
+
+        // Mouse drag for rotation
+        canvasElement.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+        });
+
+        canvasElement.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const deltaX = e.clientX - lastMouseX;
+                const deltaY = e.clientY - lastMouseY;
+                angleY += deltaX * 0.01;
+                angleX -= deltaY * 0.01;
+                angleX = p.constrain(angleX, -Math.PI / 2.1, Math.PI / 2.1);
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+            }
+        });
+
+        canvasElement.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        canvasElement.addEventListener('mouseleave', () => {
+            isDragging = false;
+        });
+
+        // Mouse wheel for zoom
+        canvasElement.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            zoomLevel -= e.deltaY * 0.001 * zoomLevel;
+            zoomLevel = p.constrain(zoomLevel, 0.2, 5.0);
+        }, { passive: false });
+
+        // Touch events for mobile
+        canvasElement.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                lastMouseX = e.touches[0].clientX;
+                lastMouseY = e.touches[0].clientY;
+                isDragging = true;
+            } else if (e.touches.length === 2) {
+                isDragging = false;
+                touchStartDist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+            }
+        }, { passive: true }); // Passive: we don't prevent default on touchstart
+
+        canvasElement.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 1 && isDragging) {
+                const deltaX = e.touches[0].clientX - lastMouseX;
+                const deltaY = e.touches[0].clientY - lastMouseY;
+                angleY += deltaX * 0.01;
+                angleX -= deltaY * 0.01;
+                angleX = p.constrain(angleX, -Math.PI / 2.1, Math.PI / 2.1);
+                lastMouseX = e.touches[0].clientX;
+                lastMouseY = e.touches[0].clientY;
+                e.preventDefault();
+            } else if (e.touches.length === 2) {
+                const currentDist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                const zoomAmount = (currentDist - touchStartDist) * 0.01;
+                zoomLevel += zoomAmount;
+                zoomLevel = p.constrain(zoomLevel, 0.2, 5.0);
+                touchStartDist = currentDist;
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        canvasElement.addEventListener('touchend', () => {
+            isDragging = false;
+        });
     }
 
     p.preload = async () => {
@@ -98,9 +213,12 @@ export default function(p) {
         earthquakes = p.loadStrings('/data/quakes.csv');
         issGif = p.loadImage('/img/iss.png');
         try {
+            console.log('[issDetector] Fetching ISS historical data from /api/iss...');
             const response = await fetch('/api/iss');
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
+            console.log('[issDetector] Received response, data.data.length:', data.data ? data.data.length : 'N/A');
+            console.log('[issDetector] Response meta:', data.meta);
             populateInitialIssHistory(data);
         } catch (err) {
             console.error('[fetch error] Failed to load historical ISS data:', err);
@@ -113,110 +231,25 @@ export default function(p) {
         const canvasHeight = canvasWidth * (9 / 16);
         const canvas = p.createCanvas(canvasWidth, canvasHeight, p.WEBGL);
         canvas.parent('sketch-holder');
-        controlsOverlayElement = document.getElementById('controls-overlay');
 
+        // Setup canvas interactions using standard DOM events instead of p5 event handlers
+        setupCanvasInteractions(canvas.elt);
+
+        // Get references to the approach info elements that are now in the HTML
         try {
-            if (controlsOverlayElement) {
-                controlsOverlayElement.style.pointerEvents = 'auto';
-                controlsOverlayElement.style.zIndex = 2000;
-            }
-            if (canvas && canvas.elt) {
-                canvas.elt.style.zIndex = 1000;
-                canvas.elt.style.pointerEvents = 'auto';
-            }
-            const controlEls = controlsOverlayElement.querySelectorAll('input, button, label');
-            controlEls.forEach(el => {
-                el.addEventListener('pointerdown', (ev) => { ev.stopPropagation(); }, false);
-                el.addEventListener('pointermove', (ev) => { ev.stopPropagation(); }, false);
-                el.addEventListener('mousedown', (ev) => { ev.stopPropagation(); }, false);
-                el.addEventListener('touchstart', (ev) => { ev.stopPropagation(); }, false);
-                el.addEventListener('touchmove', (ev) => { ev.stopPropagation(); }, false);
-            });
-            controlsOverlayElement.addEventListener('pointerdown', (ev) => { ev.stopPropagation(); }, false);
-            controlsOverlayElement.addEventListener('mousedown', (ev) => { ev.stopPropagation(); }, false);
-            controlsOverlayElement.addEventListener('click', (ev) => { ev.stopPropagation(); }, false);
-        } catch (e) {
-            console.warn('Could not set up overlay event handlers:', e);
-        }
+            approachInfoDiv = document.getElementById('approach-info');
+            const showApproachCheckbox = document.getElementById('show-approach-info');
+            const refreshPredictionBtn = document.getElementById('refresh-prediction-btn');
 
-        // Add a small UI toggle to show/hide the great-circle approach path and approach time label
-        try {
-            if (controlsOverlayElement) {
-                const toggleDiv = document.createElement('div');
-                toggleDiv.style.marginTop = '6px';
-                toggleDiv.style.display = 'flex';
-                toggleDiv.style.alignItems = 'center';
-
-                const chk = document.createElement('input');
-                chk.type = 'checkbox';
-                chk.id = 'show-approach-info';
-                chk.checked = showApproachInfo;
-                chk.style.marginRight = '6px';
-
-                const lbl = document.createElement('label');
-                lbl.htmlFor = chk.id;
-                lbl.textContent = 'Show approach path/time';
-                lbl.style.color = '#fff';
-                lbl.style.userSelect = 'none';
-
-                // stop propagation on these controls so they don't interfere with globe dragging
-                ['pointerdown', 'pointermove', 'mousedown', 'touchstart', 'touchmove'].forEach(evt => {
-                    chk.addEventListener(evt, (ev) => ev.stopPropagation(), false);
-                    lbl.addEventListener(evt, (ev) => ev.stopPropagation(), false);
-                });
-
-                chk.addEventListener('change', (ev) => {
+            if (showApproachCheckbox) {
+                showApproachCheckbox.checked = showApproachInfo;
+                showApproachCheckbox.addEventListener('change', (ev) => {
                     showApproachInfo = !!ev.target.checked;
-                    try {
-                        if (approachInfoDiv) approachInfoDiv.style.display = showApproachInfo ? 'block' : 'none';
-                    } catch (e) { /* ignore */ }
                 });
-
-                toggleDiv.appendChild(chk);
-                toggleDiv.appendChild(lbl);
-                controlsOverlayElement.appendChild(toggleDiv);
             }
-        } catch (e) {
-            console.warn('Could not add approach toggle control:', e);
-        }
 
-        // create a small DOM container to show approach time/details (avoids drawing text in WEBGL)
-        try {
-            approachInfoDiv = document.createElement('div');
-            approachInfoDiv.id = 'approach-info';
-            approachInfoDiv.style.marginTop = '6px';
-            approachInfoDiv.style.padding = '8px 10px';
-            approachInfoDiv.style.background = 'rgba(0,0,0,0.75)';
-            approachInfoDiv.style.color = '#fff';
-            approachInfoDiv.style.fontSize = '13px';
-            approachInfoDiv.style.borderRadius = '6px';
-            approachInfoDiv.style.display = showApproachInfo ? 'block' : 'none';
-            approachInfoDiv.style.minWidth = '220px';
-            approachInfoDiv.style.textAlign = 'center';
-            approachInfoDiv.style.boxShadow = '0 2px 8px rgba(0,0,0,0.6)';
-            approachInfoDiv.style.pointerEvents = 'auto';
-            approachInfoDiv.textContent = '';
-                if (controlsOverlayElement) {
-                    controlsOverlayElement.appendChild(approachInfoDiv);
-                } else {
-                // fallback: create a floating panel in the top-right so the user sees the countdown
-                approachInfoDiv.style.position = 'fixed';
-                approachInfoDiv.style.top = '12px';
-                approachInfoDiv.style.right = '12px';
-                approachInfoDiv.style.zIndex = 99999;
-                approachInfoDiv.style.pointerEvents = 'auto';
-                    document.body.appendChild(approachInfoDiv);
-                }
-
-            // Add a small Refresh button into the panel so the user can force a re-predict
-            try {
-                const btn = document.createElement('button');
-                btn.textContent = 'Refresh prediction';
-                btn.style.marginTop = '8px';
-                btn.style.padding = '6px 8px';
-                btn.style.fontSize = '12px';
-                btn.style.cursor = 'pointer';
-                btn.addEventListener('click', (ev) => {
+            if (refreshPredictionBtn) {
+                refreshPredictionBtn.addEventListener('click', (ev) => {
                     ev.stopPropagation();
                     try {
                         if (typeof predictor.refreshTLE === 'function') {
@@ -226,11 +259,13 @@ export default function(p) {
                         }
                     } catch (e) { console.warn('Refresh failed', e); }
                 });
-                approachInfoDiv.appendChild(document.createElement('br'));
-                approachInfoDiv.appendChild(btn);
-            } catch (e) { /* ignore */ }
+            }
+
+            if (!approachInfoDiv) {
+                console.warn('Could not find approach-info element');
+            }
         } catch (e) {
-            console.warn('Could not create approach info element:', e);
+            console.warn('Could not set up approach info controls:', e);
             approachInfoDiv = null;
         }
 
@@ -249,14 +284,10 @@ export default function(p) {
             function updateApproachInfo() {
                 try {
                     if (!approachInfoDiv) return;
-                    if (!showApproachInfo) {
-                        approachInfoDiv.style.display = 'none';
-                        return;
-                    }
+                    
                     const details = predictor.getClosestApproachDetailsAsDate ? predictor.getClosestApproachDetailsAsDate() : predictor.getClosestApproachDetails();
-                    console.log('[iss-detector] updater got approach details:', details);
+                    //console.log('[iss-detector] updater got approach details:', details);
                     if (!details) {
-                        approachInfoDiv.style.display = 'block';
                         approachInfoDiv.textContent = 'No upcoming approach detected';
                         // try to trigger a prediction if we aren't already refreshing
                         if (!approachIsRefreshing) {
@@ -281,7 +312,6 @@ export default function(p) {
                     const nowMs = Date.now();
                     const remainingMs = absMs - nowMs;
                     const localStr = new Date(absMs).toLocaleString();
-                    const utcStr = new Date(absMs).toISOString();
 
                     // stale detection
                     const computedAtMs = details.computedAtMs || null;
@@ -297,13 +327,14 @@ export default function(p) {
                     try {
                         const currentPos = (typeof predictor.getCurrentPosition === 'function') ? predictor.getCurrentPosition() : null;
                         if (currentPos && typeof currentPos.lat === 'number' && typeof currentPos.lon === 'number') {
+                            const currentDisplayLat = (typeof window.clientLat === 'number') ? window.clientLat : 46.8139;
+                            const currentDisplayLon = (typeof window.clientLon === 'number') ? window.clientLon : -71.2080;
                             const liveDist = haversineDistance(currentPos.lat, currentPos.lon, currentDisplayLat, currentDisplayLon);
-                            liveDistText = `Current: ${liveDist.toFixed(1)} km — `;
+                            liveDistText = `Current distance: ${liveDist.toFixed(1)} km — `;
                         }
                     } catch (e) { /* ignore */ }
 
-                    approachInfoDiv.style.display = 'block';
-                    approachInfoDiv.textContent = `${liveDistText}Approach in ${formatHMS(remainingMs)} — Local: ${localStr} — UTC: ${utcStr}${status}`;
+                    approachInfoDiv.textContent = `${liveDistText}Approach in ${formatHMS(remainingMs)} — ${localStr}${status}`;
 
                     // auto-refresh if stale and not already refreshing
                     if (isStale && !approachIsRefreshing) {
@@ -404,6 +435,25 @@ export default function(p) {
         const currentDisplayLat = (typeof window.clientLat === 'number') ? window.clientLat : 46.8139;
         const currentDisplayLon = (typeof window.clientLon === 'number') ? window.clientLon : -71.2080;
 
+        // Update UI with current locations (throttled to avoid excessive DOM updates)
+        if (p.frameCount % 30 === 0) { // Update every 30 frames (~0.5 seconds at 60fps)
+            try {
+                // Update ISS position
+                if (window.iss && typeof window.iss.latitude === 'number' && typeof window.iss.longitude === 'number') {
+                    const issLatSpan = document.getElementById('isslat');
+                    const issLonSpan = document.getElementById('isslon');
+                    if (issLatSpan) issLatSpan.textContent = window.iss.latitude.toFixed(4);
+                    if (issLonSpan) issLonSpan.textContent = window.iss.longitude.toFixed(4);
+                }
+                
+                // Update client location
+                const clatSpan = document.getElementById('clat');
+                const clonSpan = document.getElementById('clon');
+                if (clatSpan) clatSpan.textContent = currentDisplayLat.toFixed(4);
+                if (clonSpan) clonSpan.textContent = currentDisplayLon.toFixed(4);
+            } catch (e) { /* ignore DOM update errors */ }
+        }
+
         p.background(52);
         if (showAxis) { p.push(); drawAxis(earthSize * 50); p.pop(); }
 
@@ -435,6 +485,12 @@ export default function(p) {
             const vISS = getSphereCoord(p, earthSize + issDistanceToEarth, window.iss.latitude, window.iss.longitude);
             p.push();
             p.translate(vISS.x, vISS.y, vISS.z);
+            
+            // Billboard effect: make the sprite always face the camera
+            // Reverse the global rotations to face the camera
+            p.rotateY(-angleY);
+            p.rotateX(-angleX);
+            
             p.noStroke();
             if (issGif) {
                 const planeW = (issGif.width > 0) ? issGif.width / issSize : 40;
@@ -614,49 +670,18 @@ export default function(p) {
             const rotationAxis = defaultCylinderAxis.cross(upVector);
             let rotationAngle = defaultCylinderAxis.angleBetween(upVector);
 
-            // Draw a ground-projected translucent disk (visibility horizon) and an outline ring
+            // Draw outline ring for detection radius (removed gradient disk for better performance)
+            const diskSegments = 64;
+            const elevation = DISK_ELEVATION;
+            
             p.push();
             p.translate(pClientLoc.x, pClientLoc.y, pClientLoc.z);
             if (rotationAngle !== 0 && rotationAxis.magSq() > 0) {
                 p.rotate(rotationAngle, rotationAxis);
             }
 
-            // Translucent filled disk with radial gradient approximation (concentric fans)
-            const diskSegments = 64;
-            // translate a little along the upVector to avoid z-fighting with the globe surface
-            const elevation = DISK_ELEVATION;
-            p.push();
-            p.translate(upVector.x * elevation, upVector.y * elevation, upVector.z * elevation);
-            p.rotateX(Math.PI / 2); // make the disk lie tangent to the sphere at the user location
-            p.noStroke();
-            // draw concentric rings from inner (more opaque) to outer (more transparent)
-            for (let step = 0; step < DISK_GRADIENT_STEPS; step++) {
-                const tInner = step / DISK_GRADIENT_STEPS;
-                const tOuter = (step + 1) / DISK_GRADIENT_STEPS;
-                const rInner = detectionRadius3DUnits * tInner;
-                const rOuter = detectionRadius3DUnits * tOuter;
-                // alpha ramps down for outer rings
-                const baseAlpha = 100; // 0-255 scale
-                const alpha = Math.max(0, Math.floor(baseAlpha * (1 - tOuter)));
-                // orange gradient
-                p.fill(255, 140, 0, alpha);
-                p.beginShape(p.TRIANGLE_FAN);
-                p.vertex(0, 0, 0);
-                // outer arc for this ring
-                const ringSegments = diskSegments;
-                for (let i = 0; i <= ringSegments; i++) {
-                    const theta = (i / ringSegments) * Math.PI * 2;
-                    const x = Math.cos(theta) * rOuter;
-                    const y = Math.sin(theta) * rOuter;
-                    p.vertex(x, y, 0);
-                }
-                p.endShape();
-            }
-            p.pop();
-
-            // Outline ring for better visibility
-            // compute pulse alpha if an approach is imminent
-            let ringAlpha = 220;
+            // Compute pulse alpha if an approach is imminent
+            let ringAlpha = 255; // Fully opaque for better visibility
             try {
                 const details = predictor.getClosestApproachDetailsAsDate ? predictor.getClosestApproachDetailsAsDate() : predictor.getClosestApproachDetails();
                 if (details && (details.absoluteTimeMs || details.time)) {
@@ -666,7 +691,7 @@ export default function(p) {
                         const t = (Date.now() / 1000) % PULSE_PERIOD_SEC;
                         const phase = (t / PULSE_PERIOD_SEC) * Math.PI * 2;
                         const pulse = (Math.sin(phase) + 1) / 2; // 0..1
-                        ringAlpha = Math.floor(160 + pulse * 95); // vary between 160 and 255
+                        ringAlpha = Math.floor(200 + pulse * 55); // vary between 200 and 255
                     }
                 }
             } catch (e) { /* ignore */ }
@@ -675,8 +700,22 @@ export default function(p) {
             p.translate(upVector.x * elevation, upVector.y * elevation, upVector.z * elevation);
             p.rotateX(Math.PI / 2);
             p.noFill();
-            p.stroke(255, 165, 0, ringAlpha);
-            p.strokeWeight(2);
+            
+            // Outer ring - dark blue
+            p.stroke(0, 80, 180, ringAlpha);
+            p.strokeWeight(3);
+            p.beginShape();
+            for (let i = 0; i <= diskSegments; i++) {
+                const theta = (i / diskSegments) * Math.PI * 2;
+                const x = Math.cos(theta) * detectionRadius3DUnits * 1.015;
+                const y = Math.sin(theta) * detectionRadius3DUnits * 1.015;
+                p.vertex(x, y, 0);
+            }
+            p.endShape();
+            
+            // Main inner ring - bright blue
+            p.stroke(50, 150, 255, ringAlpha);
+            p.strokeWeight(4);
             p.beginShape();
             for (let i = 0; i <= diskSegments; i++) {
                 const theta = (i / diskSegments) * Math.PI * 2;
@@ -699,42 +738,6 @@ export default function(p) {
         }
     };
 
-    p.mouseDragged = () => {
-        if (p.mouseX > 0 && p.mouseX < p.width && p.mouseY > 0 && p.mouseY < p.height) {
-            angleY += (p.mouseX - p.pmouseX) * 0.01;
-            angleX -= (p.mouseY - p.pmouseY) * 0.01;
-            angleX = p.constrain(angleX, -Math.PI / 2.1, Math.PI / 2.1);
-            return false;
-        }
-    };
-
-    p.mouseWheel = (event) => {
-        if (p.mouseX > 0 && p.mouseX < p.width && p.mouseY > 0 && p.mouseY < p.height) {
-            zoomLevel -= event.deltaY * 0.001 * zoomLevel;
-            zoomLevel = p.constrain(zoomLevel, 0.2, 5.0);
-            return false;
-        }
-    };
-
-    p.touchStarted = () => {
-        if (p.touches.length === 2) {
-            initialPinchDistance = p.dist(p.touches[0].x, p.touches[0].y, p.touches[1].x, p.touches[1].y);
-        }
-        return false;
-    };
-
-    p.touchMoved = () => {
-        if (p.touches.length === 2) {
-            const currentPinchDistance = p.dist(p.touches[0].x, p.touches[0].y, p.touches[1].x, p.touches[1].y);
-            const zoomAmount = (currentPinchDistance - initialPinchDistance) * 0.01;
-            zoomLevel += zoomAmount;
-            zoomLevel = p.constrain(zoomLevel, 0.2, 5.0);
-            initialPinchDistance = currentPinchDistance;
-        } else if (p.touches.length === 1) {
-            angleY += (p.mouseX - p.pmouseX) * 0.01;
-            angleX -= (p.mouseY - p.pmouseY) * 0.01;
-            angleX = p.constrain(angleX, -Math.PI / 2.1, Math.PI / 2.1);
-        }
-        return false;
-    };
+    // Removed p5 mouse/touch event handlers - now using standard DOM events in setupCanvasInteractions()
+    // This prevents p5 from blocking slider interactions and other page-level controls
 }

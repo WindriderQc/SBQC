@@ -136,13 +136,15 @@ router.get('/pressure', async (req, res, next) => {
     }
 });
 
-// ISS Data
+// ISS Data - Proxied from DataAPI
 router.get('/iss', async (req, res, next) => {
     try {
-        const issData = await issService.getIssData(req.app.locals.collections.isses);
-        res.json({ status: "success", data: issData });
+        const issData = await dataApiService.getIssData();
+        // DataAPI returns: { status: "success", message: "...", meta: { total }, data: [...] }
+        // Forward it directly to the client
+        res.json(issData);
     } catch (error) {
-        console.error('Error fetching historical ISS data:', error);
+        console.error('Error fetching historical ISS data from DataAPI:', error);
         next(error);
     }
 });

@@ -84,6 +84,10 @@ async function getDeviceData(samplingRatio, espID, dateFrom, token) {
     return await fetchJSON(`${dataAPIUrl}/heartbeats/data/${samplingRatio},${espID},${dateFrom}`, options);
 }
 
+async function getIssData() {
+    return await fetchJSON(`${dataAPIUrl}/api/v1/iss`);
+}
+
 module.exports = {
     getProfile,
     setAlarms,
@@ -94,4 +98,5 @@ module.exports = {
     getDeviceLatest,
     saveProfile,
     getDeviceData,
+    getIssData,
 };

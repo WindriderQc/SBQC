@@ -3,7 +3,38 @@
 
 <head>
     <%- include('partials/mainHead', { title: 'SBQC ISS Tracker' }) %>
+    <link rel="stylesheet" href="/css/iss-controls.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.0.0/satellite.min.js"></script>
+    <style>
+        /* Critical override to ensure sliders work - highest specificity */
+        #page-top input[type="range"],
+        #page-top input[type="checkbox"],
+        #page-top .form-range,
+        #page-top .form-check-input {
+            pointer-events: auto !important;
+            -webkit-user-select: auto !important;
+            user-select: auto !important;
+            cursor: pointer !important;
+        }
+        
+        /* Ensure parent containers don't block events */
+        .card-body,
+        .content-wrapper,
+        .container-fluid {
+            pointer-events: auto !important;
+        }
+        
+        /* Make sliders more visible/obvious */
+        input[type="range"]::-webkit-slider-thumb {
+            cursor: pointer !important;
+            pointer-events: auto !important;
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            cursor: pointer !important;
+            pointer-events: auto !important;
+        }
+    </style>
 </head>
 
 <body class="fixed-nav sticky-footer bg-light sidenav-toggled" id="page-top">
@@ -21,49 +52,6 @@
                 <div id="sketch-holder" style="width: 100%; height: auto; display: flex; justify-content: center; align-items: center;">
                     <!-- p5.js canvas will be parented here -->
                 </div>
-                <!-- Pass-by overlay: appears on top of the map, right under the card title -->
-                <div id="passby-overlay" style="position: absolute; top: 8px; left: 50%; transform: translateX(-50%); z-index: 1101; background: rgba(0,0,0,0.6); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 0.95em; display: flex; gap: 12px; align-items: center;">
-                    <div>Next ISS pass-by: <span id="iss-passby-time">Calculating...</span></div>
-                    <div style="font-size:0.85em; color:#ddd;">Loc: <span id="iss-target-loc">46.81, -71.21</span></div>
-                    <button id="refresh-tle-btn" style="background:#007bff; color:#fff; border:none; padding:6px 8px; border-radius:4px; cursor:pointer; font-size:0.85em;">Refresh TLE</button>
-                </div>
-                <div id="controls-overlay" style="position: absolute; top: 10px; left: 10px; background-color: transparent; padding: 12px; border-radius: 6px; z-index: 1000; width: auto; min-width: 250px;">
-                    <div style="margin-bottom: 8px;">
-                        <label for="pathLengthSlider" style="font-size: 0.85em; display: block; margin-bottom: 2px;">Hist. Path: <span id="pathLengthValue">4200</span> pts</label>
-                        <input type="range" id="pathLengthSlider" min="100" max="4200" step="100" value="4200" style="width: 100%; margin-top: -2px;">
-                    </div>
-                    <div style="margin-bottom: 8px;">
-                        <label for="predictionLengthSlider" style="font-size: 0.85em; display: block; margin-bottom: 2px;">Pred. Length: <span id="predictionLengthValue">90</span> min</label>
-                        <input type="range" id="predictionLengthSlider" min="5" max="6480" step="5" value="90" style="width: 100%; margin-top: -2px;">
-                    </div>
-                    <div>
-                        <label for="passByRadiusSlider" style="font-size: 0.85em; display: block; margin-bottom: 2px;">Detect Radius: <span id="passByRadiusValue">1500</span> km</label>
-                        <input type="range" id="passByRadiusSlider" min="250" max="3000" step="50" value="1500" style="width: 100%; margin-top: -2px;">
-                    </div>
-                    <hr style="border-top: 1px solid rgba(255,255,255,0.2); margin-top: 8px; margin-bottom: 8px;">
-                    <div style="font-size: 0.85em;">
-                        <div style="margin-bottom: 4px;">
-                            <input type="checkbox" id="showIssHistoricalPath" checked>
-                            <label for="showIssHistoricalPath" style="margin-left: 4px;">Show Hist. Path</label>
-                        </div>
-                        <div style="margin-bottom: 4px;">
-                            <input type="checkbox" id="showIssPredictedPath" checked>
-                            <label for="showIssPredictedPath" style="margin-left: 4px;">Show Pred. Path</label>
-                        </div>
-                        <div>
-                            <input type="checkbox" id="showQuakes" checked>
-                            <label for="showQuakes" style="margin-left: 4px;">Show Quakes</label>
-                        </div>
-                        <div style="margin-top: 4px;">
-                            <input type="checkbox" id="showIssCamera" >
-                            <label for="showIssCamera" style="margin-left: 4px;">ISS Camera</label>
-                        </div>
-                    </div>
-                    <div id="iss-camera-controls" style="display: none; margin-top: 8px;">
-                        <label for="issFovSlider" style="font-size: 0.85em; display: block; margin-bottom: 2px;">Cam FOV: <span id="issFovValue">60</span>&deg;</label>
-                        <input type="range" id="issFovSlider" min="20" max="120" step="1" value="60" style="width: 100%; margin-top: -2px;">
-                    </div>
-                </div>
             </div>
         </div>
         <div class="card-footer small text-muted">Press 'S' to save canvas to PNG.</div>
@@ -72,29 +60,152 @@
     <div class="card mb-3" style="max-width: 1280px; margin: 0 auto;">
         <div class="card-header">Controls & Info</div>
         <div class="card-body">
-            <p>ISS Location - Latitude: <span id="isslat">N/A</span>&deg;, Longitude: <span id="isslon">N/A</span>&deg;</p>
-            <p>Client Location - Latitude: <span id="clat">N/A</span>&deg;, Longitude: <span id="clon">N/A</span>&deg;</p>
-            <p id="default-location-msg" style="font-size: 0.8em; color: #777; display: none;">Using default client location as live geolocation is unavailable or denied.</p>
+            <!-- Path Controls -->
+            <div style="margin-bottom: 20px;">
+                <h6 style="margin-bottom: 12px; border-bottom: 2px solid #dee2e6; padding-bottom: 6px;">Path & Prediction Controls</h6>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="pathLengthSlider" class="form-label">
+                            Historical Path: <strong><span id="pathLengthValue">100</span> points</strong>
+                        </label>
+                        <input type="range" class="form-range" id="pathLengthSlider" min="100" max="1000" step="100" value="100">
+                        <small class="text-muted" style="display: block; margin-top: 4px;">Max adjusts to loaded data</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="predictionLengthSlider" class="form-label">
+                            Prediction Length: <strong><span id="predictionLengthValue">90</span> min</strong>
+                        </label>
+                        <input type="range" class="form-range" id="predictionLengthSlider" min="5" max="1440" step="5" value="90">
+                        <small class="text-muted" style="display: block; margin-top: 4px;">Max adjusts to next pass-by time</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="passByRadiusSlider" class="form-label">
+                            Detection Radius: <strong><span id="passByRadiusValue">1500</span> km</strong>
+                        </label>
+                        <input type="range" class="form-range" id="passByRadiusSlider" min="250" max="3000" step="50" value="1500">
+                    </div>
+                </div>
+            </div>
 
-            <div style="padding: 10px; text-align: left; border-top: 1px solid #eee;">
-                <strong>Legend (3D View):</strong>
-                <div style="margin-top: 5px;">
-                    <span style="background-color: orange; display: inline-block; width: 20px; height: 10px; margin-right: 5px; border: 1px solid #555;"></span> Historical ISS Path
+            <!-- Display Options -->
+            <div style="margin-bottom: 20px;">
+                <h6 style="margin-bottom: 12px; border-bottom: 2px solid #dee2e6; padding-bottom: 6px;">Display Options</h6>
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="showIssHistoricalPath" checked>
+                            <label class="form-check-label" for="showIssHistoricalPath">
+                                Show Historical Path
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="showIssPredictedPath" checked>
+                            <label class="form-check-label" for="showIssPredictedPath">
+                                Show Predicted Path
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="showQuakes">
+                            <label class="form-check-label" for="showQuakes">
+                                Show Earthquakes
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="showIssCamera">
+                            <label class="form-check-label" for="showIssCamera">
+                                ISS Camera View
+                            </label>
+                        </div>
+                    </div>
                 </div>
-                 <div style="margin-top: 5px;">
-                    <span style="background-color: #00FF00; display: inline-block; width: 20px; height: 10px; margin-right: 5px; border: 1px solid #555;"></span> Predicted ISS Path
+                
+                <!-- ISS Camera Controls (shown when camera is enabled) -->
+                <div id="iss-camera-controls" style="display: none; margin-top: 12px; padding: 12px; background: rgba(0,0,0,0.03); border-radius: 4px;">
+                    <label for="issFovSlider" class="form-label">
+                        Camera Field of View: <strong><span id="issFovValue">60</span>&deg;</strong>
+                    </label>
+                    <input type="range" class="form-range" id="issFovSlider" min="20" max="120" step="1" value="60">
                 </div>
-                <div style="margin-top: 5px;">
-                    <span style="background-color: yellow; display: inline-block; width: 10px; height: 10px; margin-right: 5px; border: 1px solid #555; border-radius: 50%;"></span> Default Location (Quebec City)
+            </div>
+
+            <!-- Approach Information Section -->
+            <div style="margin-bottom: 20px;">
+                <h6 style="margin-bottom: 12px; border-bottom: 2px solid #dee2e6; padding-bottom: 6px;">Next ISS Pass-by</h6>
+                <div style="padding: 12px; background: rgba(0,123,255,0.1); border-left: 4px solid #007bff; border-radius: 4px; margin-bottom: 10px;">
+                    <div id="approach-info" style="font-size: 14px; font-weight: 500; color: #333;">
+                        Calculating upcoming approach...
+                    </div>
                 </div>
-                 <div style="margin-top: 5px;">
-                    <span style="background-color: rgba(0,100,255,0.3); display: inline-block; width: 20px; height: 10px; margin-right: 5px; border: 1px solid #555;"></span> Pass-by Detection Radius
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: space-between;">
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="show-approach-info" checked>
+                            <label class="form-check-label" for="show-approach-info">
+                                Show approach path/time on globe
+                            </label>
+                        </div>
+                        <button id="refresh-prediction-btn" class="btn btn-sm btn-success">Refresh Prediction</button>
+                    </div>
+                    <button id="refresh-tle-btn" class="btn btn-sm btn-primary">Refresh TLE Data</button>
                 </div>
-                <div style="margin-top: 5px;">
-                    <span style="background-color: teal; display: inline-block; width: 10px; height: 10px; margin-right: 5px; border: 1px solid #555; border-radius: 50%;"></span> Point of Closest Approach (if detected)
+            </div>
+
+            <!-- Location Info -->
+            <div style="margin-bottom: 15px;">
+                <h6 style="margin-bottom: 8px; border-bottom: 2px solid #dee2e6; padding-bottom: 6px;">Current Locations</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-2"><strong>ISS Position:</strong> 
+                            Lat: <span id="isslat">N/A</span>&deg;, 
+                            Lon: <span id="isslon">N/A</span>&deg;
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-2"><strong>Your Location:</strong> 
+                            Lat: <span id="clat">N/A</span>&deg;, 
+                            Lon: <span id="clon">N/A</span>&deg;
+                        </p>
+                    </div>
                 </div>
-                <div style="margin-top: 5px;">
-                    <span style="background-color: green; display: inline-block; width: 7px; height: 7px; margin-right: 5px; border: 1px solid #555; border-radius: 50%;"></span> End of Predicted Path
+                <p id="default-location-msg" style="font-size: 0.85em; color: #777; display: none; margin-top: 5px;">
+                    <em>Using default location (Quebec City) as live geolocation is unavailable or denied.</em>
+                </p>
+            </div>
+
+            <!-- Legend -->
+            <div style="padding: 12px; background: rgba(0,0,0,0.03); border-radius: 4px; border-top: 2px solid #dee2e6;">
+                <h6 style="margin-bottom: 10px; font-size: 0.95rem; color: #555;">Legend (3D View)</h6>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; font-size: 0.875rem;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="background-color: orange; width: 24px; height: 3px; border-radius: 2px; flex-shrink: 0;"></span>
+                        <span>Historical ISS Path</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="background-color: #00FF00; width: 24px; height: 3px; border-radius: 2px; flex-shrink: 0;"></span>
+                        <span>Predicted ISS Path</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="background-color: yellow; width: 10px; height: 10px; border-radius: 50%; border: 1px solid #999; flex-shrink: 0;"></span>
+                        <span>Your Location</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="background-color: rgba(0,100,255,0.3); width: 24px; height: 12px; border-radius: 2px; border: 1px solid rgba(0,100,255,0.5); flex-shrink: 0;"></span>
+                        <span>Detection Radius</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="background-color: teal; width: 10px; height: 10px; border-radius: 50%; border: 1px solid #006666; flex-shrink: 0;"></span>
+                        <span>Closest Approach</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="background-color: green; width: 8px; height: 8px; border-radius: 50%; border: 1px solid #006600; flex-shrink: 0;"></span>
+                        <span>Path End Point</span>
+                    </div>
                 </div>
             </div>
 
@@ -139,6 +250,7 @@
 <%- include('partials/footer') %> <%# This should load tools.js %>
 <script src="/socket.io/socket.io.js"></script>
 <%- include('partials/p5') %>
+
 <script src="/js/iss-main.js" type="module"></script>
 
 </body>
