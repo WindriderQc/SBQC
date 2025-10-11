@@ -1,17 +1,15 @@
-const { ObjectId } = require('mongodb');
+const dataApiService = require('../services/dataApiService');
+
+// Note: User management should use DataAPI endpoints
+// These controller methods are kept for backward compatibility but should proxy to DataAPI
 
 // Handle index actions
 exports.index = async (req, res) => {
     try {
-        const usersCollection = req.app.locals.collections.users;
-        if (!usersCollection) {
-            return res.status(500).json({ status: "error", message: "Users collection not available." });
-        }
-        const users = await usersCollection.find({}).toArray();
-        res.json({
-            status: "success",
-            message: "Users retrieved successfully",
-            data: users
+        // This should call DataAPI /api/v1/users endpoint
+        return res.status(501).json({ 
+            status: "error", 
+            message: "Users endpoint not yet implemented in DataAPI. Use /api/v1/users directly." 
         });
     } catch (err) {
         res.status(500).json({

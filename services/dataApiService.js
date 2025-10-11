@@ -88,6 +88,55 @@ async function getIssData() {
     return await fetchJSON(`${dataAPIUrl}/api/v1/iss`);
 }
 
+// Meows/Mews
+async function getMews(queryParams = {}) {
+    const { skip, limit, sort } = queryParams;
+    const params = new URLSearchParams();
+    if (skip !== undefined) params.append('skip', skip);
+    if (limit !== undefined) params.append('limit', limit);
+    if (sort !== undefined) params.append('sort', sort);
+    
+    const queryString = params.toString();
+    const url = `${dataAPIUrl}/api/v1/v2/mews${queryString ? '?' + queryString : ''}`;
+    return await fetchJSON(url);
+}
+
+async function createMew(mewData) {
+    const options = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(mewData)
+    };
+    return await fetchJSON(`${dataAPIUrl}/api/v1/mews`, options);
+}
+
+// Logs
+async function getLogs(queryParams = {}) {
+    const { skip, sort, source } = queryParams;
+    const params = new URLSearchParams();
+    if (skip !== undefined) params.append('skip', skip);
+    if (sort !== undefined) params.append('sort', sort);
+    if (source !== undefined) params.append('source', source);
+    
+    const queryString = params.toString();
+    const url = `${dataAPIUrl}/api/v1/v2/logs${queryString ? '?' + queryString : ''}`;
+    return await fetchJSON(url);
+}
+
+async function createLog(logData, source = 'userLogs') {
+    const options = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(logData)
+    };
+    
+    // DataAPI has different POST endpoints for logs:
+    // /api/v1/logs/user for userLogs
+    // /api/v1/logs/server for serverLogs
+    const endpoint = source === 'server' ? 'server' : 'user';
+    return await fetchJSON(`${dataAPIUrl}/api/v1/logs/${endpoint}`, options);
+}
+
 module.exports = {
     getProfile,
     setAlarms,
@@ -99,4 +148,8 @@ module.exports = {
     saveProfile,
     getDeviceData,
     getIssData,
+    getMews,
+    createMew,
+    getLogs,
+    createLog,
 };

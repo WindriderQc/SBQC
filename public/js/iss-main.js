@@ -2,6 +2,9 @@ import * as predictor from './issOrbitPredictor.js';
 import { setOnPathUpdate } from './issOrbitPredictor.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+    let initialPredictionSet = false; // Track if we've set the initial max value
+    let isUpdatingPrediction = false; // Guard against recursive updates
+    
     // This is the bridge that connects the predictor's data to the sketch.
     // It's set up before the sketch is initialized to avoid race conditions.
     setOnPathUpdate((pathData) => {
@@ -10,13 +13,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // Update prediction slider max based on the approach time
-        updatePredictionSliderMax();
+        // Only call if we're not already in the middle of an update
+        if (!isUpdatingPrediction) {
+            updatePredictionSliderMax();
+        }
     });
 
     // Function to dynamically adjust the prediction length slider max
     function updatePredictionSliderMax() {
         const predictionLengthSlider = document.getElementById('predictionLengthSlider');
         if (!predictionLengthSlider) return;
+        
+        // Prevent recursive calls
+        if (isUpdatingPrediction) return;
+        isUpdatingPrediction = true;
         
         try {
             const approachDetails = predictor.getClosestApproachDetails();
@@ -30,27 +40,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 predictionLengthSlider.max = roundedMax;
                 
-                // If current value exceeds new max, adjust it
-                const currentValue = parseInt(predictionLengthSlider.value);
-                if (currentValue > roundedMax) {
+                // Only set to max on the first calculation, then let user control it
+                if (!initialPredictionSet) {
                     predictionLengthSlider.value = roundedMax;
                     const predictionLengthValueSpan = document.getElementById('predictionLengthValue');
                     if (predictionLengthValueSpan) {
                         predictionLengthValueSpan.textContent = roundedMax;
                     }
-                    predictor.setPredictionDurationSec(roundedMax * 60);
+                    initialPredictionSet = true;
+                    console.log(`[iss-main] Initial prediction slider set to max ${roundedMax} min (approach in ${approachTimeMinutes} min)`);
+                } else {
+                    // After initial set, only adjust if current value exceeds new max
+                    const currentValue = parseInt(predictionLengthSlider.value);
+                    if (currentValue > roundedMax) {
+                        predictionLengthSlider.value = roundedMax;
+                        const predictionLengthValueSpan = document.getElementById('predictionLengthValue');
+                        if (predictionLengthValueSpan) {
+                            predictionLengthValueSpan.textContent = roundedMax;
+                        }
+                    }
+                    console.log(`[iss-main] Updated prediction slider max to ${roundedMax} min`);
                 }
-                
-                console.log(`[iss-main] Updated prediction slider max to ${roundedMax} min (approach in ${approachTimeMinutes} min)`);
             }
         } catch (e) {
             console.warn('[iss-main] Could not update prediction slider max:', e);
+        } finally {
+            // Always reset the guard flag
+            isUpdatingPrediction = false;
         }
     }
 
     // We need to dynamically import the sketch because it's not a default export anymore.
     import('./issDetector.js').then(module => {
         new p5(module.default, 'sketch-holder');
+        // The sketch API is set synchronously, but wait for next tick to ensure everything is ready
+        setTimeout(() => {
+            if (window.p5SketchApi && typeof window.p5SketchApi.update3DPredictedPath === 'function') {
+                console.log('[iss-main] Sketch API ready, starting initial prediction');
+                predictor.fetchAndPredict();
+            } else {
+                console.warn('[iss-main] Sketch API not ready after initialization');
+            }
+        }, 50);
     });
 
     const socket = io();
@@ -148,7 +179,4 @@ document.addEventListener('DOMContentLoaded', () => {
             predictor.refreshTLE();
         });
     }
-
-    // Initial prediction
-    predictor.fetchAndPredict();
 });

@@ -21,17 +21,12 @@ const getUserLogs = async (req, res, next) => {
         skip = parseInt(skip) || 0;
         skip = skip < 0 ? 0 : skip;
 
-        const logsdb = req.app.locals.collections[source];
-        console.log('Getting logs from DB namespace', logsdb.namespace);
-
-        const [total, logs] = await Promise.all([
-            logsdb.countDocuments(),
-            logsdb.find({}, { skip, sort: { created: sort === 'desc' ? -1 : 1 } }).toArray()
-        ]);
-
+        const response = await dataApiService.getLogs({ skip, sort, source });
+        
+        // DataAPI should return { status, message, meta: { total, skip, source, has_more }, data }
         res.json({
-            logs,
-            meta: { total, skip, source, has_more: total > (skip + logs.length) }
+            logs: response.data || [],
+            meta: response.meta || { total: 0, skip, source, has_more: false }
         });
     } catch (err) {
         next(err);
@@ -43,12 +38,14 @@ const createUserLog = async (req, res, next) => {
         if (!req.body) {
             throw new BadRequest('Invalid log data provided.');
         }
-        const log = req.body;
-        log.created = new Date();
-        const logsdb = req.app.locals.collections.userLogs;
-        const createdLog = await logsdb.insertOne(log);
-        console.log(`UserLog document was inserted with the _id: ${createdLog.insertedId}`);
-        res.json(createdLog);
+        const logData = {
+            ...req.body,
+            created: new Date()
+        };
+        
+        const response = await dataApiService.createLog(logData, 'userLogs');
+        console.log(`UserLog document was created via DataAPI`);
+        res.json(response);
     } catch (err) {
         next(err);
     }
@@ -80,8 +77,12 @@ router.get("/", async (req, res, next) => {
     try {
         const count = await counter.increaseCount();
         const log = requestLog(req);
-        const logsdb = req.app.locals.collections.server;
-        await logsdb.insertOne(log);
+        
+        // Log to DataAPI asynchronously (don't wait for response)
+        dataApiService.createLog(log, 'server').catch(err => 
+            console.error('Failed to log to DataAPI:', err.message)
+        );
+        
         res.render('index', { menuId: 'home', hitCount: count, requestLog: log, isWelcomePage: true });
     } catch (err) {
         next(err);

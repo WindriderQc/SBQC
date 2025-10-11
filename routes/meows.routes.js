@@ -1,5 +1,6 @@
 let router = require('express').Router();
 const { BadRequest } = require('../utils/errors');
+const dataApiService = require('../services/dataApiService');
 
 //  meower
 
@@ -9,42 +10,36 @@ router.get('/', (req, res) => {
     })
 })
   
+// Legacy endpoint - returns all mews (now proxies to DataAPI)
 router.get('/mews', async (req, res, next) => {
-    const mewsdb =  req.app.locals.collections['mews']
-
-    mewsdb
-    .find({}).toArray()
-    .then(mews => {
-        res.json(mews)
-    }).catch(next)
-
+    try {
+        const response = await dataApiService.getMews();
+        // DataAPI /api/v1/v2/mews returns { mews, meta } format
+        // Legacy endpoint expects just the array
+        res.json(response.mews || response.data || []);
+    } catch (error) {
+        next(error);
+    }
 })
 
+// V2 endpoint with pagination (proxies to DataAPI)
 router.get('/v2/mews', async (req, res, next) => {
-    // let skip = Number(req.query.skip) || 0
-    // let limit = Number(req.query.limit) || 10
-    let { skip = 0, limit = 5, sort = 'desc' } = req.query
-    skip = parseInt(skip) || 0
-    limit = parseInt(limit) || 5
+    try {
+        let { skip = 0, limit = 5, sort = 'desc' } = req.query;
+        skip = parseInt(skip) || 0;
+        limit = parseInt(limit) || 5;
 
-    skip = skip < 0 ? 0 : skip;
-    limit = Math.min(50, Math.max(1, limit))
+        skip = skip < 0 ? 0 : skip;
+        limit = Math.min(50, Math.max(1, limit));
 
-    const mewsdb =  req.app.locals.collections['mews']
-    console.log('Getting Meows from db namespace: ', mewsdb.namespace)
-
-    Promise.all([
-        mewsdb.countDocuments(),
-        mewsdb.find({}, { skip, limit, sort: {  created: sort === 'desc' ? -1 : 1     } }).toArray()
-    ])
-    .then(([ total, mews ]) => {
-        // console.log(mews)
-        res.json({
-        mews,
-        meta: { total, skip, limit, has_more: total - (skip + limit) > 0, } })
-    })
-    .catch(next)
-
+        const response = await dataApiService.getMews({ skip, limit, sort });
+        
+        // DataAPI /api/v1/v2/mews returns { mews, meta } format already
+        // Just pass it through
+        res.json(response);
+    } catch (error) {
+        next(error);
+    }
 })
 
 function isValidMew(mew) {
@@ -52,23 +47,20 @@ function isValidMew(mew) {
         mew.content && mew.content.toString().trim() !== '' && mew.content.toString().trim().length <= 140
 }
 
-
 const createMew = async (req, res, next) => {
     try {
         if (!isValidMew(req.body)) {
             throw new BadRequest('Hey! Name and Content are required! Name cannot be longer than 50 characters. Content cannot be longer than 140 characters.');
         }
 
-        const mew = {
+        const mewData = {
             name: req.body.name.toString().trim(),
-            content: req.body.content.toString().trim(),
-            created: new Date()
-        }
+            content: req.body.content.toString().trim()
+        };
         
-        const mewsdb =  req.app.locals.collections.mews;
-        const createdMew = await mewsdb.insertOne(mew);
-        console.log( `Mew document was inserted with the _id: ${createdMew.insertedId}` );
-        res.json(createdMew);
+        // Proxy to DataAPI
+        const response = await dataApiService.createMew(mewData);
+        res.json(response);
     }
     catch(err) {
         next(err);

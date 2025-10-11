@@ -86,9 +86,7 @@ function listAllMews(reset = true) {
 
     const url = `${mewsUrl}?skip=${skip}&limit=${limit}`
 
-    const options =  { method: 'GET', mode: 'no-cors' }
-
-    fetch(url, {options})
+    fetch(url)
         .then(response => response.json())
         .then(result => {
         result.mews.forEach(mew => {

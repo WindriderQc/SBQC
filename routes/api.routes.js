@@ -2,7 +2,6 @@ const router = require('express').Router();
 const mailman = require('../public/js/mailman');
 const dataApiService = require('../services/dataApiService');
 const weatherService = require('../services/weatherService');
-const issService = require('../services/issService');
 const { BadRequest } = require('../utils/errors');
 
 // Weather and Air Quality
