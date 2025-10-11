@@ -1,41 +1,44 @@
-<div class="row mt-2">
+<div class="row mt-3">
     <div class="col-sm-12">
         <div class="card">
-           <div class='card-body'>
-              <select id="devices_select" selected>ESP_35030</select>
+            <div class="card-header">
+                Device Controls
+            </div>
+            <div class='card-body'>
+                <form id="set-io-form">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label for="devices_select" class="form-label">Select Device:</label>
+                            <select id="devices_select" class="form-select"></select>
+                        </div>
 
+                        <div class="col-md-3">
+                            <label for="io_select" class="form-label">Select Output:</label>
+                            <select id="io_select" class="form-select">
+                                <option value="13">13-Lamp_1</option>
+                                <option value="21">21-Lamp_2</option>
+                                <option value="5">5-Fan_1</option>
+                                <option value="4">4-Heat_1</option>
+                                <option value="18">18-Pump_1</option>
+                                <option value="19">19-Pump_2</option>
+                            </select>
+                        </div>
 
-              <form class='form-inline' >
+                        <div class="col-md-2">
+                            <label for="io_state" class="form-label">State:</label>
+                            <select class="form-select" id="io_state" name="io_state">
+                                <option>ON</option>
+                                <option selected>OFF</option>
+                            </select>
+                        </div>
 
-                 <div class="form-group form-inline">
-                       <div class='form-text mb-2 mr-2'> <span id="name_label"> </span></div>
-                 </div>
-
-                 <select id="io_select" selected>
-                    <option value="13">13-Lamp_1</option>
-                    <option value="21">21-Lamp_2</option>
-                    <option value="5">5-Fan_1</option>
-                    <option value="4">4-Heat_1</option>
-                    <option value="18">18-Pump_1</option>
-                    <option value="19">19-Pump_2</option>
-                 </select>
-
-                 <div class="form-group form-inline">
-                       <select class="form-control form-inline mb-2 mr-2" id="io_state" name="io_state">
-                          <option>ON</option>
-                          <option selected>OFF</option>
-                       </select>
-                 </div>
-                 <div class="form-group form-inline">
-                       <button type="button" onClick="sendSetIO()" class="btn btn-primary  mb-2 mr-2">Set IO</button>
-                 </div>
-
-
-                 <input type="hidden" id="sender_id" name="sender" value="">
-                 <input type="hidden" id="io_id" name="io_id" value="">
-              </form>
-
-              </div>
+                        <div class="col-md-2">
+                            <button type="button" onclick="sendSetIO()" class="btn btn-primary w-100">Set IO</button>
+                        </div>
+                    </div>
+                </form>
+                <div id="set-io-feedback" class="mt-2" style="display: none;"></div>
+            </div>
         </div>
     </div>
-  </div>
+</div>

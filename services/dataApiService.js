@@ -137,6 +137,10 @@ async function createLog(logData, source = 'userLogs') {
     return await fetchJSON(`${dataAPIUrl}/api/v1/logs/${endpoint}`, options);
 }
 
+async function getLatestForAllDevices() {
+    return await fetchJSON(`${dataAPIUrl}/api/v1/heartbeats/latest-batch`);
+}
+
 module.exports = {
     getProfile,
     setAlarms,
@@ -145,6 +149,7 @@ module.exports = {
     getRegisteredDevices,
     getDevice,
     getDeviceLatest,
+    getLatestForAllDevices,
     saveProfile,
     getDeviceData,
     getIssData,
