@@ -120,20 +120,22 @@ app.use((err, req, res, next) => {
 });
 
 
-const server = app.listen(PORT, () =>{
-    console.log('\n__________________________________________________\n\n')
-    console.log(`\n\nServer running in ${IN_PROD ? "Production" : "Developement"} mode at port ${PORT}`)
-    console.log('Press Ctrl + C to exit\n\n__________________________________________________\n\n')
-    //nodeTools.readFile("greetings.txt")
-  })
+// Start server only if the script is run directly
+let server;
+if (require.main === module) {
+    server = app.listen(PORT, () => {
+        console.log('\n__________________________________________________\n\n');
+        console.log(`\n\nServer running in ${IN_PROD ? "Production" : "Development"} mode at port ${PORT}`);
+        console.log('Press Ctrl + C to exit\n\n__________________________________________________\n\n');
+    });
 
-
-const socketio = require('./scripts/socket')
-const io = socketio.init(server)     //  TODO  required?  or just use io from socketio.js
-
+    const socketio = require('./scripts/socket');
+    socketio.init(server);
+}
 
 
 //console.log('Launching automation scripts')
 //require('./scripts/serverScripts.js')  // generate infos/index.html
 
+module.exports = app;
 
