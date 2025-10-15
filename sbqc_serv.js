@@ -22,20 +22,22 @@ const PORT = process.env.PORT  || 3001
 const IN_PROD = process.env.NODE_ENV === 'production'  // for https channel...  IN_PROD will be true if in production environment    If true while on http connection, session cookie will not work
 
 
-const syncRepos = require("./scripts/syncRepos");
-// Run repo sync in the background (non-blocking)
-setImmediate(() => {
-  console.log("Starting repo sync in background...");
-  syncRepos();
-});
+if (process.env.NODE_ENV !== 'test') {
+    const syncRepos = require("./scripts/syncRepos");
+    // Run repo sync in the background (non-blocking)
+    setImmediate(() => {
+      console.log("Starting repo sync in background...");
+      syncRepos();
+    });
 
 
-//  MQTT API to communication with ESP32 and other devices
-const mqtt = require('./scripts/mqttServer')
-const esp32 = require('./scripts/esp32')
+    //  MQTT API to communication with ESP32 and other devices
+    const mqtt = require('./scripts/mqttServer')
+    const esp32 = require('./scripts/esp32')
 
-mqtt.initMqtt('mqtt://specialblend.ca', esp32.msgHandler, ['esp32', 'esp32/#', 'sbqc/iss']);
-esp32.setConnectedValidation(30000, mqtt.getClient()) //  check every X seconds if devices are still connected
+    mqtt.initMqtt('mqtt://specialblend.ca', esp32.msgHandler, ['esp32', 'esp32/#', 'sbqc/iss']);
+    esp32.setConnectedValidation(30000, mqtt.getClient()) //  check every X seconds if devices are still connected
+}
 
 
 
