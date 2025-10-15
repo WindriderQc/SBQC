@@ -8,6 +8,14 @@ const sysmon = new (require('../scripts/systemMonitor'))();
 const dataApiService = require('../services/dataApiService');
 const jwt = require('jsonwebtoken');
 
+// Import nodeTools auth middleware
+const nodetools = require('nodetools');
+const auth = nodetools.auth.createAuthMiddleware({
+    dbGetter: () => require('./api.routes').getDb(),
+    loginRedirectUrl: '/login',
+    logger: console
+});
+
 console.log("SysInfo: ", sysmon.getinfo().data);
 console.log("CPU: ", sysmon.getinfo().cpus.length);
 
@@ -208,16 +216,8 @@ router.get('/database', (req, res) => {
     res.render('database', { collectionList: JSON.stringify(list), apiUrl: apiUrl });
 });
 
-// Session validation middleware
-const hasSessionID = (req, res, next) => {
-    if (req.session && req.session.userToken) {
-        next();
-    } else {
-        res.redirect('/login');
-    }
-};
-
-router.get('/settings', hasSessionID, async (req, res, next) => {
+// Protected route - requires authentication via nodeTools middleware
+router.get('/settings', auth.requireAuth, async (req, res, next) => {
     try {
         const [usersResponse, devices, alarmsResponse] = await Promise.all([
             fetch(`${apiUrl}/api/v1/users`),
@@ -274,7 +274,7 @@ router.post('/set_io', (req, res) => {
     res.redirect('/iot');
 });
 
-router.post('/alarms/setAlarm', async (req, res, next) => {
+router.post('/alarms/setAlarm', auth.requireAuth, async (req, res, next) => {
     try {
         const { device_id, io_id, tStart, tStop } = req.body;
         const als = { espID: device_id, io: io_id, tStart, tStop };
@@ -282,7 +282,7 @@ router.post('/alarms/setAlarm', async (req, res, next) => {
         const option = {
             method: 'POST',
             headers: {
-                'auth-token': req.session.userToken,
+                // Session cookies automatically sent - no need for auth-token header
                 'Content-type': 'application/json'
             },
             body: JSON.stringify(als)

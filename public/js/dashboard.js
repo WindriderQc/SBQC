@@ -5,20 +5,24 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     const hoverElement = document.getElementById('hoverElement');
 
-    hoverElement.addEventListener('mouseenter', function() {
-      hoverElement.classList.add('animate-fading');
-    });
+    if (hoverElement) {
+        hoverElement.addEventListener('mouseenter', function() {
+          hoverElement.classList.add('animate-fading');
+        });
 
-    hoverElement.addEventListener('mouseleave', function() {
-      hoverElement.classList.add('animate-opacity');
-    });
+        hoverElement.addEventListener('mouseleave', function() {
+          hoverElement.classList.add('animate-opacity');
+        });
+    }
 
     const sourceSelect = document.getElementById('sourceSelect');
+    if (sourceSelect) {
       sourceSelect.addEventListener('change', function() {
         source = this.value;
         skip = 0; 
         listAllLogs(source); 
       });
+    }
     
     
     listAllLogs("userLogs");
@@ -32,8 +36,11 @@ document.addEventListener('DOMContentLoaded', async function() {
   
 async function getUserInfo()
 {
+    const ipElement = document.getElementById('ip_id');
+    if (!ipElement) return; // Exit if element doesn't exist
+    
     const info = await Tools.ipLookUp()
-    document.getElementById('ip_id').innerHTML =  "<pre>"+JSON.stringify(info.TimeZone,null, '\t') +"</pre>"
+    ipElement.innerHTML =  "<pre>"+JSON.stringify(info.TimeZone,null, '\t') +"</pre>"
 } 
 
 
@@ -128,10 +135,13 @@ function setWorlGraph(data) {
                 }
             };
             //worldMap = new Chart( document.getElementById('worldMap'), config);
-            if (worldMap) {
+            const worldMapElement = document.getElementById('worldMap');
+            if (worldMapElement) {
+                if (worldMap) {
                     worldMap.destroy();
                 }
-                worldMap = new Chart(document.getElementById('worldMap'), config);
+                worldMap = new Chart(worldMapElement, config);
+            }
 
         });       
 }
@@ -146,6 +156,7 @@ let loading = false;
 
 
 function listAllLogs(source) {
+  if (!loadingElement || !logsElement) return; // Guard against missing elements
   loading = true;
   loadingElement.style.display = '';
     const url = `/v2/logs?skip=${skip}&sort=${sort}&source=${source}`
@@ -247,6 +258,7 @@ var mySidebar = document.getElementById("mySidebar");
 var overlayBg = document.getElementById("myOverlay");
 // Toggle and add overlay effect
 function w3_open() {
+  if (!mySidebar || !overlayBg) return; // Guard against missing elements
   if (mySidebar.style.display === 'block') {
     mySidebar.style.display = 'none';
     overlayBg.style.display = "none";
@@ -257,6 +269,7 @@ function w3_open() {
 }
 // Close the sidebar with the close button
 function w3_close() {
+    if (!mySidebar || !overlayBg) return; // Guard against missing elements
     console.log('w3_close called');
   mySidebar.style.display = "none";
   overlayBg.style.display = "none";

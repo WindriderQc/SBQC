@@ -77,13 +77,19 @@
         // Fetching logic remains the same
         const deviceStatusMap = new Map();
         try {
-            const response = await fetch('/api/v1/devices/latest-batch');
-            if (!response.ok) throw new Error(`API request failed`);
-            const latestStatuses = await response.json();
-            if(latestStatuses.data) {
-                latestStatuses.data.forEach(status => {
-                    deviceStatusMap.set(status.id, status.lastpost.data.time);
-                });
+            const response = await fetch('/api/devices/latest-batch');
+            if (response.status === 401) {
+                // User not authenticated - skip status fetch, show default message
+                console.log("Not authenticated. Device status unavailable.");
+            } else if (!response.ok) {
+                throw new Error(`API request failed with status ${response.status}`);
+            } else {
+                const latestStatuses = await response.json();
+                if(latestStatuses.data) {
+                    latestStatuses.data.forEach(status => {
+                        deviceStatusMap.set(status.id, status.lastpost.data.time);
+                    });
+                }
             }
         } catch (error) {
             console.error("Failed to fetch latest device statuses:", error);

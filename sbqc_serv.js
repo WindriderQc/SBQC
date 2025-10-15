@@ -1,6 +1,9 @@
 require('dotenv/config');
 const { validateEnv } = require('./utils/envValidator');
+const { initializeErrorHandling, startServer } = require('./utils/serverUtils');
+
 validateEnv();
+initializeErrorHandling();
 
 const express = require('express'),
     session = require('express-session'),
@@ -36,27 +39,50 @@ if (process.env.NODE_ENV !== 'test') {
     const esp32 = require('./scripts/esp32')
 
     // This will be initialized later, after the server is created
-    let io;
+    const socketio = require('./scripts/socket');
 
     //  MQTT API to communication with ESP32 and other devices
-    // The 'io' instance will be passed here later on
-    mqtt.initMqtt('mqtt://specialblend.ca', esp32.msgHandler, ['esp32', 'esp32/#', 'sbqc/iss'], () => io);
+    // Pass a function that gets the Socket.IO instance from the socket module
+    mqtt.initMqtt('mqtt://specialblend.ca', esp32.msgHandler, ['esp32', 'esp32/#', 'sbqc/iss'], () => socketio.get_io());
     esp32.setConnectedValidation(30000, mqtt.getClient()) //  check every X seconds if devices are still connected
 
 }
 
 
 
-const mongoStore = new MongoDBStore({ uri: process.env.MONGO_CLOUD, collection: 'mySessions'}, (err) => { if(err) console.log( 'MongoStore connect error: ', err) } );
+const MONGO_CLOUD = process.env.MONGO_CLOUD;
+
+const { log } = require('./scripts/logger')
+const counter = require('./scripts/visitorCount')
+const esp32 = require('./scripts/esp32.js')
+
+const SESS_SECRET = process.env.SESS_SECRET
+const SESS_LIFETIME = 1000 * 60 * 60 * 24 // Session timeout 24h (matches DataAPI)
+
+// Determine which database to use for sessions (match DataAPI's config)
+const SESSION_DB_NAME = IN_PROD ? 'datas' : 'devdatas';
+
+const  mongoStore = new MongoDBStore({
+  //uri: 'mongodb://localhost:27017/connect_mongodb_session_test',  //
+   uri: MONGO_CLOUD,
+   databaseName: SESSION_DB_NAME, // Use same database as DataAPI for session sharing
+   collection: 'mySessions'
+})
+
 mongoStore.on('error', (error) => console.log('MongoStore Error: ', error) );
 
 const sessionOptions = {
-  name: process.env.SESS_NAME,
-  resave: false,
-  saveUninitialized: true,
-  secret: process.env.SESS_SECRET,
+  name: 'data-api.sid', // Use same session name as DataAPI for session sharing
+  resave: false, // Changed to false (matches DataAPI best practice)
+  saveUninitialized: false,
+  secret: SESS_SECRET,
   store: mongoStore,
-  cookie: {      secure: IN_PROD,     sameSite: true  }// Please note that secure: true is a recommended option. However, it requires an https-enabled website, i.e., HTTPS is necessary for secure cookies. If secure is set, and you access your site over HTTP, the cookie will not be set.
+  cookie: {      
+    maxAge: SESS_LIFETIME,
+    httpOnly: true, // Added for security
+    sameSite: 'lax', // Changed to 'lax' (matches DataAPI)
+    secure: IN_PROD  
+  }// Please note that secure: true is a recommended option. However, it requires an https-enabled website, i.e., HTTPS is necessary for secure cookies. If secure is set, and you access your site over HTTP, the cookie will not be set.
 }
 /*
 if(IN_PROD)  //  Required only when not served by nginx...  DEV Purpose
@@ -78,6 +104,14 @@ const options = {
 // Databases
 const { connectDb, loadCollections } = require('./scripts/database');
 
+// Authentication middleware from nodeTools
+const nodetools = require('nodetools');
+const auth = nodetools.auth.createAuthMiddleware({
+    dbGetter: (req) => req.app.locals.db,
+    loginRedirectUrl: 'https://data.specialblend.ca/login',
+    logger: process.env.NODE_ENV === 'development' ? console.log : null
+});
+
 (async () => {
     try {
         const db = await connectDb(process.env.MONGO_CLOUD, 'SBQC');
@@ -93,12 +127,14 @@ const { connectDb, loadCollections } = require('./scripts/database');
 
 
 //Middlewares  & routes
+
 app
   .use(cors({ origin: '*', optionsSuccessStatus: 200 }))
   .use(express.urlencoded({ extended: true, limit: '10mb' }))  //  Must be before  'app.use(express.json)'    , 10Mb to allow image to be sent
   .use(express.json({ limit:'10mb' })) // To parse the incoming requests with JSON payloads
   //.use(rateLimit({ windowMs: 2 * 1000, max: 1 }))  // useful for api to prevent too many requests...
   .use(session(sessionOptions))
+  .use(auth.attachUser) // Attach user to res.locals from session (using nodeTools auth)
   .use(express.static(path.resolve(__dirname, 'public') , { maxAge: 1000*60*60 })) // maxAge allow client to cache data for 1h
   .use('/api',      require('./routes/api.routes')) // New API routes
   .use('/',         require('./routes/routes'))
@@ -129,16 +165,9 @@ app.use((err, req, res, next) => {
 
 
 // Start server only if the script is run directly
-let server;
-if (require.main === module) {
-    server = app.listen(PORT, () => {
-        console.log('\n__________________________________________________\n\n');
-        console.log(`\n\nServer running in ${IN_PROD ? "Production" : "Development"} mode at port ${PORT}`);
-        console.log('Press Ctrl + C to exit\n\n__________________________________________________\n\n');
-    });
 
-    const socketio = require('./scripts/socket');
-    io = socketio.init(server);
+if (require.main === module) {
+   startServer(app);
 }
 
 

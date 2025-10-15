@@ -4,6 +4,13 @@ const dataApiService = require('../services/dataApiService');
 const weatherService = require('../services/weatherService');
 const { BadRequest } = require('../utils/errors');
 
+// Get auth middleware from nodeTools (already configured in sbqc_serv.js)
+const nodetools = require('nodetools');
+const auth = nodetools.auth.createAuthMiddleware({
+    dbGetter: (req) => req.app.locals.db,
+    loginRedirectUrl: 'https://data.specialblend.ca/login'
+});
+
 // Weather and Air Quality
 router.get('/weather/:latlon', async (req, res, next) => {
     try {
@@ -50,13 +57,12 @@ router.post('/alert', async (req, res, next) => {
     }
 });
 
-// Get Latest Device Data
-router.get('/deviceLatest/:esp', async (req, res, next) => {
-    if (!req.session || !req.session.userToken) {
-        return res.status(401).json({ status: "error", message: "Unauthorized: No session token." });
-    }
+// Get Latest Device Data - Requires Authentication
+router.get('/deviceLatest/:esp', auth.requireAuth, async (req, res, next) => {
     try {
-        const respData = await dataApiService.getDeviceLatest(req.params.esp, req.session.userToken);
+        // User is guaranteed to be logged in (requireAuth middleware)
+        // No need to pass token - session cookies handle authentication
+        const respData = await dataApiService.getDeviceLatest(req.params.esp);
         const data = respData.data && respData.data[0];
         if (!data) {
             return res.json({ status: "info", message: 'No latest post found for this device.', data: null });
@@ -68,13 +74,21 @@ router.get('/deviceLatest/:esp', async (req, res, next) => {
 });
 
 
-// New Batch endpoint to get latest post for all devices
-router.get('/devices/latest-batch', async (req, res, next) => {
-    if (!req.session || !req.session.userToken) {
-        return res.status(401).json({ error: 'Unauthorized: No session or token' });
-    }
+// New Batch endpoint to get latest post for all devices - Optional Authentication
+router.get('/devices/latest-batch', auth.optionalAuth, async (req, res, next) => {
     try {
-        const latestData = await dataApiService.getLatestForAllDevices(req.session.userToken);
+        // Check if user is authenticated via res.locals.user (set by optionalAuth)
+        if (!res.locals.user) {
+            // If not authenticated, return empty result
+            return res.status(200).json({ 
+                status: 'info', 
+                message: 'Authentication required for device status',
+                data: [] 
+            });
+        }
+        
+        // User is authenticated - session cookies handle auth automatically
+        const latestData = await dataApiService.getLatestForAllDevices();
         res.json(latestData);
     } catch (err) {
         next(err);
@@ -83,29 +97,25 @@ router.get('/devices/latest-batch', async (req, res, next) => {
 
 
 
-// Save Profile
-router.post('/saveProfile', async (req, res, next) => {
-    if (!req.session || !req.session.userToken) {
-        return res.status(401).json({ status: "error", message: "Unauthorized: No session token." });
-    }
+// Save Profile - Requires Authentication
+router.post('/saveProfile', auth.requireAuth, async (req, res, next) => {
     try {
         const { profileName, config } = req.body;
-        await dataApiService.saveProfile(profileName, config, req.session.userToken);
+        // User is guaranteed to be logged in - session cookies handle auth
+        await dataApiService.saveProfile(profileName, config);
         res.send('Profile saved successfully!');
     } catch (err) {
         next(err);
     }
 });
 
-router.get('/data/:options',  async (req, res, next) => {
-
-    if (!req.session || !req.session.userToken) {
-        return res.status(401).json({ error: "Unauthorized: No session token." });
-    }
+// Get Device Data - Requires Authentication
+router.get('/data/:options', auth.requireAuth, async (req, res, next) => {
     try {
         const [samplingRatio, espID, dateFrom] = req.params.options.split(',');
         if (req.session) req.session.selectedDevice = espID;
-        const data = await dataApiService.getDeviceData(samplingRatio, espID, dateFrom, req.session.userToken);
+        // User is guaranteed to be logged in - session cookies handle auth
+        const data = await dataApiService.getDeviceData(samplingRatio, espID, dateFrom);
         res.json(data);
     } catch (err) {
         next(err);
