@@ -71,203 +71,22 @@
         </div>
       </div>
 
-<script>
-
-
-const registered = <%- JSON.stringify(regDevices) %>
-
-const mqttlogin = JSON.parse('<%- mqttinfo %>')
-let streamTextArray = []
-let latestData
-
-let selectedDevice = ""
-let selectDom = ""
-let changeCallback = null
-
-
-
-document.addEventListener("DOMContentLoaded", () => {
-    console.log('Document ready  - JS  (without JQUERY)')
-    console.log('Server is at: ' + Tools.getHostIP())
-    console.log('RegDevices from ejs: ', registered)
-
-    setDevicesListOnList("devicesList", "statusList")
-    setDevicesListOnSelect('devices_select')
-
- })
-
-function mqttPost() {    mqClient.publish(document.getElementById('topic').value, document.getElementById('msg').value)     }
-
-
-async function setDevicesListOnSelect(html_dom, selectedOption = 0, onChangeCallback = null )
-{
-    selectDom = html_dom
-    if(onChangeCallback) changeCallback = onChangeCallback
-
-
-    if(registered.length != 0) {
-        let select = document.getElementById(selectDom)
-
-        for(let index in registered) {
-            select.options[select.options.length] = new Option(registered[index].id, index)
-        }
-
-        select.options[selectedOption].selected = "true"
-
-        selectedDevice = select.options[selectedOption].text
-        if(onChangeCallback) { changeCallback = onChangeCallback; changeCallback(); }
-    }
-    else  console.log('no ESP found in DB')
-}
-
-
-function updateSelected()
-{
-    selectedDevice = $("#" + selectDom + ">option:selected").text()
-    console.log("Selecting: " + selectedDevice)
-
-    if(changeCallback) changeCallback()
-}
-
-
-function setSelected(espID)
-{
-    let select = document.getElementById(selectDom)
-    let s = registered.indexOf(espID)
-
-    select.options[s].selected = "true"
-
-    selectedDevice = $("#" + selectDom + ">option:selected").text()
-    console.log("Setting selected: " + selectedDevice)
-}
-
-
-
-async function setDevicesListOnList(dom_list, dom_status, _callback = null)
-{
-    domList = dom_list
-
-    let items = registered
-    let sender_ul = document.createElement('ul')
-    let status_ul = document.createElement('ul')
-
-    document.getElementById(dom_list).appendChild(sender_ul)
-    document.getElementById(dom_status).appendChild(status_ul)
-
-
-    items.forEach( async (esp) =>{
-
-        const latest =  await fetch('/deviceLatest/' + esp.id)
-        const lastpost = await latest.json()
-        console.log("lastpost:", lastpost)
-
-
-        let li = document.createElement('li')
-        li.id = esp.id + '_li'
-        sender_ul.appendChild(li)
-        li.innerHTML += esp.id
-
-        let li2 = document.createElement('li')
-        li2.id = esp.id + '_li2'
-        status_ul.appendChild(li2)
-        try {
-            li2.innerHTML = lastpost.data.time
-        }catch(err) {
-            li2.innerHTML = "No post in database"
-        }
-    })
-}
-
-
-function sendSetIO()
-{
-   const esp = $("#devices_select>option:selected").text()
-   const io_id = $("#io_select>option:selected").val()
-   const io_state = $("#io_state>option:selected").text()
-
-   let topic = 'esp32/' + esp + '/io/' + (io_state === 'ON' ? 'on' : 'off')
-   const msg = io_id
-   console.log('Setting IO: ' + msg)
-
-   mqClient.publish(topic, msg)
-}
-
-console.log('attempting mqtt connect...')
-//const mqClient = mqtt.connect(mqttlogin.url, { rejectUnauthorized: false, username: mqttlogin.user, password: mqttlogin.pass })   //TODO  hardcoded IP + check...  using ws to connect not ssl secure //  TODO : NOT SAFE!!  Option User/Pass  visible dans la console....   utiliser le header pour ca?  ou mettre en SSL
-const mqClient = mqtt.connect('wss://mqtt.specialblend.ca');
-console.log('mqtt client:', mqClient)
-
-mqClient.publish('esp32', 'Browser Client subscribing...')
-mqClient.subscribe("esp32/#")
-mqClient.subscribe("sbqc/#")
-
-mqClient.on('error', (err) =>{   console.log(err)    })
-mqClient.on('message', (topic, payload) => {
-
-    streamTextArray.push(topic + " : " + payload.toString())
-    const area = document.getElementById('streamTextArea')
-
-    if(area.scrollTop + area.clientHeight == area.scrollHeight) {  // User has scrolled to the bottom of the element
-        area.value = streamTextArray.join("\n");
-        area.scrollTop = area.scrollHeight
-    }
-    else  area.value = streamTextArray.join("\n");
-
-    //console.log('message:', topic)
-    if((topic.indexOf("alive") >=0) || (topic.indexOf("data") >=0)) {
-
-
-        try {
-            let data = JSON.parse(payload)
-            const sender = data.sender
-            const timestamp = data.time
-            const espSelected = $("#devices_select>option:selected").text() // console.log(moment(timestamp).format('YYYY-MM-DD HH:mm:ss'))
-            latestData = data
-
-
-
-
-            if (typeof data.wifi != 'undefined') {
-                document.getElementById(sender+'rss_id_value_id').innerHTML =  data.wifi
-                document.getElementById(sender+'temp_id_value_id').innerHTML =  data.CPUtemp
-            }
-            if(typeof data.battery != 'undefined') {
-                document.getElementById(sender+'batt_id_value_id').innerHTML =  data.battery
-                document.getElementById(sender+'humid_id_value_id').innerHTML =  data.airHumid
-            }else{
-                console.log(latestData);
-            }
-
-
-
-        }
-        catch(err) {   console.log(payload.toString());  console.log(err)      }
-    }
-
-    if(topic.indexOf("disconnected") >=0) {
-
-        console.log('disconnected device!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', payload)
-        try {
-            let data = JSON.parse(payload)
-            const sender = data.id
-
-            document.getElementById(sender+'rss_id_value_id').innerHTML =  -100
-            document.getElementById(sender+'temp_id_value_id').innerHTML =  'xx'
-
-        }
-        catch(err) {   console.log(payload.toString());  console.log(err)      }
-
-    }
-})
-</script>
-
  <!-- End Container -->
     </div>
 <%- include('partials/footer') %>
 </div>
 
+<script>
+  // Pass data from EJS to our external script
+  window.ejsData = {
+    regDevices: <%- JSON.stringify(regDevices) %>,
+    mqttInfo: JSON.parse('<%- mqttinfo %>')
+  };
+</script>
+
 <script type="text/javascript" src="js/p5.speech.js"></script>
 <script type="text/javascript" src="js/nestor.js"></script>
 <script src="/js/dashboard.js"></script>
+<script src="/js/iot.js"></script> <%# New script for the IoT page %>
 </body>
 </html>
