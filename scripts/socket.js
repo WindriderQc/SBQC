@@ -34,6 +34,16 @@ function init(server)
             connectedSockets.delete(socket.id);
         });
 
+        socket.on('mqtt-command', (data) => {
+            const { topic, message } = data;
+            if (topic && message) {
+                console.log(`Received mqtt-command to publish to ${topic}`);
+                const mqttClient = require('./mqttServer').getClient();
+                if (mqttClient) {
+                    mqttClient.publish(topic, message);
+                }
+            }
+        });
     })
 
   

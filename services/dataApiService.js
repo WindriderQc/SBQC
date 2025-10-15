@@ -58,16 +58,18 @@ async function getDevice(id) {
     return await fetchJSON(`${dataAPIUrl}/device/${id}`);
 }
 
-async function getDeviceLatest(esp, token) {
-    const options = { headers: { 'auth-token': token } };
-    return await fetchJSON(`${dataAPIUrl}/heartbeats/senderLatest/${esp}`, options);
+async function getDeviceLatest(esp) {
+    // Session cookies are automatically sent with fetch requests
+    // No need to manually pass auth-token header
+    return await fetchJSON(`${dataAPIUrl}/heartbeats/senderLatest/${esp}`);
 }
 
-async function saveProfile(profileName, config, token) {
+async function saveProfile(profileName, config) {
     const profileData = { profileName, config };
     const options = {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'auth-token': token },
+        headers: { 'Content-Type': 'application/json' },
+        // Session cookies automatically sent
         body: JSON.stringify(profileData)
     };
     // This endpoint might not return JSON on success, so we can't use fetchJSON directly without knowing more.
@@ -79,9 +81,9 @@ async function saveProfile(profileName, config, token) {
     throw new Error(await response.text());
 }
 
-async function getDeviceData(samplingRatio, espID, dateFrom, token) {
-    const options = { headers: { 'auth-token': token } };
-    return await fetchJSON(`${dataAPIUrl}/heartbeats/data/${samplingRatio},${espID},${dateFrom}`, options);
+async function getDeviceData(samplingRatio, espID, dateFrom) {
+    // Session cookies are automatically sent with fetch requests
+    return await fetchJSON(`${dataAPIUrl}/heartbeats/data/${samplingRatio},${espID},${dateFrom}`);
 }
 
 async function getIssData() {
@@ -139,6 +141,7 @@ async function createLog(logData, source = 'userLogs') {
 
 
 async function getLatestForAllDevices() {
+    // Session cookies are automatically sent with fetch requests
     return await fetchJSON(`${dataAPIUrl}/api/v1/heartbeats/latest-batch`);
 }
 

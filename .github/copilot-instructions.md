@@ -1,3 +1,62 @@
+## Authentication Architecture (IMPORTANT - READ FIRST)
+
+**See `AUTHENTICATION_ARCHITECTURE.md` for complete details.**
+
+### Core Principles
+1. **DataAPI is the single source of truth** for all authentication
+2. **Session-based auth** (NOT token-based) - both SBQC and DataAPI share the same MongoDB session store
+3. **Public-first approach** - most pages are public with bonuses when logged in
+4. **User data lives in DataAPI** - SBQC never stores user credentials
+
+### Session Flow
+```
+User → SBQC → Session Cookie → DataAPI validates → User attached to res.locals.user
+```
+
+### Page Access Strategy
+- **Public pages** (/, /iot, /earth): Accessible to all, enhanced features when logged in
+- **Protected pages** (/tools, /device/:id): Require login, redirect to DataAPI login if needed
+- **API endpoints**: Some require auth, some are public with empty data fallback
+
+### Key Auth Patterns
+```javascript
+// Attach user to all requests (in sbqc_serv.js, applied globally)
+app.use(attachUser);  // from utils/auth.js
+
+// Protect a route
+router.get('/tools', requireAuth, (req, res) => { ... });
+
+// Optional auth (public page with bonuses)
+router.get('/iot', optionalAuth, (req, res) => {
+  if (res.locals.user) {
+    // Show enhanced features
+  } else {
+    // Show public version
+  }
+});
+```
+
+### Migration Status
+- ✅ **Phase 1 Complete**: Session configuration aligned with DataAPI
+  - Updated `sbqc_serv.js` with matching session config (database, name, secret)
+  - Created `utils/auth.js` with attachUser, requireAuth, optionalAuth, requireAdmin middleware
+  - Documentation: `.env.example` and `docs/AUTHENTICATION_SETUP.md`
+- 🔄 **Phase 2 In Progress**: Apply middleware and test session sharing
+  - Need to apply `attachUser` globally in `sbqc_serv.js`
+  - Test login flow: DataAPI → SBQC
+  - Remove `req.session.userToken` pattern from routes
+- ⏳ **Phase 3 Pending**: DataAPI endpoint updates and final migration
+
+### Environment Variables for Auth
+```bash
+# Must match DataAPI exactly
+SESS_SECRET=<same-as-dataapi>
+SESS_NAME=<same-as-dataapi>
+MONGO_SESSION_URI=<same-as-dataapi>
+```
+
+---
+
 ## Quick context
 
 This is a Node.js Express application (entry point `sbqc_serv.js`) that acts as a small IoT/web dashboard server. It integrates with:
@@ -38,8 +97,14 @@ Other envs referenced in code: `PORT`, `NODE_ENV`, `USER`, `PASS`, `MQTT_SERVER_
    - Custom error classes live in `utils/errors.js`. Use `BadRequest` when request validation fails so the global error handler maps codes correctly.
 
 4. Session & auth conventions:
-   - Sessions are stored in MongoDB via `connect-mongodb-session` and configured in `sbqc_serv.js`. Routes check `req.session.userToken` for Data API authorization.
-   - Many routes redirect to `/login` or return 401 when `req.session.userToken` is missing — preserve this flow when adding new protected endpoints.
+   - **Authentication**: Uses nodeTools auth middleware (from `github:windriderqc/nodeTools`) for session-based authentication
+   - **Session Sharing**: Sessions are stored in MongoDB via `connect-mongodb-session` and shared with DataAPI (session name: 'data-api.sid')
+   - **Middleware**: `auth.attachUser` runs globally to populate `res.locals.user` from session
+   - **Protected Routes**: Use `auth.requireAuth` middleware for routes requiring login (e.g., `/settings`, `/api/deviceLatest/:esp`)
+   - **Optional Auth**: Use `auth.optionalAuth` for public routes with enhanced features when logged in (e.g., `/api/devices/latest-batch`)
+   - **User Access**: In route handlers, check `res.locals.user` (populated by middleware) instead of manually checking session tokens
+   - **Login Flow**: Users must log in through DataAPI (or local `/login`). Session cookies are automatically sent with requests - no manual token management needed
+   - When adding new protected endpoints, apply `auth.requireAuth` middleware instead of manual session checks
 
 ## Project-specific patterns and examples
 
