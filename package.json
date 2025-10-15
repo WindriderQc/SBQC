@@ -4,7 +4,7 @@
   "description": "",
   "main": "sbqc_serv.js",
   "scripts": {
-    "test": "NODE_ENV=test mocha",
+    "test": "NODE_ENV=test mocha --file test/setup.js",
     "start": "node sbqc_serv.js",
     "dev": "nodemon sbqc_serv.js",
     "agent": "node sbqc_serv.js"

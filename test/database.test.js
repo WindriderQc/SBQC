@@ -1,7 +1,7 @@
 require('dotenv/config');
 const { expect } = require('chai');
 const { connectDb, loadCollections } = require('../scripts/database');
-const { connectToTestDB, closeTestDB, cleanupTestDB } = require('./helpers');
+const { connectToTestDB } = require('./helpers');
 const express = require('express');
 const fetch = require('node-fetch');
 
@@ -15,17 +15,9 @@ describe('Database Module', function() {
         db = await connectToTestDB();
     });
 
-    after(async () => {
-        await closeTestDB();
-    });
-
     beforeEach(() => {
         app = express();
         app.locals = {};
-    });
-
-    afterEach(async () => {
-        await cleanupTestDB();
     });
 
     describe('connectDb', () => {

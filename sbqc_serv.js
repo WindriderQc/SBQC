@@ -41,16 +41,30 @@ if (process.env.NODE_ENV !== 'test') {
 
 
 
-const mongoStore = new MongoDBStore({ uri: process.env.MONGO_CLOUD, collection: 'mySessions'}, (err) => { if(err) console.log( 'MongoStore connect error: ', err) } );
-mongoStore.on('error', (error) => console.log('MongoStore Error: ', error) );
+let sessionOptions;
 
-const sessionOptions = {
-  name: process.env.SESS_NAME,
-  resave: false,
-  saveUninitialized: true,
-  secret: process.env.SESS_SECRET,
-  store: mongoStore,
-  cookie: {      secure: IN_PROD,     sameSite: true  }// Please note that secure: true is a recommended option. However, it requires an https-enabled website, i.e., HTTPS is necessary for secure cookies. If secure is set, and you access your site over HTTP, the cookie will not be set.
+if (process.env.NODE_ENV === 'test') {
+    // Use in-memory session store for tests to avoid hanging connections
+    sessionOptions = {
+        secret: 'test-secret',
+        resave: false,
+        saveUninitialized: true
+    };
+} else {
+    const mongoStore = new MongoDBStore({
+        uri: process.env.MONGO_CLOUD,
+        collection: 'mySessions'
+    }, (err) => { if (err) console.log('MongoStore connect error: ', err) });
+    mongoStore.on('error', (error) => console.log('MongoStore Error: ', error));
+
+    sessionOptions = {
+        name: process.env.SESS_NAME,
+        resave: false,
+        saveUninitialized: true,
+        secret: process.env.SESS_SECRET,
+        store: mongoStore,
+        cookie: { secure: IN_PROD, sameSite: true }
+    };
 }
 /*
 if(IN_PROD)  //  Required only when not served by nginx...  DEV Purpose

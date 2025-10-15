@@ -1,25 +1,5 @@
 const request = require('supertest');
 const { expect } = require('chai');
-const app = require('../sbqc_serv');
-
-let server;
-before(done => {
-    if (!app.listening) {
-        server = app.listen(0, done);
-    } else {
-        server = app;
-        done();
-    }
-});
-
-after(done => {
-    if (server) {
-        server.close(done);
-    } else {
-        done();
-    }
-});
-
 
 describe('Meows API Routes', function() {
     this.timeout(10000);
@@ -39,7 +19,7 @@ describe('Meows API Routes', function() {
     });
 
     it('GET /meows should return an array of mews', (done) => {
-        request(server)
+        request(global.testServer)
             .get('/meows/mews')
             .expect('Content-Type', /json/)
             .expect(200)
@@ -51,7 +31,7 @@ describe('Meows API Routes', function() {
     });
 
     it('GET /v2/mews should return mews with metadata', (done) => {
-        request(server)
+        request(global.testServer)
             .get('/meows/v2/mews')
             .expect('Content-Type', /json/)
             .expect(200)
@@ -69,7 +49,7 @@ describe('Meows API Routes', function() {
             name: 'Test Cat',
             content: 'This is a test meow!'
         };
-        request(server)
+        request(global.testServer)
             .post('/meows/mews')
             .send(mew)
             .expect('Content-Type', /json/)
@@ -89,7 +69,7 @@ describe('Meows API Routes', function() {
             name: 'Test Cat',
             content: '' // Invalid content
         };
-        request(server)
+        request(global.testServer)
             .post('/meows/mews')
             .send(mew)
             .expect('Content-Type', /json/)
