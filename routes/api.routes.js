@@ -70,8 +70,11 @@ router.get('/deviceLatest/:esp', async (req, res, next) => {
 
 // New Batch endpoint to get latest post for all devices
 router.get('/devices/latest-batch', async (req, res, next) => {
+    if (!req.session || !req.session.userToken) {
+        return res.status(401).json({ error: 'Unauthorized: No session or token' });
+    }
     try {
-        const latestData = await dataApiService.getLatestForAllDevices();
+        const latestData = await dataApiService.getLatestForAllDevices(req.session.userToken);
         res.json(latestData);
     } catch (err) {
         next(err);

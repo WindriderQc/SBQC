@@ -6,13 +6,13 @@ const { BadRequest } = require('../utils/errors');
 const counter = require('../scripts/visitorCount');
 const sysmon = new (require('../scripts/systemMonitor'))();
 const dataApiService = require('../services/dataApiService');
+const jwt = require('jsonwebtoken');
 
 console.log("SysInfo: ", sysmon.getinfo().data);
 console.log("CPU: ", sysmon.getinfo().cpus.length);
 
 const apiUrl = process.env.DATA_API_URL + (process.env.DATA_API_PORT ? ":" + process.env.DATA_API_PORT : "");
 const mqttWSUrl = process.env.MQTT_SERVER_WS;
-const mqttinfo = JSON.stringify({url: mqttWSUrl, user: process.env.USER, pass: process.env.PASS });
 
 //  User/System logs manipulation functions
 const getUserLogs = async (req, res, next) => {
@@ -128,8 +128,13 @@ router.get('/iot', async (req, res, next) => {
             registered = [];
         }
         console.log('Registered devices for iot:', registered.map(dev => dev.id));
+
+        // Create a short-lived JWT for MQTT authentication
+        const mqttToken = jwt.sign({ sessionId: req.session.id }, process.env.TOKEN_SECRET, { expiresIn: '1h' });
+
         res.render('iot', {
-            mqttinfo: mqttinfo,
+            mqttUrl: mqttWSUrl,
+            mqttToken: mqttToken,
             regDevices: registered
         });
     } catch (err) {

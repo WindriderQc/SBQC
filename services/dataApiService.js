@@ -138,8 +138,9 @@ async function createLog(logData, source = 'userLogs') {
 }
 
 
-async function getLatestForAllDevices() {
-    return await fetchJSON(`${dataAPIUrl}/api/v1/heartbeats/latest-batch`);
+async function getLatestForAllDevices(token) {
+    const options = { headers: { 'auth-token': token } };
+    return await fetchJSON(`${dataAPIUrl}/api/v1/heartbeats/latest-batch`, options);
 }
 
 
