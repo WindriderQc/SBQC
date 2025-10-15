@@ -18,23 +18,26 @@ const mqttOptions = {
   }
 
 
-function initMqtt(url, msgHandler,  channels = [])  
-{
-    if (mqtt_) {   console.warn("Already initialized and Trying to init MQTT again!");   return mqtt_    }
+let getIo;
 
-    console.log('Attempting MQTT connection...')
+function initMqtt(url, msgHandler, channels = [], getSocketIoInstance) {
+    if (mqtt_) {
+        console.warn("Already initialized and Trying to init MQTT again!");
+        return mqtt_;
+    }
 
-    let mqttclient = mqtt.connect(url, mqttOptions)
+    getIo = getSocketIoInstance; // Store the function that gets the socket.io instance
 
+    console.log('Attempting MQTT connection...');
+    const mqttclient = mqtt.connect(url, mqttOptions);
 
-   
-    mqttclient.on('error', (err) => {  console.log(err)  })
+    mqttclient.on('error', (err) => {
+        console.log(err);
+    });
 
-    mqttclient.on('connect', () => {  
-        console.log('MQTT connected\n')
-
-         // Subscribe to the provided list of channels
-         if (channels.length > 0) {
+    mqttclient.on('connect', () => {
+        console.log('MQTT connected\n');
+        if (channels.length > 0) {
             channels.forEach(channel => {
                 mqttclient.subscribe(channel, (err) => {
                     if (err) {
@@ -47,18 +50,22 @@ function initMqtt(url, msgHandler,  channels = [])
         } else {
             console.warn('No channels provided for subscription.');
         }
+    });
 
-        //mqttclient.subscribe('esp32')
-        //mqttclient.subscribe('esp32/#') //  listening to all esp32 post
-    })
-    
     mqttclient.on('message', async (topic, message) => {
+        const io = getIo();
+        // Forward every MQTT message to all connected web clients
+        if (io) {
+            io.sockets.emit('mqtt-message', { topic: topic, message: message.toString() });
+        }
 
-        if(!msgHandler(topic, message, mqttclient))  consoleMsg(topic, message)      // prints all other messages to console
-    })
+        if (!msgHandler(topic, message, mqttclient)) {
+            consoleMsg(topic, message);
+        }
+    });
 
-    mqtt_ = mqttclient
-    return mqtt_
+    mqtt_ = mqttclient;
+    return mqtt_;
 }
 
 

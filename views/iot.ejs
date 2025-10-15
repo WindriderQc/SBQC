@@ -76,11 +76,11 @@
 <%- include('partials/footer') %>
 </div>
 
+<script src="/socket.io/socket.io.js"></script>
 <script>
   // Pass data from EJS to our external script
   window.ejsData = {
-    regDevices: <%- JSON.stringify(regDevices) %>,
-    mqttInfo: JSON.parse('<%- mqttinfo %>')
+    regDevices: <%- JSON.stringify(regDevices) %>
   };
 </script>
 
