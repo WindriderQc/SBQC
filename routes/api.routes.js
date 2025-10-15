@@ -67,6 +67,19 @@ router.get('/deviceLatest/:esp', async (req, res, next) => {
     }
 });
 
+
+// New Batch endpoint to get latest post for all devices
+router.get('/devices/latest-batch', async (req, res, next) => {
+    try {
+        const latestData = await dataApiService.getLatestForAllDevices();
+        res.json(latestData);
+    } catch (err) {
+        next(err);
+    }
+});
+
+
+
 // Save Profile
 router.post('/saveProfile', async (req, res, next) => {
     if (!req.session || !req.session.userToken) {
