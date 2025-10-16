@@ -216,30 +216,10 @@ router.get('/database', (req, res) => {
     res.render('database', { collectionList: JSON.stringify(list), apiUrl: apiUrl });
 });
 
-// Protected route - requires authentication via nodeTools middleware
-router.get('/settings', auth.requireAuth, async (req, res, next) => {
-    try {
-        const [usersResponse, devices, alarmsResponse] = await Promise.all([
-            fetch(`${apiUrl}/api/v1/users`),
-            dataApiService.getRegisteredDevices(),
-            fetch(`${apiUrl}/api/v1/alarms`)
-        ]);
-
-        if (!devices) {
-            throw new Error("Could not load device data from DataAPI.");
-        }
-
-        const usersResult = await usersResponse.json();
-        const alarmsResult = await alarmsResponse.json();
-
-        res.render('settings', {
-            users: usersResult.data,
-            devices: devices,
-            alarms: alarmsResult.data
-        });
-    } catch (error) {
-        next(error);
-    }
+// NOTE: /settings has been moved to DataAPI frontend
+// Redirect to DataAPI for settings management
+router.get('/settings', (req, res) => {
+    res.redirect('https://data.specialblend.ca/settings');
 });
 
 // --- Simple Static Page Routes ---

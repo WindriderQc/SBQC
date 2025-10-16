@@ -1,3 +1,7 @@
+// SBQC Service Endpoints
+// These are SBQC's internal service endpoints, not to be confused with DataAPI
+// DataAPI (external) handles: users, devices, heartbeats, alarms, profiles
+// SBQC endpoints (here) handle: weather, tides, geolocation, device queries
 const router = require('express').Router();
 const mailman = require('../public/js/mailman');
 const dataApiService = require('../services/dataApiService');
@@ -57,11 +61,9 @@ router.post('/alert', async (req, res, next) => {
     }
 });
 
-// Get Latest Device Data - Requires Authentication
-router.get('/deviceLatest/:esp', auth.requireAuth, async (req, res, next) => {
+// Get Latest Device Data - Public endpoint for IoT monitoring
+router.get('/deviceLatest/:esp', async (req, res, next) => {
     try {
-        // User is guaranteed to be logged in (requireAuth middleware)
-        // No need to pass token - session cookies handle authentication
         const respData = await dataApiService.getDeviceLatest(req.params.esp);
         const data = respData.data && respData.data[0];
         if (!data) {
@@ -74,20 +76,9 @@ router.get('/deviceLatest/:esp', auth.requireAuth, async (req, res, next) => {
 });
 
 
-// New Batch endpoint to get latest post for all devices - Optional Authentication
-router.get('/devices/latest-batch', auth.optionalAuth, async (req, res, next) => {
+// Get latest post for all devices - Public endpoint for dashboard
+router.get('/devices/latest-batch', async (req, res, next) => {
     try {
-        // Check if user is authenticated via res.locals.user (set by optionalAuth)
-        if (!res.locals.user) {
-            // If not authenticated, return empty result
-            return res.status(200).json({ 
-                status: 'info', 
-                message: 'Authentication required for device status',
-                data: [] 
-            });
-        }
-        
-        // User is authenticated - session cookies handle auth automatically
         const latestData = await dataApiService.getLatestForAllDevices();
         res.json(latestData);
     } catch (err) {
@@ -97,7 +88,8 @@ router.get('/devices/latest-batch', auth.optionalAuth, async (req, res, next) =>
 
 
 
-// Save Profile - Requires Authentication
+// Save Profile - Protected (configuration management)
+// TODO: Consider migrating to DataAPI frontend
 router.post('/saveProfile', auth.requireAuth, async (req, res, next) => {
     try {
         const { profileName, config } = req.body;
@@ -109,12 +101,11 @@ router.post('/saveProfile', auth.requireAuth, async (req, res, next) => {
     }
 });
 
-// Get Device Data - Requires Authentication
-router.get('/data/:options', auth.requireAuth, async (req, res, next) => {
+// Get Device Data - Public endpoint for graphs and visualization
+router.get('/data/:options', async (req, res, next) => {
     try {
         const [samplingRatio, espID, dateFrom] = req.params.options.split(',');
         if (req.session) req.session.selectedDevice = espID;
-        // User is guaranteed to be logged in - session cookies handle auth
         const data = await dataApiService.getDeviceData(samplingRatio, espID, dateFrom);
         res.json(data);
     } catch (err) {
