@@ -22,6 +22,12 @@ console.log("CPU: ", sysmon.getinfo().cpus.length);
 const apiUrl = process.env.DATA_API_URL + (process.env.DATA_API_PORT ? ":" + process.env.DATA_API_PORT : "");
 const mqttWSUrl = process.env.MQTT_SERVER_WS;
 
+// MQTT connection info for templates
+const mqttinfo = {
+    url: mqttWSUrl,
+    broker: process.env.MQTT_SERVER_URL || 'mqtt://mqtt.specialblend.ca'
+};
+
 //  User/System logs manipulation functions
 const getUserLogs = async (req, res, next) => {
     try {

@@ -160,7 +160,7 @@ router.post('/', loginValidationRules(), async (req, res, next) => {
         
         try  {
             await req.session.save();
-            res.header('credentials', 'include').redirect(LOGIN_SUCCESS_REDIRECT_PATH)    //res.header("auth-token", result.token).render('fundev', { name: req.session.email });      // TODO : /settings hardcoded here...   hmmm   nah! :S
+            res.header('credentials', 'include').redirect(LOGIN_SUCCESS_REDIRECT_PATH)    
         } catch (err) {
             return next(err);
         }
