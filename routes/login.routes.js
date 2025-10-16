@@ -6,11 +6,13 @@ const router = require('express').Router(),
  jwt = require('jsonwebtoken'),
  { body, validationResult } = require('express-validator'),
  verify = require('./verifyToken'),
- { registerValidationRules, loginValidationRules } = require('./validation')
+ { registerValidationRules, loginValidationRules } = require('./validation'),
+ fetch = require('node-fetch')  // Import fetch for API calls
 
-const LOGIN_SUCCESS_REDIRECT_PATH = '../settings';
+const LOGIN_SUCCESS_REDIRECT_PATH = '/'; // Redirect to SBQC home page after login
 
-const apiUrl = "http://" + process.env.DATA_API_IP + ":" + process.env.DATA_API_PORT
+// Use DATA_API_URL directly (includes protocol and domain)
+const apiUrl = process.env.DATA_API_URL || "https://data.specialblend.ca"
 
 
 router.get("/register", (req, res) => {
@@ -147,22 +149,24 @@ router.post('/', loginValidationRules(), async (req, res, next) => {
         }
 
     
-        console.log('login response: ', result.message);
-        if (result.token.length > 5) {
-       
-            req.session.userToken = result.token
-            req.session.email = result.email
-            console.log('saving session:\n', req.session)
-            
-            try  {
-                await req.session.save();
-                res.header('credentials', 'include').redirect(LOGIN_SUCCESS_REDIRECT_PATH)    //res.header("auth-token", result.token).render('fundev', { name: req.session.email });      // TODO : /settings hardcoded here...   hmmm   nah! :S
-            } catch (err) {
-                return next(err);
-            }
-             
+    console.log('login response: ', result.message);
+    if (result.token.length > 5) {
+   
+        // Store userId in session for nodeTools auth middleware
+        req.session.userId = user._id.toString() // nodeTools attachUser looks for this
+        req.session.email = result.email
+        req.session.userToken = result.token // Keep for backward compatibility (optional)
+        console.log('saving session:\n', req.session)
+        
+        try  {
+            await req.session.save();
+            res.header('credentials', 'include').redirect(LOGIN_SUCCESS_REDIRECT_PATH)    
+        } catch (err) {
+            return next(err);
         }
-        else res.render('partials/login/loginnomatch', { alertMsg: 'Sorry, something wrong with authentification. Please contact your admin.'})
+         
+    }
+    else res.render('partials/login/loginnomatch', { alertMsg: 'Sorry, something wrong with authentification. Please contact your admin.'})
     }
     catch (err) {
         return next(err);
@@ -185,6 +189,6 @@ router.get('/out', (req, res) => {
 
 
 
-// Export API routes
+// Export login/register routes
 module.exports = router
 

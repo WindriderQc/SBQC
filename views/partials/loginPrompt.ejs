@@ -1,0 +1,30 @@
+<div class="login-required-prompt text-center p-5 my-4">
+    <div class="login-prompt-content">
+        <i class="fas fa-lock fa-4x mb-4 text-muted"></i>
+        <h3 class="mb-3">Login Required</h3>
+        <p class="lead text-muted mb-4">
+<% if (typeof feature !== 'undefined') { %>You must be logged in to <%= feature %>.<% } else { %>You must be logged in to access this feature.<% } %>
+        </p>
+        <div class="d-flex justify-content-center gap-2">
+            <a href="/login" class="btn btn-primary btn-lg">
+                <i class="fas fa-sign-in-alt me-2"></i> Login Now
+            </a>
+            <a href="/login/register" class="btn btn-outline-secondary btn-lg">
+                <i class="fas fa-user-plus me-2"></i> Register
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.login-required-prompt {
+    background-color: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 0.5rem;
+}
+
+.login-prompt-content {
+    max-width: 500px;
+    margin: 0 auto;
+}
+</style>

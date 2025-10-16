@@ -30,34 +30,57 @@ async function getWeatherAndAirQuality(lat, lon) {
         return cachedData.data;
     }
 
-    if (!apiKeys.weather || !apiKeys.openaq) {
-        throw new Error('Server configuration error: Missing weather or air quality API key.');
+    if (!apiKeys.weather) {
+        throw new Error('Server configuration error: Missing weather API key.');
     }
 
     const weatherURL = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&APPID=${apiKeys.weather}`;
-    const aq_url = `https://api.openaq.org/v3/locations?coordinates=${lat},${lon}&radius=5000`;
 
-    // Fetch in parallel
-    const [weather, aq_data] = await Promise.all([
-        fetchJSON(weatherURL),
-        fetchJSON(aq_url, { headers: { 'X-API-Key': apiKeys.openaq } })
-    ]);
+    // Fetch weather data
+    const weather = await fetchJSON(weatherURL);
 
-    let sensorAQData = null;
-    if (aq_data.results && aq_data.results.length > 0) {
-        const sortedSensors = aq_data.results.sort((a, b) => new Date(b.datetimeLast) - new Date(a.datetimeLast));
-        const latestSensor = sortedSensors[0];
-        if (latestSensor && latestSensor.id) {
-            const sensor_url = `https://api.openaq.org/v3/sensors/${latestSensor.id}`;
-            try {
-                sensorAQData = await fetchJSON(sensor_url, { headers: { 'X-API-Key': apiKeys.openaq } });
-            } catch (e) {
-                console.warn(`Could not fetch details for sensor ${latestSensor.id}: ${e.message}`);
+    // Try to fetch air quality data, but don't fail if it's unavailable
+    let airQualityData = null;
+    if (apiKeys.openaq) {
+        try {
+            const aq_url = `https://api.openaq.org/v3/locations?coordinates=${lat},${lon}&radius=5000`;
+            const aq_data = await fetchJSON(aq_url, { headers: { 'X-API-Key': apiKeys.openaq } });
+
+            if (aq_data.results && aq_data.results.length > 0) {
+                // Sort by most recent data
+                const sortedSensors = aq_data.results.sort((a, b) => 
+                    new Date(b.datetimeLast) - new Date(a.datetimeLast)
+                );
+                const latestSensor = sortedSensors[0];
+
+                // Try to get detailed sensor data, but use basic data if it fails
+                if (latestSensor && latestSensor.id) {
+                    try {
+                        const sensor_url = `https://api.openaq.org/v3/sensors/${latestSensor.id}`;
+                        const sensorDetails = await fetchJSON(sensor_url, { 
+                            headers: { 'X-API-Key': apiKeys.openaq } 
+                        });
+                        airQualityData = sensorDetails;
+                    } catch (sensorError) {
+                        // Sensor details failed, use basic location data instead
+                        console.warn(`Sensor ${latestSensor.id} details unavailable, using location data: ${sensorError.message}`);
+                        airQualityData = aq_data;
+                    }
+                } else {
+                    airQualityData = aq_data;
+                }
             }
+        } catch (aqError) {
+            // Air quality API failed completely, continue without it
+            console.warn(`Air quality data unavailable: ${aqError.message}`);
         }
     }
 
-    const result = { weather, air_quality: sensorAQData || aq_data };
+    const result = { 
+        weather, 
+        air_quality: airQualityData || { status: 'unavailable', message: 'No air quality data available for this location' }
+    };
+    
     weatherCache[cacheKey] = { data: result, timestamp: Date.now() };
 
     return result;

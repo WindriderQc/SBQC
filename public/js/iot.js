@@ -86,8 +86,14 @@
             } else {
                 const latestStatuses = await response.json();
                 if(latestStatuses.data) {
-                    latestStatuses.data.forEach(status => {
-                        deviceStatusMap.set(status.id, status.lastpost.data.time);
+                    latestStatuses.data.forEach(statusWrapper => {
+                        // statusWrapper is { status: 'success', data: heartbeatObject }
+                        if (statusWrapper && statusWrapper.data) {
+                            const heartbeat = statusWrapper.data;
+                            if (heartbeat.sender && heartbeat.time) {
+                                deviceStatusMap.set(heartbeat.sender, heartbeat.time);
+                            }
+                        }
                     });
                 }
             }

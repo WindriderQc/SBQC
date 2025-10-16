@@ -1,0 +1,38 @@
+<!-- IoT Sidebar Navigation -->
+<div class="sidebar collapse white animate-left" style="z-index:3;width:250px;" id="iotSidebar">
+    <div class="container">
+        <br>
+        <h5><i class="fa fa-microchip"></i> IoT Dashboard</h5>
+    </div>
+    <hr>
+    <div class="bar-block">
+        <a href="/iot" class="bar-item btn padding <%= (typeof menuId !== 'undefined' && menuId === 'iot-overview') ? 'blue' : '' %>">
+            <i class="fa fa-dashboard fa-fw"></i> Overview
+        </a>
+        <a href="/mqttTest" class="bar-item btn padding <%= (typeof menuId !== 'undefined' && menuId === 'iot-mqtt-test') ? 'blue' : '' %>">
+            <i class="fa fa-plug fa-fw"></i> MQTT Test
+        </a>
+        <a href="/graphs" class="bar-item btn padding <%= (typeof menuId !== 'undefined' && menuId === 'iot-graphs') ? 'blue' : '' %>">
+            <i class="fa fa-line-chart fa-fw"></i> Graphs
+        </a>
+        <a href="/device" class="bar-item btn padding <%= (typeof menuId !== 'undefined' && menuId === 'iot-device') ? 'blue' : '' %>">
+            <i class="fa fa-cog fa-fw"></i> Device Control
+        </a>
+    </div>
+</div>
+
+<!-- Overlay effect when opening sidebar on small screens -->
+<div class="overlay animate-opacity" onclick="w3_close()" style="cursor:pointer" title="close side menu" id="myOverlay"></div>
+
+<script>
+// IoT Sidebar toggle functions
+function w3_open() {
+    document.getElementById("iotSidebar").style.display = "block";
+    document.getElementById("myOverlay").style.display = "block";
+}
+
+function w3_close() {
+    document.getElementById("iotSidebar").style.display = "none";
+    document.getElementById("myOverlay").style.display = "none";
+}
+</script>

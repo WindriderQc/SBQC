@@ -301,3 +301,106 @@ form .form-input:focus {
     flex: 1;
     text-align: center;
 }
+
+
+/* ============================================
+   Authentication UI Styles
+   ============================================ */
+
+/* User dropdown in navigation */
+.navbar .dropdown-menu {
+    min-width: 220px;
+}
+
+.navbar .dropdown-header {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+}
+
+.navbar .dropdown-item {
+    padding: 0.5rem 1rem;
+    font-size: 0.95rem;
+}
+
+.navbar .dropdown-item i {
+    width: 20px;
+    text-align: center;
+}
+
+.navbar .dropdown-divider {
+    margin: 0.5rem 0;
+}
+
+/* Auth status badge */
+.auth-status {
+    margin: 1rem 0;
+    border-radius: 0.375rem;
+}
+
+.auth-status.logged-in {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.auth-status.logged-out {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+}
+
+/* Login required prompt */
+.login-required-prompt {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px dashed #dee2e6;
+    border-radius: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.login-required-prompt:hover {
+    border-color: #adb5bd;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.login-required-prompt .fa-lock {
+    color: #6c757d;
+    opacity: 0.5;
+}
+
+.login-prompt-content {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+/* Enhanced feature indicators */
+.enhanced-feature .alert {
+    margin-bottom: 1.5rem;
+    border-left: 4px solid;
+}
+
+.enhanced-feature .alert-success {
+    border-left-color: #28a745;
+}
+
+.enhanced-feature .alert-info {
+    border-left-color: #17a2b8;
+}
+
+/* Protected feature wrapper */
+.protected-feature {
+    position: relative;
+    min-height: 200px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .navbar .nav-link-text {
+        display: inline;
+    }
+    
+    .login-required-prompt {
+        padding: 2rem 1rem !important;
+    }
+    
+    .login-required-prompt .fa-lock {
+        font-size: 2.5rem !important;
+    }
+}

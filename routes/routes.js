@@ -22,6 +22,12 @@ console.log("CPU: ", sysmon.getinfo().cpus.length);
 const apiUrl = process.env.DATA_API_URL + (process.env.DATA_API_PORT ? ":" + process.env.DATA_API_PORT : "");
 const mqttWSUrl = process.env.MQTT_SERVER_WS;
 
+// MQTT connection info for templates
+const mqttinfo = {
+    url: mqttWSUrl,
+    broker: process.env.MQTT_SERVER_URL || 'mqtt://mqtt.specialblend.ca'
+};
+
 //  User/System logs manipulation functions
 const getUserLogs = async (req, res, next) => {
     try {
@@ -141,6 +147,7 @@ router.get('/iot', async (req, res, next) => {
         const mqttToken = jwt.sign({ sessionId: req.session.id }, process.env.TOKEN_SECRET, { expiresIn: '1h' });
 
         res.render('iot', {
+            menuId: 'iot-overview',
             mqttUrl: mqttWSUrl,
             mqttToken: mqttToken,
             regDevices: registered
@@ -171,6 +178,7 @@ router.get('/device', async (req, res, next) => {
         const alarmList = await response.json();
 
         res.render('device', {
+            menuId: 'iot-device',
             mqttinfo: mqttinfo,
             devices: registered,
             device: selDevice,
@@ -192,6 +200,7 @@ router.get('/graphs', async (req, res, next) => {
         }
         const selectedDevice = req.session.selectedDevice || list[0].id;
         res.render('graphs', {
+            menuId: 'iot-graphs',
             mqttinfo: mqttinfo,
             devices: { list, registered: list },
             selected: selectedDevice,
@@ -200,6 +209,12 @@ router.get('/graphs', async (req, res, next) => {
     } catch (err) {
         next(err);
     }
+});
+
+router.get('/mqttTest', (req, res) => {
+    res.render('mqttTest', {
+        menuId: 'iot-mqtt-test'
+    });
 });
 
 router.post('/selectDevice', (req, res, next) => {
@@ -216,34 +231,14 @@ router.get('/database', (req, res) => {
     res.render('database', { collectionList: JSON.stringify(list), apiUrl: apiUrl });
 });
 
-// Protected route - requires authentication via nodeTools middleware
-router.get('/settings', auth.requireAuth, async (req, res, next) => {
-    try {
-        const [usersResponse, devices, alarmsResponse] = await Promise.all([
-            fetch(`${apiUrl}/api/v1/users`),
-            dataApiService.getRegisteredDevices(),
-            fetch(`${apiUrl}/api/v1/alarms`)
-        ]);
-
-        if (!devices) {
-            throw new Error("Could not load device data from DataAPI.");
-        }
-
-        const usersResult = await usersResponse.json();
-        const alarmsResult = await alarmsResponse.json();
-
-        res.render('settings', {
-            users: usersResult.data,
-            devices: devices,
-            alarms: alarmsResult.data
-        });
-    } catch (error) {
-        next(error);
-    }
+// NOTE: /settings has been moved to DataAPI frontend
+// Redirect to DataAPI for settings management
+router.get('/settings', (req, res) => {
+    res.redirect('https://data.specialblend.ca/settings');
 });
 
 // --- Simple Static Page Routes ---
-const staticRoutes = ['/iGrow', '/empty', '/cams', '/earth', '/earthmap', '/natureCode', '/tools', '/legacy', '/live', '/specs', '/threejs-scene', '/colorfinder', '/technotes', '/serverspec'];
+const staticRoutes = ['/iGrow', '/empty', '/cams', '/earth', '/earthmap', '/natureCode', '/tools', '/legacy', '/live', '/specs', '/threejs_scene', '/colorfinder', '/technotes', '/serverspec'];
 staticRoutes.forEach(route => {
     const view = route.substring(1);
     router.get(route, (req, res) => {
@@ -251,7 +246,7 @@ staticRoutes.forEach(route => {
         if (view === 'tools') renderOptions.sysInfo = sysmon.getinfo();
         if (view === 'legacy') renderOptions.weatherAPI = process.env.WEATHER_API_KEY;
         if (view === 'live') renderOptions.alertEmail = process.env.ALERT_EMAIL || "enter_your@email.com";
-        if (view === 'threejs-scene') {
+        if (view === 'threejs_scene') {
             renderOptions.menuId = 'threejs-scene';
             renderOptions.title = 'threejs scene';
         }

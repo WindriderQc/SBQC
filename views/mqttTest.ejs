@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<%- include('partials/mainHead', { title: 'MQTT WebSocket Test' }) %>
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+<style>
+    .mqtt-container {
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 20px;
+    }
+    .mqtt-form {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #333;
+    }
+    .form-group input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    .btn-publish {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 30px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+    .btn-publish:hover {
+        background-color: #0056b3;
+    }
+    .status {
+        margin-top: 20px;
+        padding: 10px;
+        border-radius: 4px;
+    }
+    .status.connected {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    .status.disconnected {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    .log-container {
+        margin-top: 20px;
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 4px;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    .log-entry {
+        padding: 5px 0;
+        border-bottom: 1px solid #dee2e6;
+        font-family: monospace;
+        font-size: 13px;
+    }
+</style>
+</head>
+
+<body class="fixed-nav sticky-footer bg-light sidenav-toggled" id="page-top">
+
+<%- include('partials/nav') %> 
+<%- include('partials/iot/sidebar') %>
+
+<div class="content-wrapper" style="margin-left:250px; margin-top:56px;">
+    <div class="mqtt-container">
+        <h1><i class="fa fa-plug"></i> MQTT WebSocket Test</h1>
+        
+        <div id="connectionStatus" class="status disconnected">
+            <strong>Status:</strong> Disconnected
+        </div>
+
+        <div class="mqtt-form">
+            <form id="mqttForm">
+                <div class="form-group">
+                    <label for="topic">Topic:</label>
+                    <input type="text" id="topic" name="topic" value="test/topic">
+                </div>
+                
+                <div class="form-group">
+                    <label for="message">Message:</label>
+                    <input type="text" id="message" name="message" value="Hello MQTT">
+                </div>
+                
+                <button type="button" class="btn-publish" onclick="mqttPost()">
+                    <i class="fa fa-paper-plane"></i> Publish Message
+                </button>
+            </form>
+        </div>
+
+        <div class="log-container">
+            <h4>Message Log</h4>
+            <div id="messageLog"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let client = null;
+    const statusEl = document.getElementById('connectionStatus');
+    const logEl = document.getElementById('messageLog');
+
+    function addLogEntry(message, type = 'info') {
+        const entry = document.createElement('div');
+        entry.className = 'log-entry';
+        const timestamp = new Date().toLocaleTimeString();
+        entry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+        logEl.insertBefore(entry, logEl.firstChild);
+    }
+
+    // Connect to the MQTT broker via WebSocket
+    try {
+        client = mqtt.connect('ws://specialblend.ca:9001');
+
+        client.on('connect', () => {
+            console.log('Connected to MQTT broker');
+            statusEl.className = 'status connected';
+            statusEl.innerHTML = '<strong>Status:</strong> Connected to ws://specialblend.ca:9001';
+            addLogEntry('✓ Connected to MQTT broker', 'success');
+            
+            client.subscribe('presence', (err) => {
+                if (!err) {
+                    client.publish('presence', 'Hello mqtt');
+                    addLogEntry('Subscribed to topic: presence', 'info');
+                }
+            });
+        });
+
+        client.on('message', (topic, message) => {
+            const msg = message.toString();
+            console.log('Received:', topic, msg);
+            addLogEntry(`📨 Received on [${topic}]: ${msg}`, 'received');
+        });
+
+        client.on('error', (err) => {
+            console.error('MQTT Error:', err);
+            statusEl.className = 'status disconnected';
+            statusEl.innerHTML = '<strong>Status:</strong> Connection Error';
+            addLogEntry('❌ Error: ' + err.message, 'error');
+        });
+
+        client.on('close', () => {
+            statusEl.className = 'status disconnected';
+            statusEl.innerHTML = '<strong>Status:</strong> Disconnected';
+            addLogEntry('Connection closed', 'warning');
+        });
+
+    } catch (err) {
+        console.error('Failed to connect:', err);
+        addLogEntry('❌ Failed to initialize MQTT client: ' + err.message, 'error');
+    }
+
+    function mqttPost() {
+        const topic = document.getElementById('topic').value;
+        const message = document.getElementById('message').value;
+        
+        if (!client || !client.connected) {
+            alert('Not connected to MQTT broker');
+            addLogEntry('❌ Cannot publish: Not connected', 'error');
+            return;
+        }
+
+        client.publish(topic, message, (err) => {
+            if (err) {
+                console.error('Failed to publish message:', err);
+                addLogEntry('❌ Publish failed: ' + err.message, 'error');
+            } else {
+                console.log('Message published successfully');
+                addLogEntry(`📤 Published to [${topic}]: ${message}`, 'sent');
+            }
+        });
+    }
+</script>
+
+</body>
+</html>

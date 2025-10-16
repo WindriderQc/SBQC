@@ -18,6 +18,7 @@ const express = require('express'),
 
     
 const app = express()
+app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'ejs')
 
 
@@ -104,13 +105,8 @@ const options = {
 // Databases
 const { connectDb, loadCollections } = require('./scripts/database');
 
-// Authentication middleware from nodeTools
-const nodetools = require('nodetools');
-const auth = nodetools.auth.createAuthMiddleware({
-    dbGetter: (req) => req.app.locals.db,
-    loginRedirectUrl: 'https://data.specialblend.ca/login',
-    logger: process.env.NODE_ENV === 'development' ? console.log : null
-});
+// Custom authentication middleware that fetches users from DataAPI
+const auth = require('./scripts/authMiddleware');
 
 (async () => {
     try {
@@ -134,7 +130,7 @@ app
   .use(express.json({ limit:'10mb' })) // To parse the incoming requests with JSON payloads
   //.use(rateLimit({ windowMs: 2 * 1000, max: 1 }))  // useful for api to prevent too many requests...
   .use(session(sessionOptions))
-  .use(auth.attachUser) // Attach user to res.locals from session (using nodeTools auth)
+  .use(auth.attachUser) // Attach user to res.locals from session (fetches from DataAPI)
   .use(express.static(path.resolve(__dirname, 'public') , { maxAge: 1000*60*60 })) // maxAge allow client to cache data for 1h
   .use('/api',      require('./routes/api.routes')) // New API routes
   .use('/',         require('./routes/routes'))
