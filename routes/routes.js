@@ -147,6 +147,7 @@ router.get('/iot', async (req, res, next) => {
         const mqttToken = jwt.sign({ sessionId: req.session.id }, process.env.TOKEN_SECRET, { expiresIn: '1h' });
 
         res.render('iot', {
+            menuId: 'iot-overview',
             mqttUrl: mqttWSUrl,
             mqttToken: mqttToken,
             regDevices: registered
@@ -177,6 +178,7 @@ router.get('/device', async (req, res, next) => {
         const alarmList = await response.json();
 
         res.render('device', {
+            menuId: 'iot-device',
             mqttinfo: mqttinfo,
             devices: registered,
             device: selDevice,
@@ -198,6 +200,7 @@ router.get('/graphs', async (req, res, next) => {
         }
         const selectedDevice = req.session.selectedDevice || list[0].id;
         res.render('graphs', {
+            menuId: 'iot-graphs',
             mqttinfo: mqttinfo,
             devices: { list, registered: list },
             selected: selectedDevice,

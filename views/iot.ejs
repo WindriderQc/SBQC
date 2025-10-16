@@ -6,9 +6,17 @@
 </head>
 <body class="light-grey" id="page-top">
 
-<%- include('partials/miniNav') %>
+<%- include('partials/nav') %>
+<%- include('partials/iot/sidebar') %>
 
-<div class="main" style="margin-left:300px;margin-top:43px;">
+<!-- IoT Menu Toggle Button -->
+<div class="bar top white large" style="z-index:3; margin-top:56px; padding-left: 16px;">
+    <button class="bar-item btn hover-none hover-text-grey" onclick="w3_open();">
+        <i class="fa fa-bars"></i> IoT Menu
+    </button>
+</div>
+
+<div class="main" style="margin-left:250px;margin-top:110px;">
     <div class="container-fluid bg-3">
 
       <div class="row">
