@@ -211,6 +211,12 @@ router.get('/graphs', async (req, res, next) => {
     }
 });
 
+router.get('/mqttTest', (req, res) => {
+    res.render('mqttTest', {
+        menuId: 'iot-mqtt-test'
+    });
+});
+
 router.post('/selectDevice', (req, res, next) => {
     req.session.selectedDevice = req.body.selected;
     console.log('Saving device selection to session: ', req.body.selected);

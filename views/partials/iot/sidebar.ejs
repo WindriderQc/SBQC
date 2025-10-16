@@ -6,14 +6,14 @@
     </div>
     <hr>
     <div class="bar-block">
-        <a href="#" class="bar-item btn padding-16 hover-black" onclick="w3_close()" title="close menu">
-            <i class="fa fa-remove fa-fw"></i> Close Menu
-        </a>
         <a href="/iot" class="bar-item btn padding <%= (typeof menuId !== 'undefined' && menuId === 'iot-overview') ? 'blue' : '' %>">
             <i class="fa fa-dashboard fa-fw"></i> Overview
         </a>
+        <a href="/mqttTest" class="bar-item btn padding <%= (typeof menuId !== 'undefined' && menuId === 'iot-mqtt-test') ? 'blue' : '' %>">
+            <i class="fa fa-plug fa-fw"></i> MQTT Test
+        </a>
         <a href="/graphs" class="bar-item btn padding <%= (typeof menuId !== 'undefined' && menuId === 'iot-graphs') ? 'blue' : '' %>">
-            <i class="fa fa-line-chart fa-fw"></i> MQTT Test
+            <i class="fa fa-line-chart fa-fw"></i> Graphs
         </a>
         <a href="/device" class="bar-item btn padding <%= (typeof menuId !== 'undefined' && menuId === 'iot-device') ? 'blue' : '' %>">
             <i class="fa fa-cog fa-fw"></i> Device Control
