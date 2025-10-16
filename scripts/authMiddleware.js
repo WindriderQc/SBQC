@@ -7,10 +7,65 @@
 
 const dataApiService = require('../services/dataApiService');
 
+// In-memory cache for user data to prevent excessive API calls
+const userCache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Get user from cache or fetch from API
+ */
+async function getCachedUser(userId) {
+    const now = Date.now();
+    const cached = userCache.get(userId);
+    
+    // Return cached user if still valid
+    if (cached && (now - cached.timestamp) < CACHE_TTL) {
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`[AUTH CACHE] Using cached user for ${userId}`);
+        }
+        return cached.user;
+    }
+    
+    // Fetch from API
+    const user = await dataApiService.getUserById(userId);
+    
+    // Cache the result (even if null to prevent repeated failed lookups)
+    userCache.set(userId, {
+        user,
+        timestamp: now
+    });
+    
+    // Clean up old cache entries (simple cleanup on each fetch)
+    if (userCache.size > 100) { // Prevent unbounded growth
+        const cutoff = now - CACHE_TTL;
+        for (const [key, value] of userCache.entries()) {
+            if (value.timestamp < cutoff) {
+                userCache.delete(key);
+            }
+        }
+    }
+    
+    return user;
+}
+
+/**
+ * Clear cache for a specific user (useful after updates)
+ */
+function clearUserCache(userId) {
+    userCache.delete(userId);
+}
+
+/**
+ * Clear entire user cache
+ */
+function clearAllUserCache() {
+    userCache.clear();
+}
+
 /**
  * Custom attachUser middleware that fetches user from DataAPI
  * 
- * Checks session for userId and loads user from DataAPI.
+ * Checks session for userId and loads user from DataAPI (with caching).
  * Sets res.locals.user with user data or null.
  * Never blocks requests - always calls next().
  */
@@ -30,8 +85,8 @@ async function attachUser(req, res, next) {
         }
         
         try {
-            // Fetch user from DataAPI instead of local database
-            const user = await dataApiService.getUserById(req.session.userId);
+            // Fetch user from cache or DataAPI
+            const user = await getCachedUser(req.session.userId);
             
             if (user) {
                 if (process.env.NODE_ENV === 'development') {
@@ -101,5 +156,7 @@ module.exports = {
     attachUser,
     requireAuth,
     requireAdmin,
-    optionalAuth
+    optionalAuth,
+    clearUserCache,      // Export for manual cache invalidation
+    clearAllUserCache    // Export for clearing entire cache
 };
