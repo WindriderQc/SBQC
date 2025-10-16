@@ -58,6 +58,20 @@ async function getDevice(id) {
     return await fetchJSON(`${dataAPIUrl}/device/${id}`);
 }
 
+async function getUserById(userId) {
+    // Fetch user from DataAPI by ID
+    try {
+        const result = await fetchJSON(`${dataAPIUrl}/api/v1/users/${userId}`);
+        if (result && result.status === 'success') {
+            return result.data;
+        }
+        return null;
+    } catch (error) {
+        console.error(`Error fetching user ${userId}:`, error.message);
+        return null;
+    }
+}
+
 async function getDeviceLatest(esp) {
     // Try the /api/v1/heartbeats endpoint with sender filter
     // This endpoint was confirmed to exist in the GitHub repo
@@ -191,6 +205,7 @@ module.exports = {
     registerDevice,
     getRegisteredDevices,
     getDevice,
+    getUserById,
     getDeviceLatest,
     getLatestForAllDevices,
     saveProfile,

@@ -223,7 +223,7 @@ router.get('/settings', (req, res) => {
 });
 
 // --- Simple Static Page Routes ---
-const staticRoutes = ['/iGrow', '/empty', '/cams', '/earth', '/earthmap', '/natureCode', '/tools', '/legacy', '/live', '/specs', '/threejs-scene', '/colorfinder', '/technotes', '/serverspec'];
+const staticRoutes = ['/iGrow', '/empty', '/cams', '/earth', '/earthmap', '/natureCode', '/tools', '/legacy', '/live', '/specs', '/threejs_scene', '/colorfinder', '/technotes', '/serverspec'];
 staticRoutes.forEach(route => {
     const view = route.substring(1);
     router.get(route, (req, res) => {
@@ -231,7 +231,7 @@ staticRoutes.forEach(route => {
         if (view === 'tools') renderOptions.sysInfo = sysmon.getinfo();
         if (view === 'legacy') renderOptions.weatherAPI = process.env.WEATHER_API_KEY;
         if (view === 'live') renderOptions.alertEmail = process.env.ALERT_EMAIL || "enter_your@email.com";
-        if (view === 'threejs-scene') {
+        if (view === 'threejs_scene') {
             renderOptions.menuId = 'threejs-scene';
             renderOptions.title = 'threejs scene';
         }
