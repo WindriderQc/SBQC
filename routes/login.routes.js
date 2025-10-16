@@ -6,11 +6,13 @@ const router = require('express').Router(),
  jwt = require('jsonwebtoken'),
  { body, validationResult } = require('express-validator'),
  verify = require('./verifyToken'),
- { registerValidationRules, loginValidationRules } = require('./validation')
+ { registerValidationRules, loginValidationRules } = require('./validation'),
+ fetch = require('node-fetch')  // Import fetch for API calls
 
-const LOGIN_SUCCESS_REDIRECT_PATH = '../dashboard'; // Redirect to SBQC dashboard after login
+const LOGIN_SUCCESS_REDIRECT_PATH = '/'; // Redirect to SBQC home page after login
 
-const apiUrl = "http://" + process.env.DATA_API_IP + ":" + process.env.DATA_API_PORT
+// Use DATA_API_URL directly (includes protocol and domain)
+const apiUrl = process.env.DATA_API_URL || "https://data.specialblend.ca"
 
 
 router.get("/register", (req, res) => {

@@ -59,9 +59,19 @@ async function getDevice(id) {
 }
 
 async function getDeviceLatest(esp) {
-    // Session cookies are automatically sent with fetch requests
-    // No need to manually pass auth-token header
-    return await fetchJSON(`${dataAPIUrl}/heartbeats/senderLatest/${esp}`);
+    // Try the /api/v1/heartbeats endpoint with sender filter
+    // This endpoint was confirmed to exist in the GitHub repo
+    try {
+        const response = await fetchJSON(`${dataAPIUrl}/api/v1/heartbeats?sender=${esp}&limit=1&sort=desc`);
+        // Response format: { status: 'success', data: [...], meta: {...} }
+        if (response && response.data && response.data.length > 0) {
+            return { status: 'success', data: response.data[0] };
+        }
+        return { status: 'success', data: null };
+    } catch (error) {
+        console.error(`Error fetching latest for ${esp}:`, error.message);
+        throw error;
+    }
 }
 
 async function saveProfile(profileName, config) {
@@ -140,9 +150,37 @@ async function createLog(logData, source = 'userLogs') {
 }
 
 
-async function getLatestForAllDevices() {
-    // Session cookies are automatically sent with fetch requests
-    return await fetchJSON(`${dataAPIUrl}/api/v1/heartbeats/latest-batch`);
+async function getLatestForAllDevices(deviceIds = null) {
+    // If no device IDs provided, fetch registered devices first
+    if (!deviceIds) {
+        const devices = await getRegisteredDevices();
+        if (!devices || devices.length === 0) {
+            return { status: 'success', data: [] };
+        }
+        deviceIds = devices.map(d => d.id);
+    }
+    
+    // Fetch latest heartbeat for each device individually and combine
+    // Since the batch endpoint doesn't seem to work, we'll use individual calls
+    try {
+        const promises = deviceIds.map(id => 
+            getDeviceLatest(id).catch(err => {
+                console.warn(`Failed to fetch latest for device ${id}:`, err.message);
+                return null;
+            })
+        );
+        
+        const results = await Promise.all(promises);
+        const validResults = results.filter(r => r !== null);
+        
+        return { 
+            status: 'success', 
+            data: validResults 
+        };
+    } catch (error) {
+        console.error('Error in getLatestForAllDevices:', error);
+        return { status: 'error', data: [], message: error.message };
+    }
 }
 
 

@@ -39,9 +39,67 @@
             <li class="nav-item" title="IoT">
                 <a class="nav-link" href="/iot"><i class="fa-solid fa-network-wired"></i><span class="nav-link-text">IoT</span></a>
             </li>
-              <li class="nav-item" title="3DScene">
+            
+            <li class="nav-item" title="3DScene">
                 <a class="nav-link" href="/threejs-scene"><i class="fa fa-cube"></i><span class="nav-link-text">3D Scene</span></a>
             </li>
+
+            <!-- Divider before auth section -->
+            <li class="nav-item d-none d-lg-block">
+                <span class="nav-link text-muted px-2">|</span>
+            </li>
+
+            <!-- Authentication Section -->
+            <% if (locals.user) { %>
+                <!-- User is logged in: Show user dropdown -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" 
+                       href="#" id="userDropdown" role="button" 
+                       data-mdb-toggle="dropdown" aria-expanded="false"
+                       title="User Menu">
+                        <i class="fas fa-user-circle fa-lg me-2"></i>
+                        <span class="nav-link-text"><%= user.name %></span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li class="dropdown-header">
+                            <small class="text-muted"><%= user.email %></small>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="https://data.specialblend.ca/settings" target="_blank">
+                                <i class="fas fa-cog me-2"></i> Settings
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="https://data.specialblend.ca/profile" target="_blank">
+                                <i class="fas fa-user me-2"></i> Profile
+                            </a>
+                        </li>
+                        <% if (user.isAdmin) { %>
+                        <li>
+                            <a class="dropdown-item" href="https://data.specialblend.ca/admin" target="_blank">
+                                <i class="fas fa-crown me-2 text-warning"></i> Admin
+                            </a>
+                        </li>
+                        <% } %>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-danger" href="/login/out">
+                                <i class="fas fa-sign-out-alt me-2"></i> Logout
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            <% } else { %>
+                <!-- User is NOT logged in: Show login button -->
+                <li class="nav-item">
+                    <a class="nav-link" href="/login" title="Login to access enhanced features">
+                        <i class="fas fa-sign-in-alt me-2"></i>
+                        <span class="nav-link-text">Login</span>
+                    </a>
+                </li>
+            <% } %>
+
             <!--   <i class="fas fa-fw fa-globe">      <i class="fas fa-leaf"></i>       <i class="fas fa-cannabis"></i>          -->
             </ul>
         </div>   
