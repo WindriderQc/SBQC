@@ -28,7 +28,8 @@ export default function(p) {
     let angleY = 0;
     let angleX = 0;
     let zoomLevel = 1.0;
-    let cloudyEarth;
+    let earthTexture; // New variable for the Earth's surface texture
+    let cloudTexture; // New variable for the cloud layer texture
     let earthquakes;
     let issGif;
     let quakeFromColor;
@@ -237,7 +238,9 @@ export default function(p) {
     }
 
     p.preload = async () => {
-        cloudyEarth = p.loadImage('/img/Planets/cloudyEarth.jpg');
+        // Load the separate textures for Earth and clouds
+        earthTexture = p.loadImage('/img/world.200407.3x5400x2700.jpg');
+        cloudTexture = p.loadImage('/img/Transparent_Stormy_Weather_Clouds_Map.png');
         earthquakes = p.loadStrings('/data/quakes.csv');
         issGif = p.loadImage('/img/iss.png');
         try {
@@ -419,7 +422,7 @@ export default function(p) {
         quakeFromColor = p.color(0, 255, 0, 150);
         quakeToColor = p.color(255, 0, 0, 150);
 
-        issCam = new IssCamera(p, cloudyEarth, earthSize, issDistanceToEarth);
+        issCam = new IssCamera(p, earthTexture, earthSize, issDistanceToEarth);
     };
 
     p.windowResized = () => {
@@ -496,17 +499,33 @@ export default function(p) {
 
         angleY += autoRotationSpeed / 60.0;
 
-        p.ambientLight(250);
+        // Enhanced lighting for a more 3D appearance
+        p.ambientLight(80); // Provides a gentle fill light
+        // Directional light simulates the sun, casting shadows.
+        // The direction is from top-right-front towards the origin.
+        p.directionalLight(255, 255, 255, -0.5, -0.5, -1);
+
         p.scale(zoomLevel);
         p.push();
         p.rotateX(angleX);
         p.rotateY(angleY);
 
+        // Render the Earth sphere
         p.push();
-        p.texture(cloudyEarth);
+        p.texture(earthTexture);
         p.noStroke();
-        p.sphere(earthSize, 24, 16); // Reduced detail: 24x16 instead of default 24x24
+        p.sphere(earthSize, 24, 16); // Base Earth sphere
         p.pop();
+
+        // Render the cloud sphere, rotating it slightly slower for a parallax effect
+        p.push();
+        p.rotateY(angleY * 0.9); // Slower rotation for clouds
+        p.texture(cloudTexture);
+        p.noStroke();
+        // Render clouds on a slightly larger sphere with transparency
+        p.sphere(earthSize * 1.02, 24, 16);
+        p.pop();
+
 
         if (window.iss && typeof window.iss.latitude === 'number' && typeof window.iss.longitude === 'number') {
             let addPoint = true;
