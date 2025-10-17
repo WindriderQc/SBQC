@@ -6,14 +6,13 @@ import IssCamera from './issCamera.js';
  * ISS Detector 3D Visualization
  * 
  * Performance Optimizations:
- * 1. Cached 3D coordinates for historical path (~8000 points) - recalculate only when data changes
- * 2. Cached 3D coordinates for predicted path (~300 points) - recalculate only when prediction updates
- * 3. Cached 3D coordinates for great circle path (~48 points) - recalculate only when approach changes
- * 4. Cached detection radius ring vertices (96 vertices) - recalculate only when radius changes
- * 5. Reduced sphere detail: Earth (24×16), markers (8×6), earthquakes (6×4)
- * 6. Throttled DOM updates to 1fps instead of 60fps
+ * 1. Adaptive path decimation for historical path (~8000 → ~2600 vertices) - keeps recent points detailed
+ * 2. Cached 3D coordinates for all paths - recalculate only when data changes
+ * 3. Cached detection radius ring vertices (96 vertices) - recalculate only when radius changes
+ * 4. Reduced sphere detail: Earth (24×16), markers (8×6), earthquakes (6×4)
+ * 5. Throttled DOM updates to 1fps instead of 60fps
  * 
- * These optimizations reduce frame time from ~70ms to <16ms (target for 60fps)
+ * Target: <16ms per frame for 60fps
  */
 
 // This function will be the main sketch. It's exported and passed to the p5 constructor.
@@ -69,6 +68,7 @@ export default function(p) {
 
     // Performance: Cache 3D coordinates to avoid recalculating every frame
     let cachedHistoricalPath3D = null;
+    let cachedHistoricalSourceLength = 0; // Track source array length for cache invalidation
     let cachedPredictedPath3D = null;
     let cachedGreatCirclePath3D = null;
     let cachedDetectionRings = null; // Cache detection radius ring vertices
@@ -82,6 +82,7 @@ export default function(p) {
                 const startIndex = Math.max(0, originalLoadedIssHistory.length - MAX_HISTORY_POINTS);
                 internalIssPathHistory = originalLoadedIssHistory.slice(startIndex);
                 cachedHistoricalPath3D = null; // Invalidate cache
+                cachedHistoricalSourceLength = 0; // Reset source length
             }
         },
         getLoadedHistoryCount: () => originalLoadedIssHistory.length,
@@ -472,6 +473,9 @@ export default function(p) {
 
     p.draw = () => {
         const perfStart = performance.now();
+        const perfTimings = {};
+        let lastMark = perfStart;
+        
         const currentDisplayLat = (typeof window.clientLat === 'number') ? window.clientLat : 46.8139;
         const currentDisplayLon = (typeof window.clientLon === 'number') ? window.clientLon : -71.2080;
 
@@ -518,6 +522,9 @@ export default function(p) {
         p.pop();
 
         // Render the cloud sphere, rotating it slightly slower for a parallax effect
+        perfTimings.setup = performance.now() - lastMark;
+        lastMark = performance.now();
+
         p.push();
         p.rotateY(angleY * 0.9); // Slower rotation for clouds
         p.texture(cloudTexture);
@@ -525,6 +532,9 @@ export default function(p) {
         // Render clouds on a slightly larger sphere with transparency
         p.sphere(earthSize * 1.02, 24, 16);
         p.pop();
+        
+        perfTimings.earth = performance.now() - lastMark;
+        lastMark = performance.now();
 
 
         if (window.iss && typeof window.iss.latitude === 'number' && typeof window.iss.longitude === 'number') {
@@ -562,10 +572,28 @@ export default function(p) {
 
         if (showIssHistoricalPath && internalIssPathHistory.length > 1) {
             // Cache 3D coordinates - only recalculate when history changes
-            if (!cachedHistoricalPath3D || cachedHistoricalPath3D.length !== internalIssPathHistory.length) {
-                cachedHistoricalPath3D = internalIssPathHistory
-                    .filter(pt => pt && typeof pt.lat === 'number' && typeof pt.lon === 'number')
-                    .map(pt => getSphereCoord(p, earthSize + issDistanceToEarth, pt.lat, pt.lon));
+            // OPTIMIZATION: Decimate the path to reduce vertex count while maintaining visual quality
+            if (!cachedHistoricalPath3D || cachedHistoricalSourceLength !== internalIssPathHistory.length) {
+                const filtered = internalIssPathHistory.filter(pt => pt && typeof pt.lat === 'number' && typeof pt.lon === 'number');
+                
+                // Adaptive decimation: keep more recent points, reduce older ones
+                const decimated = [];
+                const totalPoints = filtered.length;
+                for (let i = 0; i < totalPoints; i++) {
+                    // Keep every point in the most recent 10%, every 2nd in next 20%, every 4th in next 30%, every 8th for the rest
+                    const age = (totalPoints - i) / totalPoints; // 1.0 = oldest, 0.0 = newest
+                    let keep = false;
+                    if (age < 0.1) keep = true; // Last 10%: keep all
+                    else if (age < 0.3) keep = (i % 2 === 0); // Next 20%: keep every 2nd
+                    else if (age < 0.6) keep = (i % 4 === 0); // Next 30%: keep every 4th
+                    else keep = (i % 8 === 0); // Oldest 40%: keep every 8th
+                    
+                    if (keep) decimated.push(filtered[i]);
+                }
+                
+                cachedHistoricalPath3D = decimated.map(pt => getSphereCoord(p, earthSize + issDistanceToEarth, pt.lat, pt.lon));
+                cachedHistoricalSourceLength = internalIssPathHistory.length; // Store source length for cache validation
+                console.log(`[PERF] Historical path: ${filtered.length} → ${cachedHistoricalPath3D.length} vertices (${Math.round(100*cachedHistoricalPath3D.length/filtered.length)}%)`);
             }
             
             p.push();
@@ -579,6 +607,9 @@ export default function(p) {
             p.endShape();
             p.pop();
         }
+        
+        perfTimings.historicalPath = performance.now() - lastMark;
+        lastMark = performance.now();
 
         if (showIssPredictedPath && internalPredictedPath.length > 1) {
             // Cache 3D coordinates and path segments - only recalculate when needed
@@ -826,6 +857,11 @@ export default function(p) {
         const frameTime = perfEnd - perfStart;
         if (p.frameCount % 60 === 0 && frameTime > 16) {
             console.log(`[PERF] Frame ${p.frameCount}: ${frameTime.toFixed(2)}ms`);
+            console.log(`[PERF] Breakdown:`, {
+                setup: perfTimings.setup?.toFixed(2) + 'ms',
+                earth: perfTimings.earth?.toFixed(2) + 'ms', 
+                historicalPath: perfTimings.historicalPath?.toFixed(2) + 'ms'
+            });
         }
     };
 
