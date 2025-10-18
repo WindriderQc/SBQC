@@ -1,4 +1,4 @@
-import { getSphereCoord, haversineDistance } from './utils.js';
+import { getSphereCoord } from './utils.js';
 import * as predictor from './issOrbitPredictor.js';
 import IssCamera from './issCamera.js';
 import Starfield from './Starfield.js';
@@ -526,7 +526,7 @@ export default function(p) {
         }
 
         if (showIssPredictedPath) {
-            predictedPath.draw(earthSize + issDistanceToEarth, sketchPassByRadiusKM, currentDisplayLat, currentDisplayLon, haversineDistance);
+            predictedPath.draw(earthSize + issDistanceToEarth, sketchPassByRadiusKM, currentDisplayLat, currentDisplayLon);
         }
 
 
