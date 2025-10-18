@@ -48,6 +48,7 @@ export default function(p) {
     let showIssPredictedPath = true;
     let showQuakes = false;
     let showIssCamera = false;
+    let showCloud = true; // Toggle for cloud layer visibility
     let issCameraView;
     let issFov = 60;
     let showApproachInfo = false; // UI toggle: show/hide great-circle path and approach time label
@@ -104,6 +105,7 @@ export default function(p) {
         setShowIssHistoricalPath: (value) => { showIssHistoricalPath = !!value; },
         setShowIssPredictedPath: (value) => { showIssPredictedPath = !!value; },
         setShowQuakes: (value) => { showQuakes = !!value; },
+        setShowCloud: (value) => { showCloud = !!value; },
         setShowIssCamera: (value) => { if (issCam) issCam.setShow(value); },
         setIssFov: (value) => { if (issCam) issCam.setFov(value); },
     };
@@ -541,8 +543,8 @@ export default function(p) {
         if (showAxis) { p.push(); drawAxis(earthSize * 50); p.pop(); }
 
         angleY += autoRotationSpeed / 60.0;
-        // Cloud rotation: 1.5x faster than Earth's auto-rotation, affected by wind speed slider
-        cloudRotationY += (autoRotationSpeed / 60.0) * 1.5 * windSpeedMultiplier;
+        // Cloud rotation: 0.2x slower than Earth's auto-rotation, affected by wind speed slider
+        cloudRotationY += (autoRotationSpeed / 60.0) * 0.2 * windSpeedMultiplier;
 
         p.ambientLight(80); // Provides a gentle fill light
         p.directionalLight(255, 255, 255, -0.5, -0.5, -1);
@@ -551,7 +553,7 @@ export default function(p) {
         p.rotateX(angleX);
         p.rotateY(angleY);
 
-        globe.draw(cloudRotationY);
+        globe.draw(cloudRotationY, showCloud);
 
         if (showIssHistoricalPath) {
             historicalPath.update(internalIssPathHistory);

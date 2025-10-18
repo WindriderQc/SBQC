@@ -99,6 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const showIssHistoricalPathCheckbox = document.getElementById('showIssHistoricalPath');
     const showIssPredictedPathCheckbox = document.getElementById('showIssPredictedPath');
     const showQuakesCheckbox = document.getElementById('showQuakes');
+    const showCloudCheckbox = document.getElementById('showCloud');
     const showIssCameraCheckbox = document.getElementById('showIssCamera');
     const issCameraControls = document.getElementById('iss-camera-controls');
     const issFovSlider = document.getElementById('issFovSlider');
@@ -155,6 +156,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (showQuakesCheckbox) {
         showQuakesCheckbox.addEventListener('change', (e) => {
             if (window.p5SketchApi) window.p5SketchApi.setShowQuakes(e.target.checked);
+        });
+    }
+
+    if (showCloudCheckbox) {
+        showCloudCheckbox.addEventListener('change', (e) => {
+            if (window.p5SketchApi) window.p5SketchApi.setShowCloud(e.target.checked);
         });
     }
 
