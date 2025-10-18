@@ -50,7 +50,7 @@ export default function(p) {
     let showIssCamera = false;
     let issCameraView;
     let issFov = 60;
-    let showApproachInfo = true; // UI toggle: show/hide great-circle path and approach time label
+    let showApproachInfo = false; // UI toggle: show/hide great-circle path and approach time label
     let approachInfoDiv = null;
     let passEntryTimeSpan = null; // Cache DOM elements
     let passExitTimeSpan = null;
@@ -485,6 +485,7 @@ export default function(p) {
             const lon = parseFloat(data[2]);
             const mag = parseFloat(data[4]);
             if (isNaN(lat) || isNaN(lon) || isNaN(mag)) continue;
+            // Draw earthquakes at Earth's surface - they pop out as spheres
             const pos = getSphereCoord(p, earthSize, lat, lon);
             let h = p.pow(10, mag);
             const maxh = p.pow(10, 8);
@@ -733,6 +734,7 @@ export default function(p) {
         }
 
         if (showQuakes) show3DQuakes();
+
         p.pop();
 
         if (issCam) {

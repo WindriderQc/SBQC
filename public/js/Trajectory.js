@@ -55,10 +55,10 @@ export default class Trajectory {
                     regularPath.push(p1);
                     highlightedPath.push(p1, p2);
                 } else if (insideCylinder && !p2_inside) {
-                    exitPoint = p2;
+                    if (!exitPoint) exitPoint = p2; // Store first exit point for pass time
                     insideCylinder = false;
                     highlightedPath.push(p1, p2);
-                    break;
+                    regularPath.push(p2); // Continue drawing regular path after exit
                 } else if (insideCylinder) {
                     highlightedPath.push(p1, p2);
                 } else {
