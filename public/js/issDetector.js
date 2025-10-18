@@ -1,18 +1,22 @@
-import { haversineDistance, getSphereCoord } from './utils.js';
+import { getSphereCoord, haversineDistance } from './utils.js';
 import * as predictor from './issOrbitPredictor.js';
 import IssCamera from './issCamera.js';
+import Starfield from './Starfield.js';
+import Globe from './Globe.js';
+import Trajectory from './Trajectory.js';
 
 /**
  * ISS Detector 3D Visualization
  * 
  * Performance Optimizations:
- * 1. Adaptive path decimation for historical path (~8000 → ~2600 vertices) - keeps recent points detailed
- * 2. Cached 3D coordinates for all paths - recalculate only when data changes
- * 3. Cached detection radius ring vertices (96 vertices) - recalculate only when radius changes
- * 4. Reduced sphere detail: Earth (24×16), markers (8×6), earthquakes (6×4)
- * 5. Throttled DOM updates to 1fps instead of 60fps
+ * 1. Cached 3D coordinates for historical path (~8000 points) - recalculate only when data changes
+ * 2. Cached 3D coordinates for predicted path (~300 points) - recalculate only when prediction updates
+ * 3. Cached 3D coordinates for great circle path (~48 points) - recalculate only when approach changes
+ * 4. Cached detection radius ring vertices (96 vertices) - recalculate only when radius changes
+ * 5. Reduced sphere detail: Earth (24×16), markers (8×6), earthquakes (6×4)
+ * 6. Throttled DOM updates to 1fps instead of 60fps
  * 
- * Target: <16ms per frame for 60fps
+ * These optimizations reduce frame time from ~70ms to <16ms (target for 60fps)
  */
 
 // This function will be the main sketch. It's exported and passed to the p5 constructor.
@@ -26,9 +30,14 @@ export default function(p) {
     let autoRotationSpeed = (Math.PI * 2) / 120;
     let angleY = 0;
     let angleX = 0;
+    let cloudRotationY = 0;
     let zoomLevel = 1.0;
     let earthTexture; // New variable for the Earth's surface texture
     let cloudTexture; // New variable for the cloud layer texture
+    let starfield;
+    let globe;
+    let historicalPath;
+    let predictedPath;
     let earthquakes;
     let issGif;
     let quakeFromColor;
@@ -68,7 +77,6 @@ export default function(p) {
 
     // Performance: Cache 3D coordinates to avoid recalculating every frame
     let cachedHistoricalPath3D = null;
-    let cachedHistoricalSourceLength = 0; // Track source array length for cache invalidation
     let cachedPredictedPath3D = null;
     let cachedGreatCirclePath3D = null;
     let cachedDetectionRings = null; // Cache detection radius ring vertices
@@ -82,17 +90,12 @@ export default function(p) {
                 const startIndex = Math.max(0, originalLoadedIssHistory.length - MAX_HISTORY_POINTS);
                 internalIssPathHistory = originalLoadedIssHistory.slice(startIndex);
                 cachedHistoricalPath3D = null; // Invalidate cache
-                cachedHistoricalSourceLength = 0; // Reset source length
             }
         },
         getLoadedHistoryCount: () => originalLoadedIssHistory.length,
         update3DPredictedPath: (pointsFrom2D) => {
-            if (Array.isArray(pointsFrom2D)) {
-                internalPredictedPath = pointsFrom2D.map(pt => ({ lat: pt.lat, lon: pt.lng, time: pt.time }));
-                cachedPredictedPath3D = null; // Invalidate cache
-                cachedGreatCirclePath3D = null; // Invalidate cache
-            } else {
-                internalPredictedPath = [];
+            if (predictedPath) {
+                predictedPath.update(pointsFrom2D);
             }
         },
         setSketchPassByRadiusKM: (newRadiusKM) => {
@@ -239,7 +242,6 @@ export default function(p) {
     }
 
     p.preload = async () => {
-        // Load the separate textures for Earth and clouds
         earthTexture = p.loadImage('/img/world.200407.3x5400x2700.jpg');
         cloudTexture = p.loadImage('/img/Transparent_Stormy_Weather_Clouds_Map.png');
         earthquakes = p.loadStrings('/data/quakes.csv');
@@ -272,6 +274,12 @@ export default function(p) {
 
         // Setup canvas interactions using standard DOM events instead of p5 event handlers
         setupCanvasInteractions(canvas.elt);
+
+        // Instantiate the new classes
+        starfield = new Starfield(p);
+        globe = new Globe(p, earthSize, earthTexture, cloudTexture);
+        historicalPath = new Trajectory(p, p.color(255, 165, 0, 180));
+        predictedPath = new Trajectory(p, p.color(0, 200, 0, 180));
 
         // Get references to the approach info elements that are now in the HTML
         try {
@@ -473,9 +481,6 @@ export default function(p) {
 
     p.draw = () => {
         const perfStart = performance.now();
-        const perfTimings = {};
-        let lastMark = perfStart;
-        
         const currentDisplayLat = (typeof window.clientLat === 'number') ? window.clientLat : 46.8139;
         const currentDisplayLon = (typeof window.clientLon === 'number') ? window.clientLon : -71.2080;
 
@@ -498,43 +503,31 @@ export default function(p) {
             } catch (e) { /* ignore DOM update errors */ }
         }
 
-        p.background(52);
+        p.background(0); // Black background for space
+        starfield.draw();
+
         if (showAxis) { p.push(); drawAxis(earthSize * 50); p.pop(); }
 
         angleY += autoRotationSpeed / 60.0;
+        cloudRotationY += (autoRotationSpeed / 60.0) * 0.4;
 
-        // Enhanced lighting for a more 3D appearance
         p.ambientLight(80); // Provides a gentle fill light
-        // Directional light simulates the sun, casting shadows.
-        // The direction is from top-right-front towards the origin.
         p.directionalLight(255, 255, 255, -0.5, -0.5, -1);
-
         p.scale(zoomLevel);
         p.push();
         p.rotateX(angleX);
         p.rotateY(angleY);
 
-        // Render the Earth sphere
-        p.push();
-        p.texture(earthTexture);
-        p.noStroke();
-        p.sphere(earthSize, 24, 16); // Base Earth sphere
-        p.pop();
+        globe.draw();
 
-        // Render the cloud sphere, rotating it slightly slower for a parallax effect
-        perfTimings.setup = performance.now() - lastMark;
-        lastMark = performance.now();
+        if (showIssHistoricalPath) {
+            historicalPath.update(internalIssPathHistory);
+            historicalPath.draw(earthSize + issDistanceToEarth);
+        }
 
-        p.push();
-        p.rotateY(angleY * 0.9); // Slower rotation for clouds
-        p.texture(cloudTexture);
-        p.noStroke();
-        // Render clouds on a slightly larger sphere with transparency
-        p.sphere(earthSize * 1.02, 24, 16);
-        p.pop();
-        
-        perfTimings.earth = performance.now() - lastMark;
-        lastMark = performance.now();
+        if (showIssPredictedPath) {
+            predictedPath.draw(earthSize + issDistanceToEarth, sketchPassByRadiusKM, currentDisplayLat, currentDisplayLon, haversineDistance);
+        }
 
 
         if (window.iss && typeof window.iss.latitude === 'number' && typeof window.iss.longitude === 'number') {
@@ -570,132 +563,6 @@ export default function(p) {
             p.pop();
         }
 
-        if (showIssHistoricalPath && internalIssPathHistory.length > 1) {
-            // Cache 3D coordinates - only recalculate when history changes
-            // OPTIMIZATION: Decimate the path to reduce vertex count while maintaining visual quality
-            if (!cachedHistoricalPath3D || cachedHistoricalSourceLength !== internalIssPathHistory.length) {
-                const filtered = internalIssPathHistory.filter(pt => pt && typeof pt.lat === 'number' && typeof pt.lon === 'number');
-                
-                // Adaptive decimation: keep more recent points, reduce older ones
-                const decimated = [];
-                const totalPoints = filtered.length;
-                for (let i = 0; i < totalPoints; i++) {
-                    // Keep every point in the most recent 10%, every 2nd in next 20%, every 4th in next 30%, every 8th for the rest
-                    const age = (totalPoints - i) / totalPoints; // 1.0 = oldest, 0.0 = newest
-                    let keep = false;
-                    if (age < 0.1) keep = true; // Last 10%: keep all
-                    else if (age < 0.3) keep = (i % 2 === 0); // Next 20%: keep every 2nd
-                    else if (age < 0.6) keep = (i % 4 === 0); // Next 30%: keep every 4th
-                    else keep = (i % 8 === 0); // Oldest 40%: keep every 8th
-                    
-                    if (keep) decimated.push(filtered[i]);
-                }
-                
-                cachedHistoricalPath3D = decimated.map(pt => getSphereCoord(p, earthSize + issDistanceToEarth, pt.lat, pt.lon));
-                cachedHistoricalSourceLength = internalIssPathHistory.length; // Store source length for cache validation
-                console.log(`[PERF] Historical path: ${filtered.length} → ${cachedHistoricalPath3D.length} vertices (${Math.round(100*cachedHistoricalPath3D.length/filtered.length)}%)`);
-            }
-            
-            p.push();
-            p.stroke(255, 165, 0, 180);
-            p.strokeWeight(1.5);
-            p.noFill();
-            p.beginShape();
-            for (const v of cachedHistoricalPath3D) {
-                p.vertex(v.x, v.y, v.z);
-            }
-            p.endShape();
-            p.pop();
-        }
-        
-        perfTimings.historicalPath = performance.now() - lastMark;
-        lastMark = performance.now();
-
-        if (showIssPredictedPath && internalPredictedPath.length > 1) {
-            // Cache 3D coordinates and path segments - only recalculate when needed
-            if (!cachedPredictedPath3D) {
-                const detectionRadiusKM = sketchPassByRadiusKM;
-                let insideCylinder = false;
-                let entryPoint = null;
-                let exitPoint = null;
-                const regularPath = [];
-                const highlightedPath = [];
-
-                for (let i = 0; i < internalPredictedPath.length - 1; i++) {
-                    const p1 = internalPredictedPath[i];
-                    const p2 = internalPredictedPath[i + 1];
-                    const dist2 = haversineDistance(p2.lat, p2.lon, currentDisplayLat, currentDisplayLon);
-                    const p2_inside = dist2 <= detectionRadiusKM;
-
-                    if (!insideCylinder && p2_inside) {
-                        entryPoint = p2;
-                        insideCylinder = true;
-                        regularPath.push(p1);
-                        highlightedPath.push(p1, p2);
-                    } else if (insideCylinder && !p2_inside) {
-                        exitPoint = p2;
-                        insideCylinder = false;
-                        highlightedPath.push(p1, p2);
-                        break;
-                    } else if (insideCylinder) {
-                        highlightedPath.push(p1, p2);
-                    } else {
-                        regularPath.push(p1, p2);
-                    }
-                }
-                
-                // Pre-calculate 3D coordinates
-                const regularPath3D = regularPath.map(pt => 
-                    getSphereCoord(p, earthSize + issDistanceToEarth, pt.lat, normalizeLon(pt.lon))
-                );
-                const highlightedPath3D = highlightedPath.map(pt => 
-                    getSphereCoord(p, earthSize + issDistanceToEarth, pt.lat, normalizeLon(pt.lon))
-                );
-                
-                cachedPredictedPath3D = { regularPath3D, highlightedPath3D, entryPoint, exitPoint };
-            }
-
-            const { regularPath3D, highlightedPath3D, entryPoint, exitPoint } = cachedPredictedPath3D;
-
-            // Update pass times once per second
-            if (p.frameCount % 60 === 0) {
-                if (entryPoint && passEntryTimeSpan) {
-                    passEntryTimeSpan.textContent = new Date(Date.now() + entryPoint.time * 1000).toLocaleTimeString();
-                } else if (passEntryTimeSpan) {
-                    passEntryTimeSpan.textContent = 'N/A';
-                }
-                if (exitPoint && passExitTimeSpan) {
-                    passExitTimeSpan.textContent = new Date(Date.now() + exitPoint.time * 1000).toLocaleTimeString();
-                } else if (passExitTimeSpan) {
-                    passExitTimeSpan.textContent = 'N/A';
-                }
-            }
-
-            if (regularPath3D.length > 0) {
-                p.push();
-                p.stroke(0, 200, 0, 180);
-                p.strokeWeight(1.5);
-                p.noFill();
-                p.beginShape();
-                for (const v of regularPath3D) {
-                    p.vertex(v.x, v.y, v.z);
-                }
-                p.endShape();
-                p.pop();
-            }
-            if (highlightedPath3D.length > 0) {
-                p.push();
-                p.stroke(255, 255, 0, 220);
-                p.strokeWeight(3);
-                p.noFill();
-                p.beginShape();
-                for (const v of highlightedPath3D) {
-                    p.vertex(v.x, v.y, v.z);
-                }
-                p.endShape();
-                p.pop();
-            }
-        }
 
         const pClientLoc = getSphereCoord(p, earthSize, currentDisplayLat, currentDisplayLon);
         p.push();
@@ -857,11 +724,6 @@ export default function(p) {
         const frameTime = perfEnd - perfStart;
         if (p.frameCount % 60 === 0 && frameTime > 16) {
             console.log(`[PERF] Frame ${p.frameCount}: ${frameTime.toFixed(2)}ms`);
-            console.log(`[PERF] Breakdown:`, {
-                setup: perfTimings.setup?.toFixed(2) + 'ms',
-                earth: perfTimings.earth?.toFixed(2) + 'ms', 
-                historicalPath: perfTimings.historicalPath?.toFixed(2) + 'ms'
-            });
         }
     };
 
