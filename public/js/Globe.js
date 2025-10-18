@@ -15,8 +15,9 @@ export default class Globe {
 
     /**
      * Renders the globe with its layers.
+     * @param {number} cloudRotationY - Optional rotation angle for the cloud layer (in radians).
      */
-    draw() {
+    draw(cloudRotationY = 0) {
         // Render the Earth sphere
         this.p.push();
         this.p.texture(this.earthTexture);
@@ -24,8 +25,9 @@ export default class Globe {
         this.p.sphere(this.size, 24, 16);
         this.p.pop();
 
-        // Render the cloud sphere
+        // Render the cloud sphere with independent rotation
         this.p.push();
+        this.p.rotateY(cloudRotationY);
         this.p.texture(this.cloudTexture);
         this.p.noStroke();
         this.p.sphere(this.size * 1.02, 24, 16);

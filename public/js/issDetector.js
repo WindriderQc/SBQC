@@ -439,6 +439,19 @@ export default function(p) {
         quakeToColor = p.color(255, 0, 0, 150);
 
         issCam = new IssCamera(p, earthTexture, earthSize, issDistanceToEarth);
+
+        // Register callback to receive predicted path updates from predictor
+        predictor.setOnPathUpdate((pathPoints) => {
+            if (Array.isArray(pathPoints)) {
+                internalPredictedPath = pathPoints.map(pt => ({
+                    lat: pt.lat,
+                    lon: pt.lng,
+                    timeStamp: pt.time
+                }));
+                predictedPath.update(internalPredictedPath);
+                cachedPredictedPath3D = null; // Invalidate cache when path updates
+            }
+        });
     };
 
     p.windowResized = () => {
@@ -516,7 +529,8 @@ export default function(p) {
         if (showAxis) { p.push(); drawAxis(earthSize * 50); p.pop(); }
 
         angleY += autoRotationSpeed / 60.0;
-        cloudRotationY += (autoRotationSpeed / 60.0) * windSpeedMultiplier;
+        // Cloud rotation: 1.5x faster than Earth's auto-rotation, affected by wind speed slider
+        cloudRotationY += (autoRotationSpeed / 60.0) * 1.5 * windSpeedMultiplier;
 
         p.ambientLight(80); // Provides a gentle fill light
         p.directionalLight(255, 255, 255, -0.5, -0.5, -1);
@@ -525,7 +539,7 @@ export default function(p) {
         p.rotateX(angleX);
         p.rotateY(angleY);
 
-        globe.draw();
+        globe.draw(cloudRotationY);
 
         if (showIssHistoricalPath) {
             historicalPath.update(internalIssPathHistory);
