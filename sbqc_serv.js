@@ -113,10 +113,8 @@ const auth = require('./scripts/authMiddleware');
         const db = await connectDb(process.env.MONGO_CLOUD, 'SBQC');
         await loadCollections(db, app);
     } catch (err) {
-        console.error("!!! SEVERE: Failed to connect to the database or load collections, but continuing to run server for frontend access.");
-        console.error(err);
-        // Do not exit, allow server to run for frontend assets.
-        // process.exit(1); // Exit if DB connection fails
+        console.error("Failed to connect to the database or load collections:", err);
+        process.exit(1); // Exit if DB connection fails
     }
 })();
 
