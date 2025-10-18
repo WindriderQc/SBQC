@@ -8,8 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // This is the bridge that connects the predictor's data to the sketch.
     // It's set up before the sketch is initialized to avoid race conditions.
     setOnPathUpdate((pathData) => {
-        if (window.p5SketchApi && typeof window.p5SketchApi.update3DPredictedPath === 'function') {
-            window.p5SketchApi.update3DPredictedPath(pathData);
+        if (window.p5SketchApi && window.p5SketchApi.predictedPath) {
+            window.p5SketchApi.predictedPath.update(pathData);
         }
         
         // Update prediction slider max based on the approach time
