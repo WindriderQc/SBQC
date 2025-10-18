@@ -239,7 +239,8 @@ export default function(p) {
 
     p.preload = async () => {
         earthTexture = p.loadImage('/img/world.200407.3x5400x2700.jpg');
-        cloudTexture = p.loadImage('/img/Transparent_Stormy_Weather_Clouds_Map.png');
+        // Load the initial cloud map from the new server endpoint
+        cloudTexture = p.loadImage('/api/live-cloud-map');
         earthquakes = p.loadStrings('/data/quakes.csv');
         issGif = p.loadImage('/img/iss.png');
         try {
@@ -452,7 +453,24 @@ export default function(p) {
                 cachedPredictedPath3D = null; // Invalidate cache when path updates
             }
         });
+
+        // Periodically update the cloud map
+        setInterval(updateCloudMap, 3600 * 1000); // 1 hour
     };
+
+    function updateCloudMap() {
+        console.log('[issDetector] Updating cloud map...');
+        p.loadImage('/api/live-cloud-map', newTexture => {
+            if (newTexture) {
+                globe.updateCloudTexture(newTexture);
+                console.log('[issDetector] Cloud map updated successfully.');
+            } else {
+                console.error('[issDetector] Failed to load new cloud map texture.');
+            }
+        }, err => {
+            console.error('[issDetector] Error loading cloud map:', err);
+        });
+    }
 
     p.windowResized = () => {
         const sketchHolder = document.getElementById('sketch-holder');

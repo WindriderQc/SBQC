@@ -33,4 +33,12 @@ export default class Globe {
         this.p.sphere(this.size * 1.02, 24, 16);
         this.p.pop();
     }
+
+    /**
+     * Updates the cloud texture.
+     * @param {p5.Image} newTexture - The new cloud texture.
+     */
+    updateCloudTexture(newTexture) {
+        this.cloudTexture = newTexture;
+    }
 }

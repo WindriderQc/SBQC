@@ -8,12 +8,8 @@ const dataApiService = require('../services/dataApiService');
 const weatherService = require('../services/weatherService');
 const { BadRequest } = require('../utils/errors');
 
-// Get auth middleware from nodeTools (already configured in sbqc_serv.js)
-const nodetools = require('nodetools');
-const auth = nodetools.auth.createAuthMiddleware({
-    dbGetter: (req) => req.app.locals.db,
-    loginRedirectUrl: 'https://data.specialblend.ca/login'
-});
+// Get auth middleware from the custom auth script
+const auth = require('../scripts/authMiddleware');
 
 // Weather and Air Quality
 router.get('/weather/:latlon', async (req, res, next) => {
