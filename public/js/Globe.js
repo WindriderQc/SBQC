@@ -14,6 +14,16 @@ export default class Globe {
     }
 
     /**
+     * Updates the cloud texture with a new image.
+     * @param {p5.Image} newTexture - The new cloud texture to apply.
+     */
+    updateCloudTexture(newTexture) {
+        if (newTexture) {
+            this.cloudTexture = newTexture;
+        }
+    }
+
+    /**
      * Renders the globe with its layers.
      * @param {number} cloudRotationY - Optional rotation angle for the cloud layer (in radians).
      */
@@ -27,18 +37,14 @@ export default class Globe {
 
         // Render the cloud sphere with independent rotation
         this.p.push();
+        // Use ADD blend mode to make the transparent parts of the cloud texture not obscure the earth
+        this.p.blendMode(this.p.ADD);
         this.p.rotateY(cloudRotationY);
         this.p.texture(this.cloudTexture);
         this.p.noStroke();
         this.p.sphere(this.size * 1.02, 24, 16);
+        // Reset blend mode to default to not affect other elements
+        this.p.blendMode(this.p.BLEND);
         this.p.pop();
-    }
-
-    /**
-     * Updates the cloud texture.
-     * @param {p5.Image} newTexture - The new cloud texture.
-     */
-    updateCloudTexture(newTexture) {
-        this.cloudTexture = newTexture;
     }
 }

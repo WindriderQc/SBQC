@@ -133,7 +133,7 @@ app
   .use(auth.attachUser) // Attach user to res.locals from session (fetches from DataAPI)
   .use(express.static(path.resolve(__dirname, 'public') , { maxAge: 1000*60*60 })) // maxAge allow client to cache data for 1h
   .use('/api',      require('./routes/api.routes')) // New API routes
-  .use('/api/live-cloud-map', require('./routes/liveCloudMap.routes'))
+  .use('/api',      require('./routes/liveCloudMap.routes'))
   .use('/',         require('./routes/routes'))
   .use('/checkins', require('./routes/checkins.routes'))
   .use('/meows',    require("./routes/meows.routes"))

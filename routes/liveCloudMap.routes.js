@@ -1,24 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const fetch = require('node-fetch');
+const https = require('https');
 
-router.get('/', async (req, res, next) => {
-    try {
-        const imageUrl = 'https://api.met.no/weatherapi/geosatellite/1.4/global.png';
-        const response = await fetch(imageUrl);
+router.get('/live-cloud-map', (req, res) => {
+    const imageUrl = 'https://clouds.matteason.co.uk/images/2048x1024/clouds-alpha.png';
 
-        if (!response.ok) {
-            throw new Error(`Failed to fetch image: ${response.statusText}`);
+    https.get(imageUrl, (imageStream) => {
+        if (imageStream.statusCode === 200) {
+            res.setHeader('Content-Type', imageStream.headers['content-type']);
+            imageStream.pipe(res);
+        } else {
+            res.status(imageStream.statusCode).send('Error fetching cloud map image.');
         }
-
-        const imageBuffer = await response.buffer();
-
-        res.set('Content-Type', 'image/png');
-        res.send(imageBuffer);
-    } catch (error) {
-        console.error('Error fetching cloud map:', error);
-        res.status(500).send('Error fetching cloud map');
-    }
+    }).on('error', (e) => {
+        console.error(`Error fetching cloud map: ${e.message}`);
+        res.status(500).send('Failed to fetch cloud map image.');
+    });
 });
 
 module.exports = router;
