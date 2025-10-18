@@ -1,4 +1,4 @@
-import { getSphereCoord } from './utils.js';
+import { getSphereCoord, haversineDistance } from './utils.js';
 
 export default class Trajectory {
     /**
@@ -33,7 +33,7 @@ export default class Trajectory {
      * @param {number} userLat - The user's latitude.
      * @param {number} userLon - The user's longitude.
      */
-    draw(radius, detectionRadiusKM, userLat, userLon, haversineDistance) {
+    draw(radius, detectionRadiusKM, userLat, userLon) {
         if (this.points.length < 2) return;
 
         if (!this.cached3DPoints || this.cached3DPoints.userLat !== userLat || this.cached3DPoints.userLon !== userLon) {
