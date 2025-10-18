@@ -239,7 +239,6 @@ export default function(p) {
 
     p.preload = async () => {
         earthTexture = p.loadImage('/img/world.200407.3x5400x2700.jpg');
-        // Load the initial cloud map from the new server endpoint
         cloudTexture = p.loadImage('/api/live-cloud-map');
         earthquakes = p.loadStrings('/data/quakes.csv');
         issGif = p.loadImage('/img/iss.png');
@@ -454,23 +453,17 @@ export default function(p) {
             }
         });
 
-        // Periodically update the cloud map
-        setInterval(updateCloudMap, 3600 * 1000); // 1 hour
-    };
-
-    function updateCloudMap() {
-        console.log('[issDetector] Updating cloud map...');
-        p.loadImage('/api/live-cloud-map', newTexture => {
-            if (newTexture) {
+        // Periodically refresh the cloud texture
+        setInterval(() => {
+            console.log('[issDetector] Refreshing cloud texture...');
+            p.loadImage('/api/live-cloud-map', newTexture => {
                 globe.updateCloudTexture(newTexture);
-                console.log('[issDetector] Cloud map updated successfully.');
-            } else {
-                console.error('[issDetector] Failed to load new cloud map texture.');
-            }
-        }, err => {
-            console.error('[issDetector] Error loading cloud map:', err);
-        });
-    }
+                console.log('[issDetector] Cloud texture updated.');
+            }, err => {
+                console.error('[issDetector] Failed to refresh cloud texture:', err);
+            });
+        }, 15 * 60 * 1000); // Refresh every 15 minutes
+    };
 
     p.windowResized = () => {
         const sketchHolder = document.getElementById('sketch-holder');

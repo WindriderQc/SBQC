@@ -8,8 +8,13 @@ const sysmon = new (require('../scripts/systemMonitor'))();
 const dataApiService = require('../services/dataApiService');
 const jwt = require('jsonwebtoken');
 
-// Import the application's auth middleware
-const auth = require('../scripts/authMiddleware');
+// Import nodeTools auth middleware
+const nodetools = require('nodetools');
+const auth = nodetools.auth.createAuthMiddleware({
+    dbGetter: () => require('./api.routes').getDb(),
+    loginRedirectUrl: '/login',
+    logger: console
+});
 
 console.log("SysInfo: ", sysmon.getinfo().data);
 console.log("CPU: ", sysmon.getinfo().cpus.length);
