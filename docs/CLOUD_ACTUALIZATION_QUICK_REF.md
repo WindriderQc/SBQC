@@ -35,8 +35,8 @@ Displays **real-time global cloud coverage** on the 3D Earth globe, updating eve
 
 ### Wind Speed Slider
 - **Range**: 0× to 10×
-- **Default**: 1.0×
-- **Effect**: Controls cloud rotation speed (0.2× Earth rotation by default)
+- **Default**: 0.0× (clouds stay in real-time geographic position)
+- **Effect**: Controls cloud rotation speed (0.2× Earth rotation when multiplier > 0)
 
 ## How It Works
 
@@ -53,11 +53,12 @@ External API → Backend Proxy → p5.js Loader → Globe Class → WebGL Render
 ## Key Features
 
 ✅ **Near Real-time Data**: Global cloud coverage from EUMETSAT satellites  
+✅ **Real-time Positioning**: Clouds stay in actual geographic positions (windSpeed=0 default)  
 ✅ **Auto-refresh**: Updates every 3 hours (matches source data)  
 ✅ **Non-blocking**: Async loading doesn't freeze UI  
 ✅ **Error Resilient**: Continues with old texture if update fails  
 ✅ **Performance**: <2ms rendering impact per frame  
-✅ **User Control**: Toggle visibility and wind speed  
+✅ **User Control**: Toggle visibility and optionally add rotation animation  
 
 ## Technical Details
 

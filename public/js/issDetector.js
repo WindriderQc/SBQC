@@ -31,7 +31,7 @@ export default function(p) {
     let angleY = 0;
     let angleX = 0;
     let cloudRotationY = 0;
-    let windSpeedMultiplier = 1.0;
+    let windSpeedMultiplier = 0.0; // Default to 0 to keep clouds in real-time position
     let zoomLevel = 1.0;
     let earthTexture; // New variable for the Earth's surface texture
     let cloudTexture; // New variable for the cloud layer texture

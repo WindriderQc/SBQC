@@ -230,7 +230,7 @@ p.loadImage(url, successCallback, errorCallback)
 ### Configuration
 ```javascript
 let cloudRotationY = 0;
-let windSpeedMultiplier = 1.0;  // User-controllable via slider
+let windSpeedMultiplier = 0.0;  // Default: 0 for real-time position (user-controllable via slider)
 let autoRotationSpeed = (Math.PI * 2) / 120;  // Full rotation in 120 seconds
 ```
 
@@ -257,15 +257,18 @@ p.draw = () => {
 
 #### Cloud Rotation
 - **Speed**: `0.2 × Earth rotation speed × wind multiplier`
-- **Default Period**: 600 seconds (10 minutes) for full rotation
+- **Default Period**: No rotation (windSpeed = 0 by default, clouds stay in real-time position)
+- **With Multiplier = 1.0**: 600 seconds (10 minutes) for full rotation
 - **Multiplier Range**: 0× to 10× (user-controllable via "Wind Speed" slider)
-- **Effect**: Clouds drift slowly relative to Earth's surface
+- **Effect at 0×**: Clouds remain geographically accurate (recommended for real-time visualization)
 
 #### Wind Speed Slider
-- **HTML Element**: `<input type="range" id="windSpeedSlider" min="0" max="10" step="0.1" value="1.0">`
-- **Default**: 1.0× (standard speed)
+- **HTML Element**: `<input type="range" id="windSpeedSlider" min="0" max="10" step="0.1" value="0.0">`
+- **Default**: 0.0× (stationary clouds - real-time geographic position)
 - **Range**: 0× (stationary clouds) to 10× (very fast atmospheric movement)
-- **Use Case**: Visualize different atmospheric dynamics scenarios
+- **Use Case**: 
+  - **0×** (default): Geographic accuracy for real-time weather visualization
+  - **>0**: Animated atmospheric dynamics for visual effect
 
 ---
 
