@@ -1,4 +1,4 @@
-import { getSphereCoord } from './utils.js';
+import { getSphereCoord, haversineDistance } from './utils.js';
 import * as predictor from './issOrbitPredictor.js';
 import IssCamera from './issCamera.js';
 import Starfield from './Starfield.js';
@@ -31,6 +31,7 @@ export default function(p) {
     let angleY = 0;
     let angleX = 0;
     let cloudRotationY = 0;
+    let windSpeedMultiplier = 1.0;
     let zoomLevel = 1.0;
     let earthTexture; // New variable for the Earth's surface texture
     let cloudTexture; // New variable for the cloud layer texture
@@ -93,11 +94,6 @@ export default function(p) {
             }
         },
         getLoadedHistoryCount: () => originalLoadedIssHistory.length,
-        update3DPredictedPath: (pointsFrom2D) => {
-            if (predictedPath) {
-                predictedPath.update(pointsFrom2D);
-            }
-        },
         setSketchPassByRadiusKM: (newRadiusKM) => {
             if (typeof newRadiusKM === 'number' && newRadiusKM >= 0) {
                 sketchPassByRadiusKM = newRadiusKM;
@@ -280,6 +276,17 @@ export default function(p) {
         globe = new Globe(p, earthSize, earthTexture, cloudTexture);
         historicalPath = new Trajectory(p, p.color(255, 165, 0, 180));
         predictedPath = new Trajectory(p, p.color(0, 200, 0, 180));
+
+        const windSpeedSlider = document.getElementById('windSpeedSlider');
+        const windSpeedValueSpan = document.getElementById('windSpeedValue');
+        if (windSpeedSlider) {
+            windSpeedSlider.addEventListener('input', (e) => {
+                windSpeedMultiplier = parseFloat(e.target.value);
+                if (windSpeedValueSpan) {
+                    windSpeedValueSpan.textContent = windSpeedMultiplier.toFixed(1);
+                }
+            });
+        }
 
         // Get references to the approach info elements that are now in the HTML
         try {
@@ -509,7 +516,7 @@ export default function(p) {
         if (showAxis) { p.push(); drawAxis(earthSize * 50); p.pop(); }
 
         angleY += autoRotationSpeed / 60.0;
-        cloudRotationY += (autoRotationSpeed / 60.0) * 0.4;
+        cloudRotationY += (autoRotationSpeed / 60.0) * windSpeedMultiplier;
 
         p.ambientLight(80); // Provides a gentle fill light
         p.directionalLight(255, 255, 255, -0.5, -0.5, -1);
@@ -522,7 +529,7 @@ export default function(p) {
 
         if (showIssHistoricalPath) {
             historicalPath.update(internalIssPathHistory);
-            historicalPath.draw(earthSize + issDistanceToEarth);
+            historicalPath.draw(earthSize + issDistanceToEarth, 0, 0, 0);
         }
 
         if (showIssPredictedPath) {
