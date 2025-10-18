@@ -240,7 +240,8 @@ export default function(p) {
     }
 
     p.preload = async () => {
-        earthTexture = p.loadImage('/img/world.200407.3x5400x2700.jpg');
+        // High-quality 8K Earth texture (8192×4096, equirectangular projection)
+        earthTexture = p.loadImage('/img/Planets/earth/earthmapDay.jpg');
         cloudTexture = p.loadImage('/api/live-cloud-map');
         earthquakes = p.loadStrings('/data/quakes.csv');
         issGif = p.loadImage('/img/iss.png');

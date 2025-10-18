@@ -106,10 +106,11 @@ cloudRotationY += (autoRotationSpeed / 60.0) * 0.2 * windSpeedMultiplier;
 ## Coordinate System Alignment
 
 ### Earth Texture
-- **Source**: `/img/world.200407.3x5400x2700.jpg`
-- **Resolution**: 5400×2700 pixels
+- **Source**: `/img/Planets/earth/earthmapDay.jpg`
+- **Resolution**: 8192×4096 pixels (8K quality)
 - **Projection**: Equirectangular
-- **Prime Meridian**: Center of image (X = 2700)
+- **Prime Meridian**: Center of image (X = 4096)
+- **Date**: Updated 2023 (Adobe Photoshop 25.3)
 
 ### Cloud Texture
 - **Source**: `https://clouds.matteason.co.uk/images/2048x1024/clouds-alpha.png`
