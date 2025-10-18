@@ -456,6 +456,7 @@ export default function(p) {
         });
 
         // Periodically refresh the cloud texture
+        // Source (clouds.matteason.co.uk) updates every 3 hours using EUMETSAT data
         setInterval(() => {
             console.log('[issDetector] Refreshing cloud texture...');
             p.loadImage('/api/live-cloud-map', newTexture => {
@@ -464,7 +465,7 @@ export default function(p) {
             }, err => {
                 console.error('[issDetector] Failed to refresh cloud texture:', err);
             });
-        }, 15 * 60 * 1000); // Refresh every 15 minutes
+        }, 3 * 60 * 60 * 1000); // Refresh every 3 hours (matches source update frequency)
     };
 
     p.windowResized = () => {

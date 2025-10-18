@@ -23,7 +23,7 @@ The cloud actualization system consists of four main components:
 - **Source**: `https://clouds.matteason.co.uk/images/2048x1024/clouds-alpha.png`
 - **Format**: PNG with alpha transparency
 - **Resolution**: 2048×1024 pixels (equirectangular projection)
-- **Update Frequency**: Real-time (updated by external provider)
+- **Update Frequency**: Every 3 hours (using EUMETSAT satellite data)
 - **Projection**: Equirectangular (suitable for sphere texture mapping)
 
 ### Data Characteristics
@@ -191,6 +191,7 @@ p.setup = () => {
 #### Periodic Refresh (Post-Setup)
 ```javascript
 // Periodically refresh the cloud texture
+// Source (clouds.matteason.co.uk) updates every 3 hours using EUMETSAT data
 setInterval(() => {
     console.log('[issDetector] Refreshing cloud texture...');
     p.loadImage('/api/live-cloud-map', newTexture => {
@@ -199,15 +200,15 @@ setInterval(() => {
     }, err => {
         console.error('[issDetector] Failed to refresh cloud texture:', err);
     });
-}, 15 * 60 * 1000); // Refresh every 15 minutes
+}, 3 * 60 * 60 * 1000); // Refresh every 3 hours (matches source update frequency)
 ```
 
 ### Refresh Mechanism Details
 
 #### Interval Duration
-- **Frequency**: 15 minutes (900,000 ms)
-- **Rationale**: Balances data freshness with bandwidth/performance
-- **Satellite Update Cycle**: Most meteorological satellites update imagery every 15-30 minutes
+- **Frequency**: 3 hours (10,800,000 ms)
+- **Rationale**: Matches the source data update frequency from EUMETSAT satellites
+- **Satellite Update Cycle**: Provider updates imagery every 3 hours with fresh satellite data
 
 #### Asynchronous Loading
 ```javascript
@@ -429,9 +430,9 @@ p.loadImage('/api/live-cloud-map', successCallback, err => {
 
 ### Slow Network
 
-**Symptom**: Image takes >15 minutes to load
-**Effect**: Next refresh triggers before current one completes
-**Mitigation**: Asynchronous loading prevents blocking; multiple requests can overlap.
+**Symptom**: Image takes very long to load
+**Effect**: Load may still be in progress when next refresh triggers
+**Mitigation**: Asynchronous loading prevents blocking; with 3-hour interval, overlap is unlikely.
 
 ---
 
@@ -473,11 +474,11 @@ p.loadImage('/api/live-cloud-map', successCallback, err => {
 
 | **Property**              | **Value**                                      |
 |---------------------------|------------------------------------------------|
-| **Cloud Data Source**     | clouds.matteason.co.uk                         |
+| **Cloud Data Source**     | clouds.matteason.co.uk (EUMETSAT data)         |
 | **Image Format**          | PNG with alpha channel                         |
 | **Image Resolution**      | 2048×1024 pixels                               |
 | **Projection**            | Equirectangular                                |
-| **Update Frequency**      | 15 minutes                                     |
+| **Update Frequency**      | 3 hours (source) / 3 hours (refresh)           |
 | **Backend Route**         | `/api/live-cloud-map`                          |
 | **Proxy Method**          | HTTPS streaming proxy                          |
 | **Sphere Detail**         | 64×32 segments (2,048 vertices)                |
