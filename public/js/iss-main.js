@@ -104,6 +104,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const issCameraControls = document.getElementById('iss-camera-controls');
     const issFovSlider = document.getElementById('issFovSlider');
     const issFovValueSpan = document.getElementById('issFovValue');
+    const quakeMagFactorSlider = document.getElementById('quakeMagFactor');
+    const quakeMagFactorValueSpan = document.getElementById('quakeMagFactorValue');
     const refreshBtn = document.getElementById('refresh-tle-btn');
 
     // Optional: Enable for debugging UI element detection
@@ -156,24 +158,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (showQuakesCheckbox) {
         showQuakesCheckbox.addEventListener('change', (e) => {
             if (window.p5SketchApi) window.p5SketchApi.setShowQuakes(e.target.checked);
-            
-            // When earthquakes are enabled, disable cloud layer (earthquakes need to be visible on top)
-            if (e.target.checked && showCloudCheckbox) {
-                showCloudCheckbox.checked = false;
-                if (window.p5SketchApi) window.p5SketchApi.setShowCloud(false);
-            }
         });
     }
 
     if (showCloudCheckbox) {
         showCloudCheckbox.addEventListener('change', (e) => {
             if (window.p5SketchApi) window.p5SketchApi.setShowCloud(e.target.checked);
-            
-            // When cloud layer is enabled, disable earthquakes (cloud would hide them)
-            if (e.target.checked && showQuakesCheckbox) {
-                showQuakesCheckbox.checked = false;
-                if (window.p5SketchApi) window.p5SketchApi.setShowQuakes(false);
-            }
         });
     }
 
@@ -190,6 +180,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const fov = parseInt(e.target.value, 10);
             issFovValueSpan.textContent = fov;
             if (window.p5SketchApi) window.p5SketchApi.setIssFov(fov);
+        });
+    }
+
+    if (quakeMagFactorSlider && quakeMagFactorValueSpan) {
+        quakeMagFactorSlider.addEventListener('input', (e) => {
+            const factor = parseFloat(e.target.value);
+            quakeMagFactorValueSpan.textContent = factor.toFixed(1);
+            if (window.p5SketchApi) window.p5SketchApi.setQuakeMagFactor(factor);
         });
     }
 

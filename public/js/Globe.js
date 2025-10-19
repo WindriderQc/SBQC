@@ -82,14 +82,15 @@ export default class Globe {
             this.p.push();
             // Reset shader for clouds (use default rendering)
             this.p.resetShader();
-            // Use ADD blend mode to make the transparent parts of the cloud texture not obscure the earth
-            this.p.blendMode(this.p.ADD);
+            // Make clouds semi-transparent for better visual effect
+            this.p.tint(255, 255, 255, 180); // 180/255 = ~70% opacity
             this.p.rotateY(cloudRotationY);
             this.p.texture(this.cloudTexture);
             this.p.noStroke();
+            // Draw cloud sphere at 1.02x radius (markers are drawn at 1.03x to be above clouds)
             this.p.sphere(this.size * 1.02, 64, 32);
-            // Reset blend mode to default to not affect other elements
-            this.p.blendMode(this.p.BLEND);
+            // Reset tint to not affect other objects
+            this.p.noTint();
             this.p.pop();
         }
     }

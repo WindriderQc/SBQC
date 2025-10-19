@@ -108,6 +108,11 @@ export default function(p) {
         setShowIssPredictedPath: (value) => { showIssPredictedPath = !!value; },
         setShowQuakes: (value) => { showQuakes = !!value; },
         setShowCloud: (value) => { showCloud = !!value; },
+        setQuakeMagFactor: (value) => { 
+            if (typeof value === 'number' && value > 0) {
+                quakeMagFactor = value;
+            }
+        },
         setShowIssCamera: (value) => { if (issCam) issCam.setShow(value); },
         setIssFov: (value) => { if (issCam) issCam.setFov(value); },
     };
@@ -515,17 +520,43 @@ export default function(p) {
             const lon = parseFloat(data[2]);
             const mag = parseFloat(data[4]);
             if (isNaN(lat) || isNaN(lon) || isNaN(mag)) continue;
-            // Draw earthquakes at Earth's surface - they pop out as spheres
-            const pos = getSphereCoord(p, earthSize, lat, lon);
+            
+            // Draw earthquakes as cylinders extending from Earth surface through clouds
+            const posBase = getSphereCoord(p, earthSize, lat, lon);
             let h = p.pow(10, mag);
             const maxh = p.pow(10, 8);
             h = p.map(h, 0, maxh, 1, Math.min(mag * 5 * quakeMagFactor, 100 * quakeMagFactor));
             const quakeColor = p.lerpColor(quakeFromColor, quakeToColor, p.map(mag, 0, 8, 0, 1));
+            
             p.push();
-            p.translate(pos.x, pos.y, pos.z);
+            p.translate(posBase.x, posBase.y, posBase.z);
+            
+            // Orient cylinder to point radially outward from Earth center
+            const radialDir = posBase.copy().normalize();
+            
+            // Calculate angle between Y-axis and radial direction
+            const yAxis = p.createVector(0, 1, 0);
+            const angle = Math.acos(yAxis.dot(radialDir));
+            
+            // Get rotation axis (perpendicular to both vectors)
+            const axis = yAxis.cross(radialDir);
+            
+            if (axis.mag() > 0.001) {
+                axis.normalize();
+                p.rotate(angle, [axis.x, axis.y, axis.z]);
+            }
+            
             p.fill(quakeColor);
             p.noStroke();
-            p.sphere(Math.max(1, h / 10), 6, 4); // Very low detail for earthquake markers
+            // Cylinder dimensions scale with magnitude and magnitude factor slider
+            // Base height is 5% to clear clouds, then scale by magnitude
+            const baseHeight = earthSize * 0.05;
+            const magnitudeScale = p.map(mag, 0, 8, 0.5, 2.0); // Scale from 0.5x to 2x based on magnitude
+            const cylinderHeight = baseHeight * magnitudeScale * quakeMagFactor;
+            
+            // Radius also scales with magnitude and factor
+            const cylinderRadius = Math.max(1, (h / 10) * quakeMagFactor);
+            p.cylinder(cylinderRadius, cylinderHeight, 6, 1);
             p.pop();
         }
     }
@@ -616,12 +647,35 @@ export default function(p) {
         }
 
 
+        // Draw user location marker as a cylinder extending from Earth surface through clouds
         const pClientLoc = getSphereCoord(p, earthSize, currentDisplayLat, currentDisplayLon);
+        
         p.push();
         p.translate(pClientLoc.x, pClientLoc.y, pClientLoc.z);
+        
+        // Orient cylinder to point radially outward from Earth center
+        // Get the direction from Earth center to this point
+        const radialDir = pClientLoc.copy().normalize();
+        
+        // Use angleAxis to rotate from default Y-axis to radial direction
+        // Calculate angle between Y-axis and radial direction
+        const yAxis = p.createVector(0, 1, 0);
+        const angle = Math.acos(yAxis.dot(radialDir));
+        
+        // Get rotation axis (perpendicular to both vectors)
+        const axis = yAxis.cross(radialDir);
+        
+        if (axis.mag() > 0.001) {
+            axis.normalize();
+            p.rotate(angle, [axis.x, axis.y, axis.z]);
+        }
+        
         p.noStroke();
         p.fill(255, 255, 0);
-        p.sphere(gpsSize, 8, 6); // Low detail for small marker
+        // Cylinder: radius, height, detailX, detailY
+        // Height must exceed cloud layer offset (2%) plus extra visibility (3% more = 5% total)
+        const cylinderHeight = earthSize * 0.05; // 5% height to be clearly above clouds
+        p.cylinder(gpsSize, cylinderHeight, 8, 1);
         p.pop();
 
         const approachDetails = predictor.getClosestApproachDetails();
