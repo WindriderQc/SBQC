@@ -35,6 +35,8 @@ export default function(p) {
     let zoomLevel = 1.0;
     let earthTexture; // New variable for the Earth's surface texture
     let cloudTexture; // New variable for the cloud layer texture
+    let specularTexture; // Specular map for ocean reflectivity
+    let earthShader; // Custom shader for specular lighting
     let starfield;
     let globe;
     let historicalPath;
@@ -240,11 +242,15 @@ export default function(p) {
     }
 
     p.preload = async () => {
-        // High-quality 8K Earth texture (8192×4096, equirectangular projection)
+        // High-quality 8K Earth textures (8192×4096, equirectangular projection)
         earthTexture = p.loadImage('/img/Planets/earth/earthmapDay.jpg');
+        specularTexture = p.loadImage('/img/Planets/earth/earthmapSpecular.jpg');
         cloudTexture = p.loadImage('/api/live-cloud-map');
         earthquakes = p.loadStrings('/data/quakes.csv');
         issGif = p.loadImage('/img/iss.png');
+        
+        // Load custom shader for specular mapping
+        earthShader = p.loadShader('/shaders/earth.vert', '/shaders/earth.frag');
         try {
             console.log('[issDetector] Fetching ISS historical data from /api/iss...');
             const response = await fetch('/api/iss');
@@ -276,7 +282,16 @@ export default function(p) {
 
         // Instantiate the new classes
         starfield = new Starfield(p);
-        globe = new Globe(p, earthSize, earthTexture, cloudTexture);
+        globe = new Globe(p, earthSize, earthTexture, cloudTexture, specularTexture);
+        
+        // Set the shader for specular mapping (must be done after Globe construction)
+        if (earthShader && specularTexture) {
+            globe.setShader(earthShader);
+            console.log('[issDetector] Specular mapping enabled with custom shader');
+        } else {
+            console.warn('[issDetector] Specular mapping disabled - shader or texture missing');
+        }
+        
         historicalPath = new Trajectory(p, p.color(255, 165, 0, 180));
         predictedPath = new Trajectory(p, p.color(0, 200, 0, 180));
 
