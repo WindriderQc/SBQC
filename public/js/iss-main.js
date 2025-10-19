@@ -156,12 +156,24 @@ document.addEventListener('DOMContentLoaded', () => {
     if (showQuakesCheckbox) {
         showQuakesCheckbox.addEventListener('change', (e) => {
             if (window.p5SketchApi) window.p5SketchApi.setShowQuakes(e.target.checked);
+            
+            // When earthquakes are enabled, disable cloud layer (earthquakes need to be visible on top)
+            if (e.target.checked && showCloudCheckbox) {
+                showCloudCheckbox.checked = false;
+                if (window.p5SketchApi) window.p5SketchApi.setShowCloud(false);
+            }
         });
     }
 
     if (showCloudCheckbox) {
         showCloudCheckbox.addEventListener('change', (e) => {
             if (window.p5SketchApi) window.p5SketchApi.setShowCloud(e.target.checked);
+            
+            // When cloud layer is enabled, disable earthquakes (cloud would hide them)
+            if (e.target.checked && showQuakesCheckbox) {
+                showQuakesCheckbox.checked = false;
+                if (window.p5SketchApi) window.p5SketchApi.setShowQuakes(false);
+            }
         });
     }
 
