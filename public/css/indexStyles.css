@@ -71,3 +71,22 @@ body {
     width: 100%;
     background-position: 8px 5px;
   }
+  
+  /* P5.js Canvas styling for card */
+  #canvasDiv {
+    width: 100%;
+    min-height: 300px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  #canvasDiv canvas {
+    display: block;
+    width: 100% !important;
+    height: auto !important;
+    border-radius: 4px;
+  }

@@ -7,8 +7,14 @@ let walker, walker2, walker3;
 function setup()
 {
     //  WALKER
-    let canvas = createCanvas(windowWidth, windowHeight)
-    canvas.parent('canvasDiv')
+    // Get the canvas div dimensions
+    let canvasDiv = document.getElementById('canvasDiv');
+    let canvasWidth = canvasDiv ? canvasDiv.offsetWidth : 400;
+    let canvasHeight = canvasWidth * 0.75; // 4:3 aspect ratio
+    
+    let canvas = createCanvas(canvasWidth, canvasHeight);
+    canvas.parent('canvasDiv');
+    
     //create walker
     walker = new Walker()
     walker2 = new Walker()
@@ -64,5 +70,11 @@ function draw()
 }
 
 function windowResized() {
-    resizeCanvas(windowWidth, windowHeight);
+    // Resize canvas to fit card
+    let canvasDiv = document.getElementById('canvasDiv');
+    if (canvasDiv) {
+        let canvasWidth = canvasDiv.offsetWidth;
+        let canvasHeight = canvasWidth * 0.75; // 4:3 aspect ratio
+        resizeCanvas(canvasWidth, canvasHeight);
+    }
 }

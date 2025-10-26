@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     container.appendChild(renderer.domElement);
 
     // Earth Texture
-    const earthDayTexture = textureLoader.load('/img/world.200407.3x5400x2700.jpg'); //   1_earth_8k.jpg');
+    const earthDayTexture = textureLoader.load('/img/Planets/e43_color_s1_8k.jpg'); //   1_earth_8k.jpg');
     // Ensure sRGBEncoding for color textures for better visual results with MeshStandardMaterial
     earthDayTexture.encoding = THREE.sRGBEncoding;
 

@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Earth
         const earthTextureLoader = new THREE.TextureLoader();
-        earthTextureLoader.load('/img/world.200407.3x5400x2700.jpg', (texture) => {
+        earthTextureLoader.load('/img/Planets/e43_color_s1_8k.jpg', (texture) => {
             const earthGeometry = new THREE.SphereGeometry(EARTH_RADIUS, 64, 64); // Increased segments for smoother sphere
             const earthMaterial = new THREE.MeshStandardMaterial({ map: texture, metalness: 0.3, roughness: 0.7 });
             earthMesh = new THREE.Mesh(earthGeometry, earthMaterial);
