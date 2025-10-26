@@ -1,11 +1,13 @@
-// Ensure Three.js is loaded, if not already loaded globally
-// This simple check might need to be more robust depending on how three.js is usually included.
-if (typeof THREE === 'undefined' && typeof require !== 'undefined') {
-    // Attempt to load if in a Node-like environment (won't work in browser directly without bundling)
-    // For browser, ensure three.js is included via a script tag before this script.
-    // Given the project structure, it's likely expected to be globally available via a script tag.
-    console.warn("THREE object not found. Make sure Three.js library is loaded before this script.");
+// Access THREE from global scope (loaded via script tag)
+const THREE = window.THREE;
+
+// Ensure Three.js is loaded
+if (!THREE) {
+    console.error("THREE object not found. Make sure Three.js library is loaded before this script.");
 }
+
+// Import Flock3D class (will be loaded as ES6 module)
+import Flock3D from './Flock3D.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('threejs-container');
@@ -18,13 +20,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const textureLoader = new THREE.TextureLoader();
 
     const brightnessSlider = document.getElementById('slider1');
-    const sphereSizeSlider = document.getElementById('slider2');
 
-    if (!brightnessSlider || !sphereSizeSlider) {
-        console.error('Slider elements not found!');
-        // Optionally, disable further script execution if sliders are critical
-        // return;
-    }
+    // Get additional sliders for flock control
+    const separationSlider = document.getElementById('separationSlider');
+    const alignmentSlider = document.getElementById('alignmentSlider');
+    const cohesionSlider = document.getElementById('cohesionSlider');
+    const speedSlider = document.getElementById('speedSlider');
+    const boidCountDisplay = document.getElementById('boidCount');
 
     // Scene
     const scene = new THREE.Scene();
@@ -32,12 +34,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Camera
     const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-    camera.position.z = 5;
+    camera.position.set(0, 0, 5);
 
     // Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
     container.appendChild(renderer.domElement);
+
+    // OrbitControls for camera manipulation
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; // Smooth camera movements
+    controls.dampingFactor = 0.05;
+    controls.screenSpacePanning = false;
+    controls.minDistance = 2; // Minimum zoom distance
+    controls.maxDistance = 15; // Maximum zoom distance
+    controls.enablePan = true; // Allow panning
+    controls.autoRotate = false; // Can be toggled via keyboard
+    controls.autoRotateSpeed = 0.5;
 
     // Earth Texture
     const earthDayTexture = textureLoader.load('/img/Planets/e43_color_s1_8k.jpg'); //   1_earth_8k.jpg');
@@ -80,6 +93,17 @@ document.addEventListener('DOMContentLoaded', () => {
     directionalLight.position.set(5, 3, 5); // Position the light
     scene.add(directionalLight);
 
+    // Initialize Flock3D
+    const earthRadius = 1.5; // Match the Earth sphere radius
+    const flockAltitude = 0.3; // Altitude above Earth surface (similar to ISS orbit in scale)
+    const flock = new Flock3D(scene, earthRadius);
+    
+    // Populate with initial boids
+    const initialBoidCount = 30;
+    flock.populate(initialBoidCount, flockAltitude);
+    
+    console.log(`Initialized flock with ${initialBoidCount} boids at altitude ${flockAltitude}`);
+
     if (brightnessSlider) {
         brightnessSlider.addEventListener('input', (event) => {
             const intensityValue = parseFloat(event.target.value) / 50; // Example mapping: 0-100 to 0-2
@@ -95,30 +119,83 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (sphereSizeSlider) {
-        sphereSizeSlider.addEventListener('input', (event) => {
-            // const scaleValue = parseFloat(event.target.value) / 50; // Example mapping: 0-100 to 0-2 (adjust min on slider if 0 is too small)
-            // // Placeholder for actual sphere size update logic
-            // console.log('Sphere Size slider changed to:', event.target.value, 'Mapped scale:', scaleValue);
-            // if (sphere) { // Check if sphere is defined
-            //     sphere.scale.set(scaleValue, scaleValue, scaleValue);
-            // }
-            if (sphere && cloudSphere) { // Check if both are defined
-                const earthBaseScale = 1.5; // Original radius of Earth sphere
-                const cloudBaseScale = 1.52; // Original radius of cloud sphere
-                const minSliderVal = 10, maxSliderVal = 100;
-                const minVisualScale = 0.5, maxVisualScale = 2.0; // Desired visual scale range
-
-                // Map slider value (10-100) to visual scale (0.5-2.0)
-                const visualScale = minVisualScale + (parseFloat(event.target.value) - minSliderVal) * (maxVisualScale - minVisualScale) / (maxSliderVal - minSliderVal);
-
-                sphere.scale.set(visualScale, visualScale, visualScale);
-                // Scale clouds relative to their slightly larger base size, maintaining the visual proportion
-                cloudSphere.scale.set(visualScale, visualScale, visualScale);
-                console.log('Sphere Size slider changed to:', event.target.value, 'Mapped visual scale:', visualScale);
-            }
+    // Flock parameter event listeners
+    if (separationSlider) {
+        separationSlider.addEventListener('input', (event) => {
+            const value = parseFloat(event.target.value);
+            flock.separationWeight = value;
+            console.log('Separation weight:', value);
         });
     }
+
+    if (alignmentSlider) {
+        alignmentSlider.addEventListener('input', (event) => {
+            const value = parseFloat(event.target.value);
+            flock.alignmentWeight = value;
+            console.log('Alignment weight:', value);
+        });
+    }
+
+    if (cohesionSlider) {
+        cohesionSlider.addEventListener('input', (event) => {
+            const value = parseFloat(event.target.value);
+            flock.cohesionWeight = value;
+            console.log('Cohesion weight:', value);
+        });
+    }
+
+    if (speedSlider) {
+        speedSlider.addEventListener('input', (event) => {
+            const speed = parseFloat(event.target.value);
+            flock.setMaxSpeed(speed);
+            console.log('Boid max speed set to:', speed);
+        });
+    }
+
+    // Update boid count display
+    function updateBoidCount() {
+        if (boidCountDisplay) {
+            boidCountDisplay.textContent = flock.getCount();
+        }
+    }
+
+    // Mouse click to add boids
+    container.addEventListener('click', (event) => {
+        const rect = container.getBoundingClientRect();
+        const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        
+        // Add a boid at a random location when clicked
+        flock.addRandomBoid(flockAltitude);
+        updateBoidCount();
+        console.log('Added new boid. Total:', flock.getCount());
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (event) => {
+        switch(event.key.toLowerCase()) {
+            case ' ': // Space - toggle trails
+                event.preventDefault();
+                flock.toggleTrails();
+                console.log('Toggled boid trails');
+                break;
+            case 'c': // C - clear all boids
+                flock.clear();
+                updateBoidCount();
+                console.log('Cleared all boids');
+                break;
+            case 'r': // R - reset to initial count
+                flock.clear();
+                flock.populate(initialBoidCount, flockAltitude);
+                updateBoidCount();
+                console.log('Reset flock to', initialBoidCount, 'boids');
+                break;
+            case 'a': // A - toggle auto-rotate
+                controls.autoRotate = !controls.autoRotate;
+                console.log('Auto-rotate:', controls.autoRotate ? 'ON' : 'OFF');
+                break;
+        }
+    });
 
     // Handle window resize
     window.addEventListener('resize', () => {
@@ -131,14 +208,20 @@ document.addEventListener('DOMContentLoaded', () => {
     function animate() {
         requestAnimationFrame(animate);
 
+        // Update OrbitControls
+        controls.update();
+
         // Optional: Add some animation to the sphere
         // sphere.rotation.x += 0.005; // Remove or comment out X-axis rotation
-        sphere.rotation.y += 0.005; // Keep Y-axis rotation
+        sphere.rotation.y += 0.0025; // Slowed down from 0.005 to 0.0025
 
         if (cloudSphere) { // Check if cloudSphere is defined
-            cloudSphere.rotation.y += 0.0025; // Slower and slightly different rotation for clouds
+            cloudSphere.rotation.y += 0.00125; // Slowed down from 0.0025 to 0.00125
             // cloudSphere.rotation.x += 0.001; // Remove or comment out X-axis rotation
         }
+
+        // Update and render the flock
+        flock.run();
 
         renderer.render(scene, camera);
     }

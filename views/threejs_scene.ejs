@@ -4,7 +4,11 @@
     <%- include('partials/mainHead') %>
     <title>Three.js Scene</title>
     <style>
-        body { margin: 0; font-family: sans-serif; }
+        body { 
+            margin: 0; 
+            font-family: sans-serif;
+            padding-top: 70px; /* Account for fixed navbar */
+        }
         .main-centered-container {
             display: flex;
             flex-direction: column;
@@ -17,16 +21,45 @@
             max-width: 800px; /* Max width for text and form */
             margin-bottom: 20px;
         }
+        .intro-text-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .intro-text-section ul {
+            margin: 15px auto;
+        }
+        .intro-text-section kbd {
+            background-color: #f4f4f4;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.2);
+            padding: 2px 6px;
+            font-family: monospace;
+            font-size: 0.9em;
+            color: #333;
+            display: inline-block;
+            min-width: 20px;
+            text-align: center;
+        }
         #threejs-container {
             width: 80%; /* Responsive width */
             max-width: 800px; /* Max width for the canvas */
             height: 450px; /* Fixed height, or use aspect-ratio if preferred */
             /* aspect-ratio: 16 / 9; */ /* Alternative to fixed height */
             margin-bottom: 20px;
-            background-color: #f0f0f0; /* Light background for canvas area before it loads */
-            border: 1px solid #ccc; /* Optional border for the canvas */
+            background-color: #000; /* Black background for space */
+            border: 2px solid #333; /* Darker border for the canvas */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            cursor: pointer;
         }
         /* Basic form styling */
+        .slider-form-section h4 {
+            color: #555;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 5px;
+        }
         .slider-form-section form div {
             margin-bottom: 10px;
             display: flex;
@@ -35,9 +68,17 @@
         }
         .slider-form-section label {
             margin-right: 10px;
+            font-weight: 500;
         }
         .slider-form-section input[type="range"] {
             flex-grow: 1;
+            margin: 0 10px;
+        }
+        .slider-form-section span {
+            min-width: 40px;
+            text-align: right;
+            font-weight: bold;
+            color: #0066cc;
         }
     </style>
 </head>
@@ -46,27 +87,97 @@
 
     <div class="main-centered-container">
         <div class="intro-text-section">
-            <p>Introductory text will go here.</p>
+            <h2>3D Flocking Simulation Around Earth</h2>
+            <p>
+                Watch autonomous agents (boids) exhibit emergent flocking behavior as they orbit Earth! 
+                This simulation demonstrates three simple rules that create complex, lifelike movement.
+            </p>
         </div>
 
         <div id="threejs-container"></div>
 
         <div class="slider-form-section">
+           
+            
+            <h4 style="margin-top: 20px;">Flocking Parameters</h4>
+            <form>
+                <div>
+                    <label for="separationSlider">Separation Weight:</label>
+                    <input type="range" id="separationSlider" name="separationSlider" min="0" max="3" step="0.1" value="1.5">
+                    <span id="separationValue">1.5</span>
+                </div>
+                <div>
+                    <label for="alignmentSlider">Alignment Weight:</label>
+                    <input type="range" id="alignmentSlider" name="alignmentSlider" min="0" max="3" step="0.1" value="1.0">
+                    <span id="alignmentValue">1.0</span>
+                </div>
+                <div>
+                    <label for="cohesionSlider">Cohesion Weight:</label>
+                    <input type="range" id="cohesionSlider" name="cohesionSlider" min="0" max="3" step="0.1" value="1.0">
+                    <span id="cohesionValue">1.0</span>
+                </div>
+                <div>
+                    <label for="speedSlider">Boid Speed:</label>
+                    <input type="range" id="speedSlider" name="speedSlider" min="0.01" max="0.2" step="0.01" value="0.05">
+                    <span id="speedValue">0.05</span>
+                </div>
+            </form>
+        </div>
+
+        <div class="intro-text-section" style="margin-top: 30px;">
+   
+            <p style="margin-top: 15px;">
+                <strong>Controls:</strong> Click to add boids • Press <kbd>SPACE</kbd> to toggle trails • 
+                Press <kbd>R</kbd> to reset • Press <kbd>C</kbd> to clear all • Press <kbd>A</kbd> to toggle auto-rotate
+            </p>
+            <p style="margin-top: 10px; font-size: 0.9em;">
+                <strong>Camera:</strong> Left-drag to rotate • Right-drag to pan • Scroll to zoom
+            </p>
+            <p>
+                Current boid count: <strong><span id="boidCount">30</span></strong>
+            </p>
+   
+            <h4>Flocking Behavior Explained</h4>
+            <ul style="text-align: left; display: inline-block;">
+                <li><strong>Separation:</strong> Avoid crowding neighbors</li>
+                <li><strong>Alignment:</strong> Steer towards the average heading of neighbors</li>
+                <li><strong>Cohesion:</strong> Move toward the average position of neighbors</li>
+            </ul>
+        </div>
+
+         <h4>Scene Controls</h4>
             <form>
                 <div>
                     <label for="slider1">Brightness:</label>
                     <input type="range" id="slider1" name="slider1" min="0" max="100" value="70">
-                </div>
-                <div>
-                    <label for="slider2">Sphere Size:</label>
-                    <input type="range" id="slider2" name="slider2" min="10" max="100" value="50">
+                    <span id="brightnessValue">70</span>
                 </div>
             </form>
-        </div>
+            
     </div>
 
     <script src="/js/threejs/three.js"></script>
-    <script src="/js/threejs_setup.js"></script>
+    <script src="/js/threejs/OrbitControls.js"></script>
+    <script type="module" src="/js/threejs_setup.js"></script>
+    
+    <script>
+        // Update slider value displays
+        document.getElementById('slider1')?.addEventListener('input', (e) => {
+            document.getElementById('brightnessValue').textContent = e.target.value;
+        });
+        document.getElementById('separationSlider')?.addEventListener('input', (e) => {
+            document.getElementById('separationValue').textContent = e.target.value;
+        });
+        document.getElementById('alignmentSlider')?.addEventListener('input', (e) => {
+            document.getElementById('alignmentValue').textContent = e.target.value;
+        });
+        document.getElementById('cohesionSlider')?.addEventListener('input', (e) => {
+            document.getElementById('cohesionValue').textContent = e.target.value;
+        });
+        document.getElementById('speedSlider')?.addEventListener('input', (e) => {
+            document.getElementById('speedValue').textContent = e.target.value;
+        });
+    </script>
     <%- include('partials/footer') %>
 </body>
 </html>
