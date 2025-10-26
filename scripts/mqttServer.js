@@ -53,10 +53,16 @@ function initMqtt(url, msgHandler, channels = [], getSocketIoInstance) {
     });
 
     mqttclient.on('message', async (topic, message) => {
-        const io = getIo();
         // Forward every MQTT message to all connected web clients
-        if (io) {
-            io.sockets.emit('mqtt-message', { topic: topic, message: message.toString() });
+        // Use try-catch to handle case where Socket.IO isn't initialized yet
+        try {
+            const io = getIo();
+            if (io) {
+                io.sockets.emit('mqtt-message', { topic: topic, message: message.toString() });
+            }
+        } catch (err) {
+            // Socket.IO not initialized yet - this is expected during startup
+            // Messages will still be processed by msgHandler below
         }
 
         if (!msgHandler(topic, message, mqttclient)) {

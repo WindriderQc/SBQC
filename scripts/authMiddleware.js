@@ -1,8 +1,24 @@
 /**
  * Custom Auth Middleware for SBQC
  * 
- * Wraps nodeTools auth but fetches users from DataAPI instead of local database
- * since SBQC doesn't store user data locally.
+ * IMPORTANT: This is NOT using nodeTools auth!
+ * 
+ * Why custom auth?
+ * - SBQC stores ALL data (including users) in DataAPI, not local MongoDB
+ * - Local MongoDB is ONLY for session storage (shared with DataAPI)
+ * - We need to fetch users via HTTP API calls to DataAPI, not database queries
+ * - nodeTools auth expects users in local MongoDB (different architecture)
+ * 
+ * Architecture:
+ * 1. User logs in at DataAPI (session created there)
+ * 2. Session cookie is shared across domains (data.specialblend.ca + SBQC)
+ * 3. This middleware reads userId from session
+ * 4. Fetches full user data from DataAPI via HTTP
+ * 5. Caches user data to minimize API calls
+ * 
+ * For projects with local user storage, use nodeTools auth instead:
+ *   const nodetools = require('nodetools');
+ *   const auth = nodetools.auth.createAuthMiddleware({...});
  */
 
 const dataApiService = require('../services/dataApiService');

@@ -29,6 +29,19 @@ function startServer(app) {
     // Initialize socket.io as it depends on the server instance
     if (process.env.NODE_ENV !== 'test') {
         socketio.init(server);
+        
+        // Initialize MQTT after Socket.IO is ready
+        // This ensures Socket.IO is available when MQTT messages arrive
+        const mqtt = require('../scripts/mqttServer');
+        const esp32 = require('../scripts/esp32');
+        
+        mqtt.initMqtt(
+            'mqtt://specialblend.ca', 
+            esp32.msgHandler, 
+            ['esp32', 'esp32/#', 'sbqc/iss'], 
+            () => socketio.get_io()
+        );
+        esp32.setConnectedValidation(30000, mqtt.getClient());
     }
 
 

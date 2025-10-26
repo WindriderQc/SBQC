@@ -34,19 +34,8 @@ if (process.env.NODE_ENV !== 'test') {
       syncRepos();
     });
 
-
-    //  MQTT API to communication with ESP32 and other devices
-    const mqtt = require('./scripts/mqttServer')
-    const esp32 = require('./scripts/esp32')
-
-    // This will be initialized later, after the server is created
-    const socketio = require('./scripts/socket');
-
-    //  MQTT API to communication with ESP32 and other devices
-    // Pass a function that gets the Socket.IO instance from the socket module
-    mqtt.initMqtt('mqtt://specialblend.ca', esp32.msgHandler, ['esp32', 'esp32/#', 'sbqc/iss'], () => socketio.get_io());
-    esp32.setConnectedValidation(30000, mqtt.getClient()) //  check every X seconds if devices are still connected
-
+    // MQTT and Socket.IO will be initialized in serverUtils.startServer()
+    // after the HTTP server is created (to avoid initialization race conditions)
 }
 
 
@@ -105,7 +94,10 @@ const options = {
 // Databases
 const { connectDb, loadCollections } = require('./scripts/database');
 
-// Custom authentication middleware that fetches users from DataAPI
+// SBQC uses custom authentication middleware that fetches users from DataAPI
+// (Not nodeTools auth, which expects users in local MongoDB)
+// This is because SBQC stores ALL data in DataAPI, including users
+// Local MongoDB is ONLY used for session storage (shared with DataAPI)
 const auth = require('./scripts/authMiddleware');
 
 (async () => {

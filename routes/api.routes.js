@@ -8,12 +8,10 @@ const dataApiService = require('../services/dataApiService');
 const weatherService = require('../services/weatherService');
 const { BadRequest } = require('../utils/errors');
 
-// Get auth middleware from nodeTools (already configured in sbqc_serv.js)
-const nodetools = require('nodetools');
-const auth = nodetools.auth.createAuthMiddleware({
-    dbGetter: (req) => req.app.locals.db,
-    loginRedirectUrl: 'https://data.specialblend.ca/login'
-});
+// SBQC uses custom auth middleware that fetches users from DataAPI
+// This is different from nodeTools auth (which fetches from local MongoDB)
+// because SBQC stores all data in DataAPI, not locally
+const auth = require('../scripts/authMiddleware');
 
 // Weather and Air Quality
 router.get('/weather/:latlon', async (req, res, next) => {
