@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+  <%- include('partials/mainHead', { title: 'SBQC Home' }) %>
+  <link rel='stylesheet' href='css/mews.css'>
+  <link rel='stylesheet' href='css/rockPaperScissor.css'>
+</head>
+
+<body>
+<%- include('partials/nav') %>
+
+
+    <div class="background-container d-flex justify-content-center align-items-center" style="min-height: 100vh; padding: 2rem 0;">
+        <div class="container">
+            <div class="row justify-content-center">
+                
+                <!-- Main Welcome Card -->
+                <div class='col-12 col-md-8 topZ mb-4' id="welcomeSquare">
+                    <img class="mb-4" src="img/favicon.ico" style="width: 250px;" />
+                    <div class="welcome-section">
+                        <h3>Welcome to Special Blend Production</h3>
+                        <p class="text-muted">System Dashboard</p>
+                    </div>
+                </div>
+
+                <!-- Stats Cards Row -->
+                <div class="col-12">
+                    <div class="row justify-content-center g-4">
+                        
+                        <!-- Visitor Counter Card -->
+                        <div class="col-md-4">
+                            <div class="card bg-dark bg-opacity-75 border-info text-white h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-eye-fill mb-3" style="font-size: 2.5rem; color: #0dcaf0;"></i>
+                                    <h5 class="card-title">Total Visits</h5>
+                                    <h2 class="display-4 text-info"><%= hitCount || 0 %></h2>
+                                    <p class="text-muted small">All-time visitor count</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Database Collections Card -->
+                        <div class="col-md-4">
+                            <div class="card bg-dark bg-opacity-75 border-success text-white h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-database-fill mb-3" style="font-size: 2.5rem; color: #198754;"></i>
+                                    <h5 class="card-title">Database</h5>
+                                    <h2 class="display-4 text-success"><%= collectionInfo ? Object.keys(collectionInfo).length : 0 %></h2>
+                                    <p class="text-muted small">Active collections</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Registered Devices Card -->
+                        <div class="col-md-4">
+                            <div class="card bg-dark bg-opacity-75 border-warning text-white h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-cpu-fill mb-3" style="font-size: 2.5rem; color: #ffc107;"></i>
+                                    <h5 class="card-title">IoT Devices</h5>
+                                    <h2 class="display-4 text-warning"><%= regDevices ? regDevices.length : 0 %></h2>
+                                    <p class="text-muted small">Registered devices</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Collection Details (if available) -->
+                <% if (collectionInfo && Object.keys(collectionInfo).length > 0) { %>
+                <div class="col-12 mt-4">
+                    <div class="card bg-dark bg-opacity-75 border-secondary text-white">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-list-ul"></i> Database Collections</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <% Object.entries(collectionInfo).forEach(([name, info]) => { %>
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="p-3 bg-secondary bg-opacity-25 rounded">
+                                        <h6 class="text-info mb-1"><%= name %></h6>
+                                        <p class="text-muted small mb-0">
+                                            <%= info.count || 0 %> documents
+                                        </p>
+                                    </div>
+                                </div>
+                                <% }); %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <% } %>
+
+                <!-- Registered Devices List -->
+                <div class="col-12 mt-4">
+                    <div class="card bg-dark bg-opacity-75 border-secondary text-white">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-hdd-network"></i> Registered Devices</h5>
+                            <% if (locals.user) { %>
+                                <span class="badge bg-success"><i class="bi bi-lock-fill"></i> Authenticated</span>
+                            <% } else { %>
+                                <span class="badge bg-danger"><i class="bi bi-lock"></i> Login Required</span>
+                            <% } %>
+                        </div>
+                        <% if (locals.user && regDevices && regDevices.length > 0) { %>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <% regDevices.forEach((device, index) => { 
+                                    // Handle both string and object formats
+                                    const deviceId = typeof device === 'string' ? device : (device.id || device.name || device.deviceId || device._id || 'Unknown');
+                                    const deviceType = typeof device === 'object' && device.type ? device.type : (String(deviceId).startsWith('ESP_') ? 'ESP32' : 'ESP32');
+                                %>
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="p-3 bg-secondary bg-opacity-25 rounded">
+                                        <h6 class="text-warning mb-2">
+                                            <i class="bi bi-cpu"></i> <%= deviceId %>
+                                        </h6>
+                                        <p class="text-white-50 small mb-0">
+                                            <strong>Type:</strong> <span class="text-info"><%= deviceType %></span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <% }); %>
+                            </div>
+                        </div>
+                        <% } else { %>
+                        <div class="card-body text-center py-5">
+                            <i class="bi bi-lock" style="font-size: 3rem; color: #dc3545;"></i>
+                            <h5 class="mt-3 text-muted">Authentication Required</h5>
+                            <p class="text-muted mb-3">Please log in to view registered IoT devices</p>
+                            <a href="/login" class="btn btn-primary">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                            </a>
+                        </div>
+                        <% } %>
+                    </div>
+                </div>
+
+                <!-- Voice Assistant Status -->
+                <div class="col-12 mt-4">
+                    <div class="card bg-dark bg-opacity-75 border-secondary text-white">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-mic-fill"></i> Voice Assistant - Nestor</h5>
+                            <div>
+                                <button id="activate-nestor-btn" class="btn btn-sm btn-success me-2" onclick="activateNestor()">
+                                    <i class="bi bi-mic"></i> Activate
+                                </button>
+                                <span id="nestor-status" class="badge bg-secondary">Not Active</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-info mb-3">Recent Commands</h6>
+                                    <div id="speech" class="speech-log" style="max-height: 200px; overflow-y: auto;">
+                                        <p class="text-muted small"><em>Click "Activate" to start voice recognition...</em></p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-info mb-3">System Info</h6>
+                                    <div class="p-2">
+                                        <p class="small mb-2">
+                                            <strong>Language:</strong> <span id="nestor-lang" class="text-warning">en-US</span>
+                                        </p>
+                                        <p class="small mb-2">
+                                            <strong>Microphones:</strong> <span id="nestor-mics" class="text-warning">Detecting...</span>
+                                        </p>
+                                        <p class="small mb-0">
+                                            <strong>Status:</strong> <span id="nestor-listening" class="text-warning">Starting...</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+
+
+<div id='page-top' class=' content-wrapper bg-transparent'>
+<div class='container-fluid text-center '>
+<!-- Begin Container  -->
+
+
+<div id='speech'></div>
+
+
+<%- include('partials/footer') %>
+
+
+ <!-- End Container  -->
+</div>
+</div>
+
+
+
+<%- include('partials/p5') %>
+<script type='text/javascript' src='js/p5.speech.js'></script>
+<script type='text/javascript' src='js/nestor.js'></script>
+
+<script>
+let nestorActivated = false;
+
+function activateNestor() {
+    if (nestorActivated) return;
+    
+    const btn = document.getElementById('activate-nestor-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Activating...';
+    
+    setupNestor();
+    nestorActivated = true;
+    
+    // Hide button after activation
+    setTimeout(() => {
+        btn.style.display = 'none';
+    }, 1000);
+}
+
+// Auto-activate if user came from index (check if sessionStorage has interaction flag)
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if user has already interacted (coming from index page)
+    if (sessionStorage.getItem('userInteracted') === 'true') {
+        // Auto-activate without requiring button click
+        activateNestor();
+    }
+});
+</script>
+</body>
+</html>

@@ -3,81 +3,120 @@
 <html lang="en">
 
 <head>
-  <!-- <meta name="google-site-verification" content="ZxzvcpuiKsVz7ls-msP04CTmjAzew6l8TzIwLERDP0Q" /> -->
-    <%- include('../mainHead', { title: 'Login' }) %> 
-  <link rel="stylesheet"  type="text/css"  href="css/login.css">
+    <%- include('../mainHead', { title: 'Login - Special Blend Production' }) %> 
 </head>
 
-<script>  // Disable submit button until all form inputs have data
+<body>
+<%- include('../nav') %>
 
-$(document).ready(function() {
-  validate();
-  $('input').on('keyup', validate);
-});
+<div class="background-container d-flex justify-content-center align-items-center" style="min-height: 100vh; padding: 2rem 0;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-6 col-lg-5">
+                
+                <!-- Login Card -->
+                <div class="card bg-dark bg-opacity-90 border-secondary text-white shadow-lg">
+                    <div class="card-body p-5">
+                        
+                        <!-- Logo & Title -->
+                        <div class="text-center mb-4">
+                            <img src="img/favicon.ico" style="width: 100px;" class="mb-3" alt="Logo" />
+                            <h3 class="mb-2">Welcome Back</h3>
+                            <p class="text-muted">Sign in to Special Blend Production</p>
+                        </div>
 
-function validate() {
-  var inputsWithValues = 0;
+                        <!-- Error/Success Messages -->
+                        <% if (locals.error) { %>
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i><%= error %>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        <% } %>
+                        
+                        <% if (locals.success) { %>
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="bi bi-check-circle-fill me-2"></i><%= success %>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        <% } %>
 
-  // get all input fields except for type='submit'
-  var myInputs = $("input:not([type='submit'])");
+                        <!-- Login Form -->
+                        <form action="/login" method="post">
+                            
+                            <div class="mb-3">
+                                <label for="email" class="form-label">
+                                    <i class="bi bi-envelope me-2"></i>Email Address
+                                </label>
+                                <input 
+                                    type="email" 
+                                    id="email" 
+                                    name="email" 
+                                    class="form-control form-control-lg bg-dark text-white border-secondary" 
+                                    placeholder="you@example.com" 
+                                    required 
+                                    autofocus
+                                >
+                            </div>
 
-  myInputs.each(function(e) {
-    // if it has a value, increment the counter
-    if ($(this).val()) {
-      inputsWithValues += 1;
-    }
-  });
+                            <div class="mb-4">
+                                <label for="password" class="form-label">
+                                    <i class="bi bi-lock me-2"></i>Password
+                                </label>
+                                <input 
+                                    type="password" 
+                                    id="password" 
+                                    name="password" 
+                                    class="form-control form-control-lg bg-dark text-white border-secondary" 
+                                    placeholder="Enter your password" 
+                                    required
+                                >
+                            </div>
 
-  if (inputsWithValues == myInputs.length) {
-    $("input[type=submit]").prop("disabled", false);
-  } else {
-    $("input[type=submit]").prop("disabled", true);
-  }
-}
-</script>
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="rememberMe">
+                                    <label class="form-check-label text-muted" for="rememberMe">
+                                        Remember me
+                                    </label>
+                                </div>
+                                <a href="/forgot-password" class="text-info text-decoration-none small">
+                                    Forgot password?
+                                </a>
+                            </div>
 
+                            <button class="btn btn-warning btn-lg w-100 mb-3" type="submit">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                            </button>
 
-<body class="bg-light">
-<div class="container">
-    <div class="row">
-      <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
-        <div class="card card-signin my-5">
-          <div class="card-body">
+                        </form>
 
-            <h5 class="card-title text-center">Sign In</h5>
-            
-            <form class="form-signin" action =/login method="post" >
-              <div class="form-label-group">
-                <input type="email" id="email" name="email" class="form-control" placeholder="Email address" required autofocus >
-                <label for="email">Email address</label>
-              </div>
+                        <hr class="border-secondary my-4">
 
-              <div class="form-label-group">
-                <input type="password" id="password" name="password" class="form-control" placeholder="Password" required >
-                <label for="password">Password</label>
-              </div>
+                        <!-- Register Link -->
+                        <div class="text-center">
+                            <p class="text-muted mb-2">Don't have an account?</p>
+                            <a href="/login/register" class="btn btn-outline-success w-100">
+                                <i class="bi bi-person-plus me-2"></i>Create Account
+                            </a>
+                        </div>
 
-              <div class="custom-control custom-checkbox mb-3">
-                <input type="checkbox" class="custom-control-input" id="customCheck1">
-                <label class="custom-control-label" for="customCheck1">Remember password</label>
-              </div>
-              <button class="btn btn-lg btn-warning btn-block text-uppercase" type="submit" value="Login">Sign in</button>
-              <hr class="my-4">
-              <button class="btn btn-lg btn-google btn-block text-uppercase" type="submit"><i class="fab fa-google mr-2"></i> Sign in with Google</button>
-              <button class="btn btn-lg btn-facebook btn-block text-uppercase" type="submit"><i class="fab fa-facebook-f mr-2"></i> Sign in with Facebook</button>
-            </form>
+                    </div>
+                </div>
 
-          </div>
+                <!-- Additional Info -->
+                <div class="text-center mt-4">
+                    <p class="text-white-50 small">
+                        <i class="bi bi-shield-check me-2"></i>
+                        Your data is secured with industry-standard encryption
+                    </p>
+                </div>
+
+            </div>
         </div>
-      </div>
     </div>
-    <div class="text-center">
-      <a class="d-block small " href="/login/register">Register an Account</a>
-      <a class="d-block small" href="forgot-password.html">Forgot Password?</a>
-    </div>
-
 </div>
 
-</body>
+<%- include('../footer') %>
 
+</body>
 </html>

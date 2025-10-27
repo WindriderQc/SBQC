@@ -46,7 +46,7 @@
             <textarea class="form-control" id="streamTextArea" rows="32"></textarea>
         </div>
 
-
+      <% if (locals.user) { %>
       <div class="row mt-2">
          <div class="col-sm-12">
             <div class="card ">
@@ -62,7 +62,6 @@
       <%- include('partials/iot/mqtt-docs') %>
       <%- include('partials/iot/device-controls') %>
 
-      <% if (locals.user) { %>
       <div class="row mt-2">
         <div class="col-sm-12">
             <div class="card">
@@ -84,7 +83,7 @@
       <% } else { %>
       <div class="row mt-2">
         <div class="col-sm-12">
-            <%- include('partials/loginPrompt', { feature: 'manage device configuration profiles' }) %>
+            <%- include('partials/loginPrompt', { feature: 'access device controls and configuration' }) %>
         </div>
       </div>
       <% } %>

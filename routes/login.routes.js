@@ -176,15 +176,15 @@ router.post('/', loginValidationRules(), async (req, res, next) => {
 
 
 router.get('/out', (req, res) => {
-
-    res.clearCookie(process.env.SESS_NAME)
-    res.redirect('../')
-   /* req.session.destroy(err => {
-        if (err) res.send('error destroying session')
-        console.log('Session destroyed and logged out')
-        res.clearCookie(process.env.SESS_NAME)
-        res.redirect('../')
-    })*/
+    req.session.destroy(err => {
+        if (err) {
+            console.error('Error destroying session:', err);
+            return res.redirect('../');
+        }
+        console.log('Session destroyed and logged out');
+        res.clearCookie('data-api.sid'); // Use the actual session name from sessionOptions
+        res.redirect('../');
+    });
 })
 
 

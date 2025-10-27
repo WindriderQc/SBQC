@@ -51,7 +51,16 @@ function engageInteractiveExperience() {
     const welcomeSections = document.querySelectorAll('.welcome-section');
     welcomeSections.forEach(section => section.style.display = 'none');
 
-    // Assuming setupNestor is defined in nestor.js
+    // Set flag that user has interacted (for dashboard auto-activation)
+    sessionStorage.setItem('userInteracted', 'true');
+
+    // Show Nestor card
+    const nestorCard = document.getElementById('nestor-card');
+    if (nestorCard) {
+        nestorCard.style.display = 'flex';
+    }
+
+    // Initialize Nestor (user interaction required for microphone access)
     setupNestor();
 }
 

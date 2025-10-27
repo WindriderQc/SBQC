@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Camera
     const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-    camera.position.set(0, 0, 5);
+    camera.position.set(0, 0, 3); // Adjusted camera distance
 
     // Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const flock = new Flock3D(scene, earthRadius);
     
     // Populate with initial boids
-    const initialBoidCount = 30;
+    const initialBoidCount = 150; 
     flock.populate(initialBoidCount, flockAltitude);
     
     console.log(`Initialized flock with ${initialBoidCount} boids at altitude ${flockAltitude}`);
@@ -212,8 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
         controls.update();
 
         // Optional: Add some animation to the sphere
-        // sphere.rotation.x += 0.005; // Remove or comment out X-axis rotation
-        sphere.rotation.y += 0.0025; // Slowed down from 0.005 to 0.0025
+        sphere.rotation.y += 0.00150; // Slowed down from 0.005 to 0.00150
 
         if (cloudSphere) { // Check if cloudSphere is defined
             cloudSphere.rotation.y += 0.00125; // Slowed down from 0.0025 to 0.00125
