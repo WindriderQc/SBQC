@@ -1,0 +1,51 @@
+/* public/css/weather-card.css */
+.weather-card {
+    background: linear-gradient(135deg, #6dd5ed, #2193b0);
+    color: white;
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+.weather-main {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.weather-stat {
+    margin: 1rem;
+    min-width: 120px;
+}
+.weather-icon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+.weather-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+.weather-label {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.weather-location {
+    font-size: 1.2rem;
+    margin-top: 1rem;
+    font-weight: 300;
+}
+.weather-aq {
+    margin-top: 1.5rem;
+    background-color: rgba(255, 255, 255, 0.2);
+    padding: 1rem;
+    border-radius: 10px;
+}
+.weather-aq-value {
+    font-weight: bold;
+}
+.weather-last-updated {
+    font-size: 0.8rem;
+    opacity: 0.8;
+    margin-top: 0.5rem;
+}
