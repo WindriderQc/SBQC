@@ -1,5 +1,6 @@
 const { fetchJSON, fetchText } = require('./apiClient');
 const moment = require('moment');
+const { connectDb } = require('../scripts/database');
 
 const apiKeys = {
     weather: process.env.WEATHER_API_KEY,
@@ -20,6 +21,21 @@ const weatherCache = {};
 const tidesCache = {};
 const WEATHER_CACHE_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 const TIDES_CACHE_DURATION_MS = 6 * 60 * 60 * 1000; // 6 hours
+
+// --- Database Connection ---
+let dbInstance = null;
+async function getDb() {
+    if (dbInstance) return dbInstance;
+    if (process.env.MONGO_CLOUD) {
+        try {
+            dbInstance = await connectDb(process.env.MONGO_CLOUD, 'SBQC');
+            return dbInstance;
+        } catch (e) {
+            console.error("Failed to connect to DB for weather service:", e);
+        }
+    }
+    return null;
+}
 
 // --- Weather ---
 async function getWeatherAndAirQuality(lat, lon) {
@@ -144,10 +160,81 @@ async function fetchAndCacheWeatherData(url, cacheKey, cacheDuration) {
     return data;
 }
 
+async function getPressureAveragesFromDB(lat, lon) {
+    const db = await getDb();
+    if (!db) {
+        console.warn("Database unavailable for pressure averages.");
+        return null;
+    }
+
+    try {
+        const collection = db.collection('pressures');
+        const now = moment().utc();
+        const oneWeekAgo = moment(now).subtract(7, 'days').toDate();
+        const oneMonthAgo = moment(now).subtract(30, 'days').toDate();
+        const oneYearAgo = moment(now).subtract(365, 'days').toDate();
+
+        // Round lat/lon to match DB precision (4 decimals vs 3 or whatever in DB)
+        // DB has 46.8138, request has 46.8139. Let's use a small range.
+        const latNum = parseFloat(lat);
+        const lonNum = parseFloat(lon);
+        const tolerance = 0.01;
+
+        const matchStage = {
+            $match: {
+                lat: { $gte: latNum - tolerance, $lte: latNum + tolerance },
+                lon: { $gte: lonNum - tolerance, $lte: lonNum + tolerance },
+                timeStamp: { $gte: oneYearAgo }
+            }
+        };
+
+        const facetStage = {
+            $facet: {
+                week: [
+                    { $match: { timeStamp: { $gte: oneWeekAgo } } },
+                    { $group: { _id: null, avg: { $avg: "$pressure" } } }
+                ],
+                month: [
+                    { $match: { timeStamp: { $gte: oneMonthAgo } } },
+                    { $group: { _id: null, avg: { $avg: "$pressure" } } }
+                ],
+                year: [
+                    { $group: { _id: null, avg: { $avg: "$pressure" } } }
+                ]
+            }
+        };
+
+        const result = await collection.aggregate([matchStage, facetStage]).toArray();
+
+        if (result && result.length > 0) {
+            const data = result[0];
+            return {
+                week: data.week.length > 0 ? parseFloat(data.week[0].avg.toFixed(1)) : null,
+                month: data.month.length > 0 ? parseFloat(data.month[0].avg.toFixed(1)) : null,
+                year: data.year.length > 0 ? parseFloat(data.year[0].avg.toFixed(1)) : null
+            };
+        }
+    } catch (error) {
+        console.error("Error calculating pressure averages from DB:", error);
+    }
+    return null;
+}
+
 async function getPressure(lat, lon, numDaysHistorical = 2) {
+    // Determine data source preference
+    let averages = null;
+
+    // Attempt DB calculation first (priority as requested)
+    averages = await getPressureAveragesFromDB(lat, lon);
+
     if (!apiKeys.weather) {
-        console.warn('WEATHER_API_KEY is not set. Falling back to mock data for pressure.');
-        return generateMockPressureTempData(lat, lon, numDaysHistorical);
+        console.warn('WEATHER_API_KEY is not set. Falling back to mock data for pressure readings.');
+        const mockData = generateMockPressureTempData(lat, lon, numDaysHistorical);
+        if (!averages) {
+            averages = mockData.averages; // Use mock averages if DB failed
+        }
+        mockData.averages = averages;
+        return mockData;
     }
 
     try {
@@ -185,6 +272,14 @@ async function getPressure(lat, lon, numDaysHistorical = 2) {
         allReadings.forEach(item => uniqueReadingsMap.set(item.dt, item));
         const sortedReadings = Array.from(uniqueReadingsMap.values()).sort((a, b) => a.dt - b.dt);
 
+        // If DB averages were not found (e.g. no DB connection or no data), fall back to API sampling
+        if (!averages) {
+            try {
+                averages = await calculateRealAverages(processedLat, processedLon, apiKeys.weather);
+            } catch (avgErr) {
+                console.warn("Failed to calculate real averages from API:", avgErr.message);
+            }
+        }
         // Calculate real averages using sampling strategy
         let averages = { week: null, month: null, year: null };
         try {
