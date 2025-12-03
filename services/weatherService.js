@@ -185,9 +185,18 @@ async function getPressure(lat, lon, numDaysHistorical = 2) {
         allReadings.forEach(item => uniqueReadingsMap.set(item.dt, item));
         const sortedReadings = Array.from(uniqueReadingsMap.values()).sort((a, b) => a.dt - b.dt);
 
+        // Note: Real averages for month/year would require many API calls.
+        // For now we will return simplified or null values for month/year to avoid heavy API usage.
+
         return {
             readings: sortedReadings,
             data_source: "openweathermap",
+            averages: {
+                // Placeholder: to be implemented with sampling strategy if needed
+                week: null,
+                month: null,
+                year: null
+            }
         };
 
     } catch (error) {
@@ -196,25 +205,57 @@ async function getPressure(lat, lon, numDaysHistorical = 2) {
     }
 }
 
+function calculateMockVal(timestamp) {
+    const time = moment.unix(timestamp);
+    const hourOfYear = time.dayOfYear() * 24 + time.hour();
+    const basePressure = 1012, pressureVariability = 10;
+    const baseTemp = 15, tempVariability = 5;
+
+    const pressure = basePressure + (Math.sin(hourOfYear * 2 * Math.PI / (365*12)) * (pressureVariability/2)) + (Math.sin(hourOfYear * 2 * Math.PI / 12) * (pressureVariability/3)) + (Math.random() * pressureVariability/3 - pressureVariability/6);
+    const temp = baseTemp + (Math.sin(hourOfYear * 2 * Math.PI / 8760) * tempVariability*2) + (Math.sin(hourOfYear * 2 * Math.PI / 24 + Math.PI) * tempVariability) + (Math.random() * tempVariability/2 - tempVariability/4);
+
+    return { pressure, temp };
+}
+
 function generateMockPressureTempData(lat, lon, numDaysHistorical = 2, numDaysForecast = 2) {
     const readings = [];
     const now = moment.utc();
-    const basePressure = 1012, pressureVariability = 10;
-    const baseTemp = 15, tempVariability = 5;
+
     const totalDataPoints = (numDaysHistorical + numDaysForecast) * 24;
     const startTime = moment(now).subtract(numDaysHistorical, 'days').startOf('hour');
 
     for (let i = 0; i < totalDataPoints; i++) {
         const currentTime = moment(startTime).add(i, 'hours');
-        const hourOfYear = currentTime.dayOfYear() * 24 + currentTime.hour();
-        const pressure = basePressure + (Math.sin(hourOfYear * 2 * Math.PI / (365*12)) * (pressureVariability/2)) + (Math.sin(hourOfYear * 2 * Math.PI / 12) * (pressureVariability/3)) + (Math.random() * pressureVariability/3 - pressureVariability/6);
-        const temp = baseTemp + (Math.sin(hourOfYear * 2 * Math.PI / 8760) * tempVariability*2) + (Math.sin(hourOfYear * 2 * Math.PI / 24 + Math.PI) * tempVariability) + (Math.random() * tempVariability/2 - tempVariability/4);
+        const { pressure, temp } = calculateMockVal(currentTime.unix());
         readings.push({ dt: currentTime.unix(), pressure: parseFloat(pressure.toFixed(1)), temp: parseFloat(temp.toFixed(1)) });
     }
+
+    // Calculate averages for Week, Month, Year
+    const calculateAverageSampled = (daysBack, sampleEveryHours = 1) => {
+         let sumPressure = 0;
+         let count = 0;
+         const start = moment(now).subtract(daysBack, 'days').startOf('hour');
+         const totalHours = daysBack * 24;
+         for(let i=0; i<totalHours; i+=sampleEveryHours) {
+              const t = moment(start).add(i, 'hours');
+              const { pressure } = calculateMockVal(t.unix());
+              sumPressure += pressure;
+              count++;
+         }
+         return parseFloat((sumPressure / count).toFixed(1));
+    };
+
+    const averages = {
+        week: calculateAverageSampled(7, 4), // Sample every 4 hours
+        month: calculateAverageSampled(30, 12), // Sample every 12 hours
+        year: calculateAverageSampled(365, 24) // Sample every 24 hours
+    };
+
     const forecastEndTime = moment(now).add(numDaysForecast, 'days').endOf('day').unix();
     return {
         readings: readings.filter(r => r.dt <= forecastEndTime),
-        data_source: "mock"
+        data_source: "mock",
+        averages
     };
 }
 
