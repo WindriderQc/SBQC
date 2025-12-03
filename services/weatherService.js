@@ -1,5 +1,6 @@
 const { fetchJSON, fetchText } = require('./apiClient');
 const moment = require('moment');
+const { connectDb } = require('../scripts/database');
 
 const apiKeys = {
     weather: process.env.WEATHER_API_KEY,
@@ -20,6 +21,21 @@ const weatherCache = {};
 const tidesCache = {};
 const WEATHER_CACHE_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 const TIDES_CACHE_DURATION_MS = 6 * 60 * 60 * 1000; // 6 hours
+
+// --- Database Connection ---
+let dbInstance = null;
+async function getDb() {
+    if (dbInstance) return dbInstance;
+    if (process.env.MONGO_CLOUD) {
+        try {
+            dbInstance = await connectDb(process.env.MONGO_CLOUD, 'SBQC');
+            return dbInstance;
+        } catch (e) {
+            console.error("Failed to connect to DB for weather service:", e);
+        }
+    }
+    return null;
+}
 
 // --- Weather ---
 async function getWeatherAndAirQuality(lat, lon) {
@@ -144,10 +160,81 @@ async function fetchAndCacheWeatherData(url, cacheKey, cacheDuration) {
     return data;
 }
 
+async function getPressureAveragesFromDB(lat, lon) {
+    const db = await getDb();
+    if (!db) {
+        console.warn("Database unavailable for pressure averages.");
+        return null;
+    }
+
+    try {
+        const collection = db.collection('pressures');
+        const now = moment().utc();
+        const oneWeekAgo = moment(now).subtract(7, 'days').toDate();
+        const oneMonthAgo = moment(now).subtract(30, 'days').toDate();
+        const oneYearAgo = moment(now).subtract(365, 'days').toDate();
+
+        // Round lat/lon to match DB precision (4 decimals vs 3 or whatever in DB)
+        // DB has 46.8138, request has 46.8139. Let's use a small range.
+        const latNum = parseFloat(lat);
+        const lonNum = parseFloat(lon);
+        const tolerance = 0.01;
+
+        const matchStage = {
+            $match: {
+                lat: { $gte: latNum - tolerance, $lte: latNum + tolerance },
+                lon: { $gte: lonNum - tolerance, $lte: lonNum + tolerance },
+                timeStamp: { $gte: oneYearAgo }
+            }
+        };
+
+        const facetStage = {
+            $facet: {
+                week: [
+                    { $match: { timeStamp: { $gte: oneWeekAgo } } },
+                    { $group: { _id: null, avg: { $avg: "$pressure" } } }
+                ],
+                month: [
+                    { $match: { timeStamp: { $gte: oneMonthAgo } } },
+                    { $group: { _id: null, avg: { $avg: "$pressure" } } }
+                ],
+                year: [
+                    { $group: { _id: null, avg: { $avg: "$pressure" } } }
+                ]
+            }
+        };
+
+        const result = await collection.aggregate([matchStage, facetStage]).toArray();
+
+        if (result && result.length > 0) {
+            const data = result[0];
+            return {
+                week: data.week.length > 0 ? parseFloat(data.week[0].avg.toFixed(1)) : null,
+                month: data.month.length > 0 ? parseFloat(data.month[0].avg.toFixed(1)) : null,
+                year: data.year.length > 0 ? parseFloat(data.year[0].avg.toFixed(1)) : null
+            };
+        }
+    } catch (error) {
+        console.error("Error calculating pressure averages from DB:", error);
+    }
+    return null;
+}
+
 async function getPressure(lat, lon, numDaysHistorical = 2) {
+    // Determine data source preference
+    let averages = null;
+
+    // Attempt DB calculation first (priority as requested)
+    averages = await getPressureAveragesFromDB(lat, lon);
+
     if (!apiKeys.weather) {
-        console.warn('WEATHER_API_KEY is not set. Falling back to mock data for pressure.');
-        return generateMockPressureTempData(lat, lon, numDaysHistorical);
+        console.warn('WEATHER_API_KEY is not set. Falling back to mock data for pressure readings.');
+        const mockData = generateMockPressureTempData(lat, lon, numDaysHistorical);
+        if (!averages) {
+            averages = mockData.averages; // Use mock averages if DB failed
+        }
+        mockData.averages = averages;
+        return mockData;
     }
 
     try {
@@ -185,9 +272,19 @@ async function getPressure(lat, lon, numDaysHistorical = 2) {
         allReadings.forEach(item => uniqueReadingsMap.set(item.dt, item));
         const sortedReadings = Array.from(uniqueReadingsMap.values()).sort((a, b) => a.dt - b.dt);
 
+        // If DB averages were not found (e.g. no DB connection or no data), fall back to API sampling
+        if (!averages) {
+            try {
+                averages = await calculateRealAverages(processedLat, processedLon, apiKeys.weather);
+            } catch (avgErr) {
+                console.warn("Failed to calculate real averages from API:", avgErr.message);
+            }
+        }
+
         return {
             readings: sortedReadings,
             data_source: "openweathermap",
+            averages
         };
 
     } catch (error) {
@@ -196,25 +293,108 @@ async function getPressure(lat, lon, numDaysHistorical = 2) {
     }
 }
 
+function calculateMockVal(timestamp) {
+    const time = moment.unix(timestamp);
+    const hourOfYear = time.dayOfYear() * 24 + time.hour();
+    const basePressure = 1012, pressureVariability = 10;
+    const baseTemp = 15, tempVariability = 5;
+
+    const pressure = basePressure + (Math.sin(hourOfYear * 2 * Math.PI / (365*12)) * (pressureVariability/2)) + (Math.sin(hourOfYear * 2 * Math.PI / 12) * (pressureVariability/3)) + (Math.random() * pressureVariability/3 - pressureVariability/6);
+    const temp = baseTemp + (Math.sin(hourOfYear * 2 * Math.PI / 8760) * tempVariability*2) + (Math.sin(hourOfYear * 2 * Math.PI / 24 + Math.PI) * tempVariability) + (Math.random() * tempVariability/2 - tempVariability/4);
+
+    return { pressure, temp };
+}
+
+async function calculateRealAverages(lat, lon, apiKey) {
+    const now = moment.utc();
+
+    // Sampling points (days ago)
+    const samplesWeek = [2, 4, 7];
+    const samplesMonth = [10, 20, 30];
+    const samplesYear = [60, 120, 180, 240, 300, 360];
+
+    const fetchSample = async (daysAgo) => {
+        const targetDate = moment(now).subtract(daysAgo, 'days');
+        const targetTimestamp = targetDate.unix();
+        const url = `https://api.openweathermap.org/data/3.0/onecall/timemachine?lat=${lat}&lon=${lon}&dt=${targetTimestamp}&units=metric&appid=${apiKey}`;
+        const cacheKey = `hist-${lat}-${lon}-${targetDate.format('YYYYMMDD')}`;
+
+        try {
+            const data = await fetchAndCacheWeatherData(url, cacheKey, HISTORICAL_PRESSURE_CACHE_DURATION);
+            if (data && data.data && data.data.length > 0) {
+                let sum = 0;
+                data.data.forEach(d => sum += d.pressure);
+                return sum / data.data.length;
+            }
+        } catch (e) {
+            console.warn(`Failed to fetch sample for ${daysAgo} days ago: ${e.message}`);
+        }
+        return null;
+    };
+
+    const distinctDays = [...new Set([...samplesWeek, ...samplesMonth, ...samplesYear])];
+    const results = await Promise.all(distinctDays.map(day => fetchSample(day).then(val => ({ day, val }))));
+    const resultMap = new Map(results.map(r => [r.day, r.val]));
+
+    const calcAvg = (daysArray) => {
+        let sum = 0;
+        let count = 0;
+        daysArray.forEach(d => {
+            const val = resultMap.get(d);
+            if (val !== null && val !== undefined) {
+                sum += val;
+                count++;
+            }
+        });
+        return count > 0 ? parseFloat((sum / count).toFixed(1)) : null;
+    };
+
+    return {
+        week: calcAvg(samplesWeek),
+        month: calcAvg(samplesMonth),
+        year: calcAvg(samplesYear)
+    };
+}
+
 function generateMockPressureTempData(lat, lon, numDaysHistorical = 2, numDaysForecast = 2) {
     const readings = [];
     const now = moment.utc();
-    const basePressure = 1012, pressureVariability = 10;
-    const baseTemp = 15, tempVariability = 5;
+
     const totalDataPoints = (numDaysHistorical + numDaysForecast) * 24;
     const startTime = moment(now).subtract(numDaysHistorical, 'days').startOf('hour');
 
     for (let i = 0; i < totalDataPoints; i++) {
         const currentTime = moment(startTime).add(i, 'hours');
-        const hourOfYear = currentTime.dayOfYear() * 24 + currentTime.hour();
-        const pressure = basePressure + (Math.sin(hourOfYear * 2 * Math.PI / (365*12)) * (pressureVariability/2)) + (Math.sin(hourOfYear * 2 * Math.PI / 12) * (pressureVariability/3)) + (Math.random() * pressureVariability/3 - pressureVariability/6);
-        const temp = baseTemp + (Math.sin(hourOfYear * 2 * Math.PI / 8760) * tempVariability*2) + (Math.sin(hourOfYear * 2 * Math.PI / 24 + Math.PI) * tempVariability) + (Math.random() * tempVariability/2 - tempVariability/4);
+        const { pressure, temp } = calculateMockVal(currentTime.unix());
         readings.push({ dt: currentTime.unix(), pressure: parseFloat(pressure.toFixed(1)), temp: parseFloat(temp.toFixed(1)) });
     }
+
+    // Calculate averages for Week, Month, Year
+    const calculateAverageSampled = (daysBack, sampleEveryHours = 1) => {
+         let sumPressure = 0;
+         let count = 0;
+         const start = moment(now).subtract(daysBack, 'days').startOf('hour');
+         const totalHours = daysBack * 24;
+         for(let i=0; i<totalHours; i+=sampleEveryHours) {
+              const t = moment(start).add(i, 'hours');
+              const { pressure } = calculateMockVal(t.unix());
+              sumPressure += pressure;
+              count++;
+         }
+         return parseFloat((sumPressure / count).toFixed(1));
+    };
+
+    const averages = {
+        week: calculateAverageSampled(7, 4), // Sample every 4 hours
+        month: calculateAverageSampled(30, 12), // Sample every 12 hours
+        year: calculateAverageSampled(365, 24) // Sample every 24 hours
+    };
+
     const forecastEndTime = moment(now).add(numDaysForecast, 'days').endOf('day').unix();
     return {
         readings: readings.filter(r => r.dt <= forecastEndTime),
-        data_source: "mock"
+        data_source: "mock",
+        averages
     };
 }
 
