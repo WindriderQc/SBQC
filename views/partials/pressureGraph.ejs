@@ -33,6 +33,16 @@
     </select>
     <button id="refreshPressure" style="margin-left: 10px;">Refresh Data</button>
     <small id="pressureDataRangeMessage" style="margin-left: 10px;">(Displays historical and forecast pressure/temp)</small>
+    <div id="averageControls" style="margin-top: 10px;">
+        <input type="checkbox" id="showAvgWeek" name="showAvgWeek" checked>
+        <label for="showAvgWeek" style="margin-right: 10px;">Avg Week</label>
+
+        <input type="checkbox" id="showAvgMonth" name="showAvgMonth" checked>
+        <label for="showAvgMonth" style="margin-right: 10px;">Avg Month</label>
+
+        <input type="checkbox" id="showAvgYear" name="showAvgYear" checked>
+        <label for="showAvgYear">Avg Year</label>
+    </div>
 </div>
 <!-- Ensure the pressureDataSourceMessage span is present in the p tag for current readings -->
 <script>
@@ -42,6 +52,7 @@
     let tempValues = [];
     let chartTimeLabels = [];
     let pressureChartInstance; 
+    let currentServerResponse = null;
 
     async function fetchPressureData(lat, lon, days, forecastHours) { // Removed default values
         // Update data range message at the beginning of the function
@@ -81,10 +92,26 @@
             }
         }
 
+        currentServerResponse = serverResponse;
+        renderPressureChart();
+    }
+
+    function renderPressureChart() {
+        if (!currentServerResponse) return;
+
+        const serverResponse = currentServerResponse;
+        const forecastHours = parseInt(document.getElementById('pressureForecastHours').value, 10);
+
         const dataSourceMessageEl = document.getElementById('pressureDataSourceMessage');
         if (dataSourceMessageEl) {
             if (serverResponse.data_source === "mock") {
-                dataSourceMessageEl.textContent = " (Warning: Displaying mock data due to API issue)";
+                let reasonMsg = "API issue";
+                if (serverResponse.mock_reason === "missing_api_key") {
+                    reasonMsg = "Missing API Key";
+                } else if (serverResponse.mock_reason === "api_error") {
+                    reasonMsg = "API Error";
+                }
+                dataSourceMessageEl.textContent = ` (Warning: Displaying mock data due to ${reasonMsg})`;
                 dataSourceMessageEl.style.color = "orange";
             } else {
                 dataSourceMessageEl.textContent = "";
@@ -138,6 +165,83 @@
             const ctx = document.getElementById('pressureChart').getContext('2d');
             if (pressureChartInstance) {
                 pressureChartInstance.destroy();
+            }
+
+            // Prepare annotations
+            const annotations = [{
+                type: 'line',
+                mode: 'vertical',
+                scaleID: 'x-axis-0',
+                value: moment().toDate(),
+                borderColor: 'green',
+                borderWidth: 2,
+                label: {
+                    content: 'Now',
+                    enabled: true,
+                    position: 'top'
+                }
+            }];
+
+            // Check checkboxes
+            const showWeek = document.getElementById('showAvgWeek').checked;
+            const showMonth = document.getElementById('showAvgMonth').checked;
+            const showYear = document.getElementById('showAvgYear').checked;
+
+            if (serverResponse.averages) {
+                if (showWeek && serverResponse.averages.week) {
+                    annotations.push({
+                        type: 'line',
+                        mode: 'horizontal',
+                        scaleID: 'y-axis-pressure',
+                        value: serverResponse.averages.week,
+                        borderColor: 'rgba(255, 159, 64, 0.7)',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        label: {
+                            content: 'Avg Week: ' + serverResponse.averages.week,
+                            enabled: true,
+                            position: 'right',
+                            backgroundColor: 'rgba(255, 159, 64, 0.7)',
+                            fontSize: 10
+                        }
+                    });
+                }
+                if (showMonth && serverResponse.averages.month) {
+                     annotations.push({
+                        type: 'line',
+                        mode: 'horizontal',
+                        scaleID: 'y-axis-pressure',
+                        value: serverResponse.averages.month,
+                        borderColor: 'rgba(75, 192, 192, 0.7)',
+                        borderWidth: 2,
+                        borderDash: [10, 5],
+                        label: {
+                            content: 'Avg Month: ' + serverResponse.averages.month,
+                            enabled: true,
+                            position: 'right',
+                            backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                            fontSize: 10
+                        }
+                    });
+                }
+                 if (showYear && serverResponse.averages.year) {
+                     annotations.push({
+                        type: 'line',
+                        mode: 'horizontal',
+                        scaleID: 'y-axis-pressure',
+                        value: serverResponse.averages.year,
+                        borderColor: 'rgba(153, 102, 255, 0.7)',
+                        borderWidth: 2,
+                        borderDash: [2, 2],
+                        label: {
+                            content: 'Avg Year: ' + serverResponse.averages.year,
+                            enabled: true,
+                            position: 'right',
+                            backgroundColor: 'rgba(153, 102, 255, 0.7)',
+                            fontSize: 10
+                        }
+                    });
+                }
             }
 
             pressureChartInstance = new Chart(ctx, {
@@ -222,20 +326,8 @@
                             }
                         }
                     },
-                    annotation: { // Keep existing annotation for "Now" line
-                        annotations: [{
-                            type: 'line',
-                            mode: 'vertical',
-                            scaleID: 'x-axis-0', // Ensure this matches your xAxis ID if specified
-                            value: moment().toDate(),
-                            borderColor: 'green',
-                            borderWidth: 2,
-                            label: {
-                                content: 'Now',
-                                enabled: true,
-                                position: 'top'
-                            }
-                        }]
+                    annotation: {
+                        annotations: annotations
                     }
                 }
             });
@@ -286,6 +378,12 @@
 
         // The range message is now updated inside fetchPressureData
         fetchPressureData(lat, lon, days, forecastHours);
+    });
+
+    // Checkbox event listeners
+    ['showAvgWeek', 'showAvgMonth', 'showAvgYear'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', renderPressureChart);
     });
 
     // Initial data fetch on page load
