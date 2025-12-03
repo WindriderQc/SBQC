@@ -185,6 +185,13 @@ async function getPressure(lat, lon, numDaysHistorical = 2) {
         allReadings.forEach(item => uniqueReadingsMap.set(item.dt, item));
         const sortedReadings = Array.from(uniqueReadingsMap.values()).sort((a, b) => a.dt - b.dt);
 
+        // Calculate real averages using sampling strategy
+        let averages = { week: null, month: null, year: null };
+        try {
+            averages = await calculateRealAverages(processedLat, processedLon, apiKeys.weather);
+        } catch (avgErr) {
+            console.warn("Failed to calculate real averages:", avgErr.message);
+        }
         // Note: Real averages for month/year would require many API calls.
         // For now we will return simplified or null values for month/year to avoid heavy API usage.
 
@@ -215,6 +222,57 @@ function calculateMockVal(timestamp) {
     const temp = baseTemp + (Math.sin(hourOfYear * 2 * Math.PI / 8760) * tempVariability*2) + (Math.sin(hourOfYear * 2 * Math.PI / 24 + Math.PI) * tempVariability) + (Math.random() * tempVariability/2 - tempVariability/4);
 
     return { pressure, temp };
+}
+
+async function calculateRealAverages(lat, lon, apiKey) {
+    const now = moment.utc();
+
+    // Sampling points (days ago)
+    const samplesWeek = [2, 4, 7];
+    const samplesMonth = [10, 20, 30];
+    const samplesYear = [60, 120, 180, 240, 300, 360];
+
+    const fetchSample = async (daysAgo) => {
+        const targetDate = moment(now).subtract(daysAgo, 'days');
+        const targetTimestamp = targetDate.unix();
+        const url = `https://api.openweathermap.org/data/3.0/onecall/timemachine?lat=${lat}&lon=${lon}&dt=${targetTimestamp}&units=metric&appid=${apiKey}`;
+        const cacheKey = `hist-${lat}-${lon}-${targetDate.format('YYYYMMDD')}`;
+
+        try {
+            const data = await fetchAndCacheWeatherData(url, cacheKey, HISTORICAL_PRESSURE_CACHE_DURATION);
+            if (data && data.data && data.data.length > 0) {
+                let sum = 0;
+                data.data.forEach(d => sum += d.pressure);
+                return sum / data.data.length;
+            }
+        } catch (e) {
+            console.warn(`Failed to fetch sample for ${daysAgo} days ago: ${e.message}`);
+        }
+        return null;
+    };
+
+    const distinctDays = [...new Set([...samplesWeek, ...samplesMonth, ...samplesYear])];
+    const results = await Promise.all(distinctDays.map(day => fetchSample(day).then(val => ({ day, val }))));
+    const resultMap = new Map(results.map(r => [r.day, r.val]));
+
+    const calcAvg = (daysArray) => {
+        let sum = 0;
+        let count = 0;
+        daysArray.forEach(d => {
+            const val = resultMap.get(d);
+            if (val !== null && val !== undefined) {
+                sum += val;
+                count++;
+            }
+        });
+        return count > 0 ? parseFloat((sum / count).toFixed(1)) : null;
+    };
+
+    return {
+        week: calcAvg(samplesWeek),
+        month: calcAvg(samplesMonth),
+        year: calcAvg(samplesYear)
+    };
 }
 
 function generateMockPressureTempData(lat, lon, numDaysHistorical = 2, numDaysForecast = 2) {

@@ -33,6 +33,16 @@
     </select>
     <button id="refreshPressure" style="margin-left: 10px;">Refresh Data</button>
     <small id="pressureDataRangeMessage" style="margin-left: 10px;">(Displays historical and forecast pressure/temp)</small>
+    <div id="averageControls" style="margin-top: 10px;">
+        <input type="checkbox" id="showAvgWeek" name="showAvgWeek" checked>
+        <label for="showAvgWeek" style="margin-right: 10px;">Avg Week</label>
+
+        <input type="checkbox" id="showAvgMonth" name="showAvgMonth" checked>
+        <label for="showAvgMonth" style="margin-right: 10px;">Avg Month</label>
+
+        <input type="checkbox" id="showAvgYear" name="showAvgYear" checked>
+        <label for="showAvgYear">Avg Year</label>
+    </div>
 </div>
 <!-- Ensure the pressureDataSourceMessage span is present in the p tag for current readings -->
 <script>
@@ -42,6 +52,7 @@
     let tempValues = [];
     let chartTimeLabels = [];
     let pressureChartInstance; 
+    let currentServerResponse = null;
 
     async function fetchPressureData(lat, lon, days, forecastHours) { // Removed default values
         // Update data range message at the beginning of the function
@@ -80,6 +91,16 @@
                 return;
             }
         }
+
+        currentServerResponse = serverResponse;
+        renderPressureChart();
+    }
+
+    function renderPressureChart() {
+        if (!currentServerResponse) return;
+
+        const serverResponse = currentServerResponse;
+        const forecastHours = parseInt(document.getElementById('pressureForecastHours').value, 10);
 
         const dataSourceMessageEl = document.getElementById('pressureDataSourceMessage');
         if (dataSourceMessageEl) {
@@ -155,8 +176,13 @@
                 }
             }];
 
+            // Check checkboxes
+            const showWeek = document.getElementById('showAvgWeek').checked;
+            const showMonth = document.getElementById('showAvgMonth').checked;
+            const showYear = document.getElementById('showAvgYear').checked;
+
             if (serverResponse.averages) {
-                if (serverResponse.averages.week) {
+                if (showWeek && serverResponse.averages.week) {
                     annotations.push({
                         type: 'line',
                         mode: 'horizontal',
@@ -174,7 +200,7 @@
                         }
                     });
                 }
-                if (serverResponse.averages.month) {
+                if (showMonth && serverResponse.averages.month) {
                      annotations.push({
                         type: 'line',
                         mode: 'horizontal',
@@ -192,7 +218,7 @@
                         }
                     });
                 }
-                 if (serverResponse.averages.year) {
+                 if (showYear && serverResponse.averages.year) {
                      annotations.push({
                         type: 'line',
                         mode: 'horizontal',
@@ -346,6 +372,12 @@
 
         // The range message is now updated inside fetchPressureData
         fetchPressureData(lat, lon, days, forecastHours);
+    });
+
+    // Checkbox event listeners
+    ['showAvgWeek', 'showAvgMonth', 'showAvgYear'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', renderPressureChart);
     });
 
     // Initial data fetch on page load
