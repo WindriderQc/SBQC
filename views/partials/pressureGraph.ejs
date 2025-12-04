@@ -105,7 +105,13 @@
         const dataSourceMessageEl = document.getElementById('pressureDataSourceMessage');
         if (dataSourceMessageEl) {
             if (serverResponse.data_source === "mock") {
-                dataSourceMessageEl.textContent = " (Warning: Displaying mock data due to API issue)";
+                let reasonMsg = "API issue";
+                if (serverResponse.mock_reason === "missing_api_key") {
+                    reasonMsg = "Missing API Key";
+                } else if (serverResponse.mock_reason === "api_error") {
+                    reasonMsg = "API Error";
+                }
+                dataSourceMessageEl.textContent = ` (Warning: Displaying mock data due to ${reasonMsg})`;
                 dataSourceMessageEl.style.color = "orange";
             } else {
                 dataSourceMessageEl.textContent = "";

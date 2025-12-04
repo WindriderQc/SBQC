@@ -229,7 +229,7 @@ async function getPressure(lat, lon, numDaysHistorical = 2) {
 
     if (!apiKeys.weather) {
         console.warn('WEATHER_API_KEY is not set. Falling back to mock data for pressure readings.');
-        const mockData = generateMockPressureTempData(lat, lon, numDaysHistorical);
+        const mockData = generateMockPressureTempData(lat, lon, numDaysHistorical, 2, "missing_api_key");
         if (!averages) {
             averages = mockData.averages; // Use mock averages if DB failed
         }
@@ -303,7 +303,7 @@ async function getPressure(lat, lon, numDaysHistorical = 2) {
 
     } catch (error) {
         console.error(`Error in getPressure. Falling back to mock data. ${error.message}`);
-        return generateMockPressureTempData(lat, lon, numDaysHistorical);
+        return generateMockPressureTempData(lat, lon, numDaysHistorical, 2, "api_error");
     }
 }
 
@@ -370,7 +370,7 @@ async function calculateRealAverages(lat, lon, apiKey) {
     };
 }
 
-function generateMockPressureTempData(lat, lon, numDaysHistorical = 2, numDaysForecast = 2) {
+function generateMockPressureTempData(lat, lon, numDaysHistorical = 2, numDaysForecast = 2, mockReason = null) {
     const readings = [];
     const now = moment.utc();
 
@@ -408,6 +408,7 @@ function generateMockPressureTempData(lat, lon, numDaysHistorical = 2, numDaysFo
     return {
         readings: readings.filter(r => r.dt <= forecastEndTime),
         data_source: "mock",
+        mock_reason: mockReason,
         averages
     };
 }
