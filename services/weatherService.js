@@ -278,27 +278,14 @@ async function getPressure(lat, lon, numDaysHistorical = 2) {
                 averages = await calculateRealAverages(processedLat, processedLon, apiKeys.weather);
             } catch (avgErr) {
                 console.warn("Failed to calculate real averages from API:", avgErr.message);
+                averages = { week: null, month: null, year: null };
             }
         }
-        // Calculate real averages using sampling strategy
-        let averages = { week: null, month: null, year: null };
-        try {
-            averages = await calculateRealAverages(processedLat, processedLon, apiKeys.weather);
-        } catch (avgErr) {
-            console.warn("Failed to calculate real averages:", avgErr.message);
-        }
-        // Note: Real averages for month/year would require many API calls.
-        // For now we will return simplified or null values for month/year to avoid heavy API usage.
 
         return {
             readings: sortedReadings,
             data_source: "openweathermap",
-            averages: {
-                // Placeholder: to be implemented with sampling strategy if needed
-                week: null,
-                month: null,
-                year: null
-            }
+            averages: averages
         };
 
     } catch (error) {
