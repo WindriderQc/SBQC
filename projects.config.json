@@ -1,0 +1,104 @@
+{
+  "schema": "sbqc.project-sources/v1",
+  "projects": [
+    {
+      "id": "mqtt-test",
+      "title": "MQTT Test",
+      "description": "The original browser MQTT experiment.",
+      "directory": "mqttTest",
+      "publicPath": "/Projects/mqttTest/",
+      "entry": "index.html",
+      "repository": "https://github.com/WindriderQc/mqttTest.git",
+      "commit": "cdbfc22ec233046ffd5ccd5a37774029de8becab",
+      "sourceDirectory": ".",
+      "publish": {
+        "type": "static"
+      }
+    },
+    {
+      "id": "draw-together",
+      "title": "Draw Together",
+      "description": "The collaborative p5.js canvas used by SBQC's Shared Canvas card.",
+      "directory": "DrawTogether",
+      "publicPath": "/Projects/DrawTogether/",
+      "entry": "index.html",
+      "repository": "https://github.com/WindriderQc/DrawTogether.git",
+      "commit": "361a199534250e3b78776c1ca3e0bd814301f5c4",
+      "sourceDirectory": ".",
+      "publish": {
+        "type": "static"
+      }
+    },
+    {
+      "id": "photo-box",
+      "title": "PhotoBox",
+      "description": "A small p5.js photo experiment.",
+      "directory": "PhotoBox",
+      "publicPath": "/Projects/PhotoBox/",
+      "entry": "index.html",
+      "repository": "https://github.com/WindriderQc/PhotoBox.git",
+      "commit": "799b0c1368150ab8bdcd678424607fca40bd3625",
+      "sourceDirectory": ".",
+      "publish": {
+        "type": "static"
+      }
+    },
+    {
+      "id": "tides",
+      "title": "Tides",
+      "description": "The original browser tide visualization.",
+      "directory": "Tides",
+      "publicPath": "/Projects/Tides/",
+      "entry": "Tides.html",
+      "repository": "https://github.com/WindriderQc/Tides.git",
+      "commit": "cab2a2b17e2a796f9d8f716aab25375ea4cd6043",
+      "sourceDirectory": ".",
+      "publish": {
+        "type": "static"
+      }
+    },
+    {
+      "id": "graphysx",
+      "title": "GraphysX",
+      "description": "Twenty years of recovered 3D scenes, physics experiments, games, and a shared human/agent world editor.",
+      "directory": "GraphysX",
+      "publicPath": "/Projects/GraphysX/",
+      "entry": "index.html",
+      "repository": "https://github.com/WindriderQc/GraphysX.git",
+      "commit": "36eac3d5a023e7a21f7b319e6e335d7ffca7d1d1",
+      "sparsePaths": [
+        "web-prototype",
+        "Yanik C++ BCKUP/Media/Models/cars"
+      ],
+      "sourceDirectory": "web-prototype",
+      "publish": {
+        "type": "npm-build",
+        "installArguments": [
+          "ci",
+          "--no-audit",
+          "--no-fund"
+        ],
+        "buildArguments": [
+          "run",
+          "build"
+        ],
+        "outputDirectory": "dist",
+        "rewriteRoot": "/assets/"
+      },
+      "agent": {
+        "schema": "graphysx.agent-tool-bridge/v1",
+        "requestSchema": "graphysx.agent-tool-request/v1",
+        "responseSchema": "graphysx.agent-tool-response/v1",
+        "eventSchema": "graphysx.agent-tool-event/v1",
+        "browserGlobal": "window.__GRAPHYSX_AGENT_BRIDGE__",
+        "transports": [
+          "direct",
+          "same-origin-window.postMessage",
+          "playwright-stdio"
+        ],
+        "remoteMutation": false,
+        "documentation": "https://github.com/WindriderQc/GraphysX/blob/36eac3d5a023e7a21f7b319e6e335d7ffca7d1d1/web-prototype/AGENT_WORLD_API.md"
+      }
+    }
+  ]
+}

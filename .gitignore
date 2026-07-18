@@ -25,8 +25,11 @@ node_modules/
 
 visitCounter.txt
 
-# Ignore project directories because driven by syncRepos.js
+# Public projects are reproducibly generated from projects.config.json.
 public/Projects
+.project-cache/
+.deploy/
+.project-release-*/
 
 *.code-workspace
 *.srt
