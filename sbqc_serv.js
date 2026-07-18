@@ -20,7 +20,6 @@ const express = require('express'),
 const app = express()
 app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'ejs')
-const graphysxStatic = require('./services/projectStatic').createGraphysXStatic();
 
 
 const PORT = process.env.PORT  || 3001
@@ -117,7 +116,6 @@ app
   //.use(rateLimit({ windowMs: 2 * 1000, max: 1 }))  // useful for api to prevent too many requests...
   .use(session(sessionOptions))
   .use(auth.attachUser) // Attach user to res.locals from session (fetches from DataAPI)
-  .use('/Projects/GraphysX', graphysxStatic)
   .use(express.static(path.resolve(__dirname, 'public') , { maxAge: 1000*60*60 })) // maxAge allow client to cache data for 1h
   .use('/api/projects', require('./routes/projects.routes'))
   .use('/api',      require('./routes/api.routes')) // New API routes

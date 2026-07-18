@@ -39,7 +39,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           source: sbqc-projects.tgz
-          target: ./code/SBQC/.deploy
+          target: /home/yb/codes/SBQC/.deploy
           overwrite: true
           timeout: 120s
           command_timeout: 30m
@@ -53,7 +53,7 @@ jobs:
           command_timeout: 30m
           script: |
             set -eu
-            cd ./code/SBQC
+            cd /home/yb/codes/SBQC
             git pull --ff-only origin main
             npm ci --omit=dev
             release_dir=".deploy/projects-${{ github.sha }}"

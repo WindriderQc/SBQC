@@ -61,30 +61,10 @@
       "id": "graphysx",
       "title": "GraphysX",
       "description": "Twenty years of recovered 3D scenes, physics experiments, games, and a shared human/agent world editor.",
-      "directory": "GraphysX",
-      "publicPath": "/Projects/GraphysX/",
-      "entry": "index.html",
-      "repository": "https://github.com/WindriderQc/GraphysX.git",
-      "commit": "36eac3d5a023e7a21f7b319e6e335d7ffca7d1d1",
-      "sparsePaths": [
-        "web-prototype",
-        "Yanik C++ BCKUP/Media/Models/cars"
-      ],
-      "sourceDirectory": "web-prototype",
-      "publish": {
-        "type": "npm-build",
-        "installArguments": [
-          "ci",
-          "--no-audit",
-          "--no-fund"
-        ],
-        "buildArguments": [
-          "run",
-          "build"
-        ],
-        "outputDirectory": "dist",
-        "rewriteRoot": "/assets/"
-      },
+      "hosting": "external",
+      "url": "https://graphysx.specialblend.ca/",
+      "repository": "https://github.com/WindriderQc/GraphysX-Web.git",
+      "commit": "ab0414fe1c043f47085600249cf13be8b8fdd247",
       "agent": {
         "schema": "graphysx.agent-tool-bridge/v1",
         "requestSchema": "graphysx.agent-tool-request/v1",
@@ -97,7 +77,7 @@
           "playwright-stdio"
         ],
         "remoteMutation": false,
-        "documentation": "https://github.com/WindriderQc/GraphysX/blob/36eac3d5a023e7a21f7b319e6e335d7ffca7d1d1/web-prototype/AGENT_WORLD_API.md"
+        "documentation": "https://github.com/WindriderQc/GraphysX-Web/blob/ab0414fe1c043f47085600249cf13be8b8fdd247/AGENT_WORLD_API.md"
       }
     }
   ]

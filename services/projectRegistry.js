@@ -14,6 +14,7 @@ function getProject(id) {
 }
 
 function readDeployment(project) {
+  if (project.hosting === 'external') return null;
   const metadataPath = path.join(repositoryRoot, 'public', 'Projects', project.directory, '.sbqc-project.json');
   try {
     const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));

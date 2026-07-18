@@ -30,6 +30,33 @@ function validateConfig(config) {
     if (ids.has(project.id)) throw new Error(`Duplicate project id: ${project.id}`);
     ids.add(project.id);
 
+    const hosting = project.hosting ?? 'managed';
+    if (!['managed', 'external'].includes(hosting)) {
+      throw new Error(`${project.id} has unsupported hosting: ${hosting}`);
+    }
+    if (!COMMIT_PATTERN.test(project.commit ?? '')) {
+      throw new Error(`${project.id} must pin a full 40-character Git commit.`);
+    }
+    if (typeof project.repository !== 'string' || !project.repository.startsWith('https://github.com/')) {
+      throw new Error(`${project.id} must use an HTTPS GitHub repository URL.`);
+    }
+
+    if (hosting === 'external') {
+      let launchUrl;
+      try {
+        launchUrl = new URL(project.url);
+      } catch {
+        throw new Error(`${project.id} must provide a valid external URL.`);
+      }
+      if (launchUrl.protocol !== 'https:' || launchUrl.username || launchUrl.password) {
+        throw new Error(`${project.id} external URL must be credential-free HTTPS.`);
+      }
+      if (project.directory || project.publicPath || project.publish) {
+        throw new Error(`${project.id} external projects cannot declare SBQC publication fields.`);
+      }
+      continue;
+    }
+
     if (typeof project.directory !== 'string' || !SAFE_DIRECTORY_PATTERN.test(project.directory)) {
       throw new Error(`Unsafe public directory for ${project.id}.`);
     }
@@ -38,12 +65,6 @@ function validateConfig(config) {
     }
     directories.add(project.directory.toLowerCase());
 
-    if (!COMMIT_PATTERN.test(project.commit ?? '')) {
-      throw new Error(`${project.id} must pin a full 40-character Git commit.`);
-    }
-    if (typeof project.repository !== 'string' || !project.repository.startsWith('https://github.com/')) {
-      throw new Error(`${project.id} must use an HTTPS GitHub repository URL.`);
-    }
     if (project.publicPath !== `/Projects/${project.directory}/`) {
       throw new Error(`${project.id} publicPath must match its public directory.`);
     }
@@ -228,12 +249,14 @@ function publishProject(project, options) {
 }
 
 function publicProject(project, deployment = null) {
+  const external = project.hosting === 'external';
   const result = {
     id: project.id,
     title: project.title,
     description: project.description,
-    url: `${project.publicPath}${project.entry === 'index.html' ? '' : project.entry}`,
-    publicPath: project.publicPath,
+    hosting: external ? 'external' : 'managed',
+    url: external ? project.url : `${project.publicPath}${project.entry === 'index.html' ? '' : project.entry}`,
+    publicPath: external ? null : project.publicPath,
     source: {
       repository: project.repository.replace(/\.git$/, ''),
       commit: project.commit
@@ -243,7 +266,7 @@ function publicProject(project, deployment = null) {
   if (project.agent) {
     result.agent = {
       ...project.agent,
-      launchUrl: project.publicPath,
+      launchUrl: result.url,
       discoveryUrl: `/api/projects/${project.id}`
     };
   }
@@ -282,11 +305,16 @@ function confinedPath(root, relative) {
 
 function publishProjects({ configPath, outputRoot, cacheRoot, only = [] }) {
   const config = loadConfig(configPath);
-  const selected = only.length > 0 ? config.projects.filter((project) => only.includes(project.id)) : config.projects;
-  if (only.length > 0 && selected.length !== only.length) {
-    const found = new Set(selected.map((project) => project.id));
+  const requested = only.length > 0 ? config.projects.filter((project) => only.includes(project.id)) : config.projects;
+  if (only.length > 0 && requested.length !== only.length) {
+    const found = new Set(requested.map((project) => project.id));
     throw new Error(`Unknown project ids: ${only.filter((id) => !found.has(id)).join(', ')}`);
   }
+  const external = requested.filter((project) => project.hosting === 'external');
+  if (only.length > 0 && external.length > 0) {
+    throw new Error(`External projects are catalog-only and deploy independently: ${external.map((project) => project.id).join(', ')}`);
+  }
+  const selected = requested.filter((project) => project.hosting !== 'external');
 
   fs.mkdirSync(outputRoot, { recursive: true });
   fs.mkdirSync(cacheRoot, { recursive: true });
