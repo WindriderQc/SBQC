@@ -20,6 +20,7 @@ const express = require('express'),
 const app = express()
 app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'ejs')
+const graphysxStatic = require('./services/projectStatic').createGraphysXStatic();
 
 
 const PORT = process.env.PORT  || 3001
@@ -27,13 +28,6 @@ const IN_PROD = process.env.NODE_ENV === 'production'  // for https channel...  
 
 
 if (process.env.NODE_ENV !== 'test') {
-    const syncRepos = require("./scripts/syncRepos");
-    // Run repo sync in the background (non-blocking)
-    setImmediate(() => {
-      console.log("Starting repo sync in background...");
-      syncRepos();
-    });
-
     // MQTT and Socket.IO will be initialized in serverUtils.startServer()
     // after the HTTP server is created (to avoid initialization race conditions)
 }
@@ -123,7 +117,9 @@ app
   //.use(rateLimit({ windowMs: 2 * 1000, max: 1 }))  // useful for api to prevent too many requests...
   .use(session(sessionOptions))
   .use(auth.attachUser) // Attach user to res.locals from session (fetches from DataAPI)
+  .use('/Projects/GraphysX', graphysxStatic)
   .use(express.static(path.resolve(__dirname, 'public') , { maxAge: 1000*60*60 })) // maxAge allow client to cache data for 1h
+  .use('/api/projects', require('./routes/projects.routes'))
   .use('/api',      require('./routes/api.routes')) // New API routes
   .use('/api',      require('./routes/liveCloudMap.routes'))
   .use('/',         require('./routes/routes'))

@@ -7,7 +7,9 @@
     "test": "NODE_ENV=test mocha --exit",
     "start": "node sbqc_serv.js",
     "dev": "nodemon sbqc_serv.js",
-    "agent": "node sbqc_serv.js"
+    "agent": "node sbqc_serv.js",
+    "projects:publish": "node scripts/publishProjects.js",
+    "projects:test": "mocha test/projects.test.js --exit"
   },
   "repository": {
     "type": "git",

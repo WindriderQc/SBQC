@@ -5,20 +5,61 @@ on:
     branches:
       - main
 
+concurrency:
+  group: specialblend-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
 jobs:
   deploy:
     name: Déploiement SSH
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📡 Connexion SSH et déploiement
-        uses: appleboy/ssh-action@master
+      - name: 📥 Checkout SBQC
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: 🧰 Use Node.js 22
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+
+      - name: 🏗️ Build pinned public projects
+        run: npm run projects:publish -- --output "$RUNNER_TEMP/sbqc-projects"
+
+      - name: 📦 Package public projects
+        run: tar -czf sbqc-projects.tgz -C "$RUNNER_TEMP/sbqc-projects" .
+
+      - name: 📤 Upload public project bundle
+        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
+          source: sbqc-projects.tgz
+          target: ./code/SBQC/.deploy
+          overwrite: true
+          timeout: 120s
+          command_timeout: 30m
+
+      - name: 📡 Connexion SSH et déploiement
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          command_timeout: 30m
           script: |
+            set -eu
             cd ./code/SBQC
-            git pull origin main
-            npm install
+            git pull --ff-only origin main
+            npm ci --omit=dev
+            release_dir=".deploy/projects-${{ github.sha }}"
+            rm -rf "$release_dir"
+            mkdir -p "$release_dir"
+            tar -xzf .deploy/sbqc-projects.tgz -C "$release_dir"
+            node scripts/activateProjects.js --staging "$release_dir"
+            rm -f .deploy/sbqc-projects.tgz
             pm2 restart sbqc_serv

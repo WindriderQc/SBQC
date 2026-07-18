@@ -1,5 +1,11 @@
 # SBQC
 
+## Public projects
+
+`public/Projects` is generated from the pinned repositories in `projects.config.json`; it is not populated while the web server starts. Run `npm run projects:publish` to fetch, build, and atomically publish every project, or add `-- --only graphysx` for one project. Production builds the same pinned release in GitHub Actions and activates it only after the bundle reaches the server.
+
+Project and agent-capability discovery is available at `/api/projects`. GraphysX's browser-local agent bridge is described at `/api/projects/graphysx`; remote mutation is intentionally disabled until an authenticated, session-scoped relay is deployed.
+
 
 
 
