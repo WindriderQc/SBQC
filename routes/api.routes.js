@@ -6,6 +6,7 @@ const router = require('express').Router();
 const mailman = require('../public/js/mailman');
 const dataApiService = require('../services/dataApiService');
 const weatherService = require('../services/weatherService');
+const issDataService = require('../services/issDataService');
 const { BadRequest } = require('../utils/errors');
 
 // SBQC uses custom auth middleware that fetches users from DataAPI
@@ -111,13 +112,35 @@ router.get('/data/:options', async (req, res, next) => {
     }
 });
 
-// TLE Data
-router.get('/tle', async (req, res, next) => {
+// TLE Data: ISS two-line elements. Text by default (unchanged contract),
+// JSON with ?format=json. Freshness travels in headers and JSON fields.
+router.get('/tle', async (req, res) => {
     try {
-        const data = await weatherService.getTLE();
-        res.type('text/plain').send(data);
+        const tle = await issDataService.getIssTle();
+        res.set({
+            'Cache-Control': 'public, max-age=600',
+            'X-TLE-Source': tle.source,
+            'X-TLE-Epoch': new Date(tle.epochMs).toISOString(),
+            'X-TLE-Fetched-At': new Date(tle.fetchedAtMs).toISOString(),
+            'X-TLE-Stale': String(tle.stale),
+        });
+        if (req.query.format === 'json') {
+            return res.json({
+                status: 'success',
+                name: tle.name,
+                line1: tle.line1,
+                line2: tle.line2,
+                source: tle.source,
+                epoch: new Date(tle.epochMs).toISOString(),
+                epochAgeHours: tle.epochAgeHours,
+                fetchedAt: new Date(tle.fetchedAtMs).toISOString(),
+                stale: tle.stale,
+                refreshFailed: tle.refreshFailed,
+            });
+        }
+        res.type('text/plain').send(`${tle.name}\n${tle.line1}\n${tle.line2}\n`);
     } catch (error) {
-        next(error);
+        sendIssUnavailable(res, error);
     }
 });
 
@@ -150,17 +173,27 @@ router.get('/pressure', async (req, res, next) => {
     }
 });
 
-// ISS Data - Proxied from DataAPI
-router.get('/iss', async (req, res, next) => {
+// ISS Data - recorded positions proxied from DataAPI (authenticated with its tool key)
+router.get('/iss', async (req, res) => {
     try {
-        const issData = await dataApiService.getIssData();
-        // DataAPI returns: { status: "success", message: "...", meta: { total }, data: [...] }
-        // Forward it directly to the client
-        res.json(issData);
+        res.json(await issDataService.getIssHistory());
     } catch (error) {
-        console.error('Error fetching historical ISS data from DataAPI:', error);
-        next(error);
+        sendIssUnavailable(res, error);
     }
 });
+
+function sendIssUnavailable(res, error) {
+    if (error instanceof issDataService.IssDataUnavailable) {
+        console.warn(`[iss] ${error.message}: ${error.reason}`);
+        return res.status(503).set('Cache-Control', 'no-store').json({
+            status: 'unavailable',
+            source: error.source,
+            message: error.message,
+            reason: error.reason,
+        });
+    }
+    console.error('[iss] unexpected error:', error);
+    res.status(500).json({ status: 'error', message: 'An internal server error occurred.' });
+}
 
 module.exports = router;

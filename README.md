@@ -38,6 +38,14 @@ GEO_API =
 
 TOKEN_SECRET=
 
+# ISS tracker (/iss-detector)
+# Recorded ISS positions come from DataAPI /api/v1/iss, which requires its tool key.
+# Without it /api/iss answers 503 and the page draws a TLE-computed track instead.
+DATAAPI_API_KEY=
+# Optional override; default is CelesTrak's ISS element set on celestrak.org.
+# celestrak.com serves an expired certificate. CelesTrak blocks repeated downloads.
+TLE_SOURCE_URL=
+
 #email service
 ADM_MAIL = 
 ADM_PASS =
