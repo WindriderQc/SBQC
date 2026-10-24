@@ -9,8 +9,6 @@ const apiKeys = {
 };
 
 // --- Caching for TLE and Pressure ---
-let tleCache = { data: null, timestamp: 0 };
-const TLE_CACHE_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hours
 
 const pressureAPIResponseCache = {};
 const HISTORICAL_PRESSURE_CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours
@@ -128,25 +126,11 @@ async function getGeolocation() {
 }
 
 // --- TLE ---
+// Kept for existing callers; the ISS service owns the source, cache and validation.
 async function getTLE() {
-    const now = Date.now();
-    if (now - tleCache.timestamp < TLE_CACHE_DURATION_MS && tleCache.data) {
-        return tleCache.data;
-    }
-    const TLE_CELESTRAK_URL = 'https://celestrak.com/NORAD/elements/stations.txt';
-    try {
-        const data = await fetchText(TLE_CELESTRAK_URL);
-        tleCache = { data, timestamp: now };
-        return data;
-    } catch (error) {
-        console.error("Error fetching TLE data from Celestrak:", error.message);
-        // Return stale data if available, otherwise re-throw
-        if (tleCache.data) {
-            console.warn("Returning stale TLE data due to fetch error.");
-            return tleCache.data;
-        }
-        throw new Error("Failed to fetch TLE data and no cache is available.");
-    }
+    const { getIssTle } = require('./issDataService');
+    const tle = await getIssTle();
+    return `${tle.name}\n${tle.line1}\n${tle.line2}\n`;
 }
 
 // --- Barometric Pressure ---

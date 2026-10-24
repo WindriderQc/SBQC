@@ -20,10 +20,14 @@ export default class Trajectory {
      * @param {Array<object>} newPoints - An array of points with lat, lon, and time properties.
      */
     update(newPoints) {
-        if (Array.isArray(newPoints)) {
-            this.points = newPoints;
-            this.cached3DPoints = null; // Invalidate cache
-        }
+        if (!Array.isArray(newPoints)) return;
+        // The sketch passes the same array every frame; rebuild only when it changed.
+        const last = newPoints[newPoints.length - 1];
+        if (newPoints === this.points && newPoints.length === this.lastLength && last === this.lastPoint) return;
+        this.points = newPoints;
+        this.lastLength = newPoints.length;
+        this.lastPoint = last;
+        this.cached3DPoints = null; // Invalidate cache
     }
 
     /**
@@ -36,7 +40,7 @@ export default class Trajectory {
     draw(radius, detectionRadiusKM, userLat, userLon) {
         if (this.points.length < 2) return;
 
-        if (!this.cached3DPoints || this.cached3DPoints.userLat !== userLat || this.cached3DPoints.userLon !== userLon) {
+        if (!this.cached3DPoints || this.cached3DPoints.userLat !== userLat || this.cached3DPoints.userLon !== userLon || this.cached3DPoints.radiusKM !== detectionRadiusKM) {
             let insideCylinder = false;
             let entryPoint = null;
             let exitPoint = null;
@@ -73,7 +77,7 @@ export default class Trajectory {
                 getSphereCoord(this.p, radius, pt.lat, pt.lon)
             );
 
-            this.cached3DPoints = { regularPath3D, highlightedPath3D, entryPoint, exitPoint };
+            this.cached3DPoints = { regularPath3D, highlightedPath3D, entryPoint, exitPoint, userLat, userLon, radiusKM: detectionRadiusKM };
         }
 
         const { regularPath3D, highlightedPath3D, entryPoint, exitPoint } = this.cached3DPoints;
@@ -107,13 +111,13 @@ export default class Trajectory {
         if (this.p.frameCount % 60 === 0) {
             const passEntryTimeSpan = document.getElementById('pass-entry-time');
             const passExitTimeSpan = document.getElementById('pass-exit-time');
-            if (entryPoint && passEntryTimeSpan) {
-                passEntryTimeSpan.textContent = new Date(Date.now() + entryPoint.time * 1000).toLocaleTimeString();
+            if (entryPoint && passEntryTimeSpan && Number.isFinite(entryPoint.timeMs)) {
+                passEntryTimeSpan.textContent = new Date(entryPoint.timeMs).toLocaleTimeString();
             } else if (passEntryTimeSpan) {
                 passEntryTimeSpan.textContent = 'N/A';
             }
-            if (exitPoint && passExitTimeSpan) {
-                passExitTimeSpan.textContent = new Date(Date.now() + exitPoint.time * 1000).toLocaleTimeString();
+            if (exitPoint && passExitTimeSpan && Number.isFinite(exitPoint.timeMs)) {
+                passExitTimeSpan.textContent = new Date(exitPoint.timeMs).toLocaleTimeString();
             } else if (passExitTimeSpan) {
                 passExitTimeSpan.textContent = 'N/A';
             }

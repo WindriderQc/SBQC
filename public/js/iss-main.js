@@ -1,5 +1,6 @@
 import * as predictor from './issOrbitPredictor.js';
 import { setOnPathUpdate } from './issOrbitPredictor.js';
+import { initIssPanels } from './issPassesPanel.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     let initialPredictionSet = false; // Track if we've set the initial max value
@@ -75,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
         new p5(module.default, 'sketch-holder');
         // The sketch API is set synchronously, but wait for next tick to ensure everything is ready
         setTimeout(() => {
-            if (window.p5SketchApi && typeof window.p5SketchApi.update3DPredictedPath === 'function') {
+            if (window.p5SketchApi) {
                 console.log('[iss-main] Sketch API ready, starting initial prediction');
                 predictor.fetchAndPredict();
             } else {
@@ -84,10 +85,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 50);
     });
 
-    const socket = io();
-    socket.on('iss', (data) => {
-        window.iss = data;
-    });
+    if (typeof io === 'function') {
+        const socket = io();
+        socket.on('iss', (data) => {
+            window.iss = { ...data, source: 'live' };
+            window.issLastLiveMs = Date.now();
+        });
+    } else {
+        console.warn('[iss-main] Socket.IO client missing: live positions disabled');
+    }
+
+    initIssPanels();
 
     // --- UI Control Logic ---
     const pathLengthSlider = document.getElementById('pathLengthSlider');

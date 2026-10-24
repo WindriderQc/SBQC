@@ -1,8 +1,9 @@
 import { haversineDistance } from './utils.js';
 
-const TLE_URL = '/api/tle';
-const TLE_CACHE_KEY = 'tleDataCache';
+const TLE_URL = '/api/tle?format=json';
+const TLE_CACHE_KEY = 'issTleCacheV2';
 const CACHE_DURATION_MS = 2 * 60 * 60 * 1000;
+const RETRY_AFTER_FAILURE_MS = 60 * 1000;
 const PREDICTION_INTERVAL_SEC = 10;
 const MAX_SEARCH_DURATION_SEC = 108 * 3600;
 const DEFAULT_SLIDER_MAX_DURATION_SEC = 6 * 3600;
@@ -12,43 +13,57 @@ let currentSliderDisplayDurationSec = 90 * 60;
 let targetLat = 46.8139;
 let targetLon = -71.2080;
 let satrec;
+let tleRecord = null;            // { name, line1, line2, epoch, source, fetchedAt, stale }
+let tleStatus = { status: 'loading', reason: null };
+let lastTleFailureMs = 0;
+let tleLoadedAtMs = 0;
+let lastComputedAtMs = null;
 let fullCalculatedPath = [];
 let timeToFirstClosePassSec = null;
 let exposedClosestApproachDetails = null;
 
-// Callback functions to be set by the main script
-let onPathUpdateCallback = null;
+// Several modules listen to path updates (sketch and page controls).
+const pathListeners = [];
 let onPredictionUpdateCallback = null;
 
-async function fetchTLE() {
-    const cachedItem = localStorage.getItem(TLE_CACHE_KEY);
-    if (cachedItem) {
-        const cachedEntry = JSON.parse(cachedItem);
-        if (Date.now() - cachedEntry.timestamp < CACHE_DURATION_MS) {
-            const lines = cachedEntry.data.split('\n');
-            const i = lines.findIndex(l => l.includes('ISS'));
-            if (i >= 0 && lines[i + 1] && lines[i + 2]) {
-                satrec = window.satellite.twoline2satrec(lines[i + 1].trim(), lines[i + 2].trim());
-                if (satrec) return true;
-            }
-        }
+function useTleRecord(record) {
+    if (!record || !record.line1 || !record.line2) return false;
+    const rec = window.satellite.twoline2satrec(record.line1.trim(), record.line2.trim());
+    if (!rec || rec.error) return false;
+    satrec = rec;
+    tleRecord = record;
+    tleLoadedAtMs = Date.now();
+    tleStatus = { status: record.stale ? 'stale' : 'ok', reason: null };
+    return true;
+}
+
+async function fetchTLE({ force = false } = {}) {
+    if (!force) {
+        try {
+            const cached = JSON.parse(localStorage.getItem(TLE_CACHE_KEY) || 'null');
+            if (cached && Date.now() - cached.savedAtMs < CACHE_DURATION_MS && useTleRecord(cached.record)) return true;
+        } catch (e) { /* storage unavailable or corrupt: fetch instead */ }
+        if (Date.now() - lastTleFailureMs < RETRY_AFTER_FAILURE_MS) return !!satrec;
     }
     try {
         const res = await fetch(TLE_URL);
-        if (!res.ok) return false;
-        const txt = await res.text();
-        localStorage.setItem(TLE_CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data: txt }));
-        const lines = txt.split('\n');
-        const i = lines.findIndex(l => l.includes('ISS'));
-        if (i >= 0 && lines[i + 1] && lines[i + 2]) {
-            satrec = window.satellite.twoline2satrec(lines[i + 1].trim(), lines[i + 2].trim());
-            return !!satrec;
+        const body = await res.json().catch(() => null);
+        if (!res.ok || !body || body.status !== 'success') {
+            throw new Error((body && (body.reason || body.message)) || `HTTP ${res.status}`);
         }
+        const record = {
+            name: body.name, line1: body.line1, line2: body.line2, epoch: body.epoch,
+            source: body.source, fetchedAt: body.fetchedAt, stale: !!body.stale,
+        };
+        if (!useTleRecord(record)) throw new Error('unreadable TLE');
+        try { localStorage.setItem(TLE_CACHE_KEY, JSON.stringify({ savedAtMs: Date.now(), record })); } catch (e) { /* ignore */ }
+        return true;
     } catch (error) {
-        console.error("Error fetching TLE:", error);
-        return false;
+        console.error('Error fetching TLE:', error);
+        lastTleFailureMs = Date.now();
+        if (!satrec) tleStatus = { status: 'unavailable', reason: error.message };
+        return !!satrec;
     }
-    return false;
 }
 
 function positionAt(time) {
@@ -66,7 +81,7 @@ function positionAt(time) {
 }
 
 async function calculateFullPredictionAndDeterminePass() {
-    if (!satrec) {
+    if (!satrec || Date.now() - tleLoadedAtMs > CACHE_DURATION_MS) {
         const tleSetupSuccess = await fetchTLE();
         if (!tleSetupSuccess) {
             if (typeof onPredictionUpdateCallback === 'function') {
@@ -83,6 +98,7 @@ async function calculateFullPredictionAndDeterminePass() {
     }
 
     const now = new Date();
+    lastComputedAtMs = now.getTime();
     fullCalculatedPath = [];
     timeToFirstClosePassSec = null;
     let closestPointInNextPass = null;
@@ -93,7 +109,7 @@ async function calculateFullPredictionAndDeterminePass() {
         const timeInstance = new Date(now.getTime() + t_sec * 1000);
         const pos = positionAt(timeInstance);
         if (pos) {
-            fullCalculatedPath.push({ lat: pos.lat, lng: pos.lon, alt: pos.alt, time: t_sec });
+            fullCalculatedPath.push({ lat: pos.lat, lng: pos.lon, alt: pos.alt, time: t_sec, timeMs: timeInstance.getTime() });
         }
     }
 
@@ -148,21 +164,25 @@ async function calculateFullPredictionAndDeterminePass() {
 
 function displaySlicedPath(displayDurationSeconds) {
     const pointsToDisplay = fullCalculatedPath.filter(p => p.time <= displayDurationSeconds);
-    if (typeof onPathUpdateCallback === 'function') {
-        onPathUpdateCallback(pointsToDisplay);
+    for (const listener of pathListeners) {
+        try { listener(pointsToDisplay); } catch (e) { console.warn('[predictor] path listener failed', e); }
     }
 }
 
 export function setOnPathUpdate(callback) {
-    onPathUpdateCallback = callback;
+    if (typeof callback === 'function' && !pathListeners.includes(callback)) pathListeners.push(callback);
 }
 
 export function setOnPredictionUpdate(callback) {
     onPredictionUpdateCallback = callback;
 }
 
+let predictionInFlight = null;
 export async function fetchAndPredict() {
-    await calculateFullPredictionAndDeterminePass();
+    if (!predictionInFlight) {
+        predictionInFlight = calculateFullPredictionAndDeterminePass().finally(() => { predictionInFlight = null; });
+    }
+    return predictionInFlight;
 }
 
 export function setTargetLatLon(lat, lon) {
@@ -178,7 +198,7 @@ export function getTargetLatLon() {
 }
 
 export async function refreshTLE() {
-    const ok = await fetchTLE();
+    const ok = await fetchTLE({ force: true });
     if (ok) await calculateFullPredictionAndDeterminePass();
     return ok;
 }
@@ -227,4 +247,26 @@ export function getCurrentPosition() {
     } catch (e) {
         return null;
     }
+}
+/** TLE in use and its freshness, for display and pass computation. */
+export function getTleInfo() {
+    return { ...tleStatus, record: tleRecord };
+}
+
+export function getLastComputedAtMs() {
+    return lastComputedAtMs;
+}
+
+/**
+ * Positions propagated from the loaded TLE between two instants. Used to show
+ * the recent track as a computed line when recorded history is unavailable.
+ */
+export function computeTrack(startMs, endMs, stepSec = 30) {
+    const out = [];
+    if (!satrec) return out;
+    for (let t = startMs; t <= endMs; t += stepSec * 1000) {
+        const pos = positionAt(new Date(t));
+        if (pos) out.push({ lat: pos.lat, lon: pos.lon, timeStamp: t, computed: true });
+    }
+    return out;
 }

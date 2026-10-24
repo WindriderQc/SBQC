@@ -58,6 +58,11 @@ export default function(p) {
     let passEntryTimeSpan = null; // Cache DOM elements
     let passExitTimeSpan = null;
     const APPROACH_STALE_MINUTES = 5; // consider a prediction stale after this many minutes
+    const COMPUTED_TRACK_HOURS = 3;
+    const LIVE_SILENCE_MS = 30000; // after this, the marker uses the TLE position
+    let computedRecentTrack = [];
+    let computedTrackPath;
+    window.issDataStatus = window.issDataStatus || { history: { status: 'loading' }, live: { status: 'waiting' }, computedTrack: null };
     let approachInfoIntervalId = null;
     let approachIsRefreshing = false;
     const earthSize = 300;
@@ -246,7 +251,7 @@ export default function(p) {
         });
     }
 
-    p.preload = async () => {
+    p.preload = () => {
         // High-quality 8K Earth textures (8192×4096, equirectangular projection)
         earthTexture = p.loadImage('/img/Planets/earth/earthmapDay.jpg');
         specularTexture = p.loadImage('/img/Planets/earth/earthmapSpecular.jpg');
@@ -256,18 +261,46 @@ export default function(p) {
         
         // Load custom shader for specular mapping
         earthShader = p.loadShader('/shaders/earth.vert', '/shaders/earth.frag');
-        try {
-            console.log('[issDetector] Fetching ISS historical data from /api/iss...');
-            const response = await fetch('/api/iss');
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const data = await response.json();
-            console.log('[issDetector] Received response, data.data.length:', data.data ? data.data.length : 'N/A');
-            console.log('[issDetector] Response meta:', data.meta);
-            populateInitialIssHistory(data);
-        } catch (err) {
-            console.error('[fetch error] Failed to load historical ISS data:', err);
-        }
+        loadRecordedHistory();
     };
+
+    // Recorded positions come from DataAPI. When they are unavailable the page
+    // says so and, once the TLE is loaded, draws the recent track computed from
+    // it in a distinct colour. Computed points are never mixed into the record.
+    async function loadRecordedHistory() {
+        const status = window.issDataStatus;
+        try {
+            const response = await fetch('/api/iss');
+            const body = await response.json().catch(() => null);
+            if (!response.ok || !body || body.status !== 'success') {
+                status.history = { status: 'unavailable', reason: (body && (body.reason || body.message)) || `HTTP ${response.status}` };
+            } else if (!Array.isArray(body.data) || body.data.length === 0) {
+                status.history = { status: 'empty', reason: 'DataAPI returned no positions' };
+            } else {
+                status.history = { status: 'ok', count: body.data.length, latest: body.meta && body.meta.latest, oldest: body.meta && body.meta.oldest };
+                populateInitialIssHistory(body);
+            }
+        } catch (err) {
+            status.history = { status: 'unavailable', reason: err.message };
+        }
+        if (status.history.status !== 'ok') {
+            console.warn('[issDetector] recorded ISS history unavailable:', status.history.reason);
+            useComputedRecentTrack();
+        }
+        window.dispatchEvent(new CustomEvent('iss-data-status'));
+    }
+
+    function useComputedRecentTrack(attempt = 0) {
+        const now = Date.now();
+        const track = predictor.computeTrack(now - COMPUTED_TRACK_HOURS * 3600000, now, 30);
+        if (track.length === 0) {
+            if (attempt < 30) setTimeout(() => useComputedRecentTrack(attempt + 1), 2000);
+            return;
+        }
+        computedRecentTrack = track;
+        window.issDataStatus.computedTrack = { hours: COMPUTED_TRACK_HOURS, points: track.length };
+        window.dispatchEvent(new CustomEvent('iss-data-status'));
+    }
 
     p.setup = () => {
         const sketchHolder = document.getElementById('sketch-holder');
@@ -299,6 +332,7 @@ export default function(p) {
         
         historicalPath = new Trajectory(p, p.color(255, 165, 0, 180));
         predictedPath = new Trajectory(p, p.color(0, 200, 0, 180));
+        computedTrackPath = new Trajectory(p, p.color(120, 170, 255, 170));
 
         const windSpeedSlider = document.getElementById('windSpeedSlider');
         const windSpeedValueSpan = document.getElementById('windSpeedValue');
@@ -366,21 +400,23 @@ export default function(p) {
                     const details = predictor.getClosestApproachDetailsAsDate ? predictor.getClosestApproachDetailsAsDate() : predictor.getClosestApproachDetails();
                     //console.log('[iss-detector] updater got approach details:', details);
                     if (!details) {
-                        approachInfoDiv.textContent = 'No upcoming approach detected';
-                        // try to trigger a prediction if we aren't already refreshing
-                        if (!approachIsRefreshing) {
-                            approachIsRefreshing = true;
+                        // Without an approach, explain why instead of re-running the
+                        // 108 h search every second.
+                        const info = predictor.getTleInfo();
+                        const computedAt = predictor.getLastComputedAtMs();
+                        if (info.status === 'unavailable') {
+                            approachInfoDiv.textContent = `Orbital data unavailable (${info.reason || 'unknown'}). Retrying every minute.`;
+                        } else if (computedAt) {
+                            approachInfoDiv.textContent = 'No pass inside the detection radius in the next 108 h.';
+                        } else {
                             approachInfoDiv.textContent = 'Calculating upcoming approach...';
-                            console.log('[iss-detector] no approach found — triggering prediction');
-                            const doFetch = (typeof predictor.refreshTLE === 'function') ? predictor.refreshTLE() : (typeof predictor.fetchAndPredict === 'function' ? predictor.fetchAndPredict() : Promise.reject(new Error('no predictor method')));
-                            doFetch.then(() => {
-                                approachIsRefreshing = false;
-                                try { updateApproachInfo(); } catch (e) {}
-                            }).catch((err) => {
-                                approachIsRefreshing = false;
-                                console.warn('[iss-detector] prediction trigger failed', err);
-                                try { approachInfoDiv.textContent = 'No upcoming approach detected'; } catch (e) {}
-                            });
+                        }
+                        const due = !computedAt || Date.now() - computedAt > (info.status === 'unavailable' ? 60 : 600) * 1000;
+                        if (due && !approachIsRefreshing) {
+                            approachIsRefreshing = true;
+                            predictor.fetchAndPredict()
+                                .catch((err) => console.warn('[iss-detector] prediction failed', err))
+                                .finally(() => { approachIsRefreshing = false; });
                         }
                         return;
                     }
@@ -412,23 +448,14 @@ export default function(p) {
                         }
                     } catch (e) { /* ignore */ }
 
-                    approachInfoDiv.textContent = `${liveDistText}Approach in ${formatHMS(remainingMs)} — ${localStr}${status}`;
+                    approachInfoDiv.textContent = `${liveDistText}Closest point inside the detection radius in ${formatHMS(remainingMs)} — ${localStr}${status}. Geometry only: see « Prochains passages » for visibility.`;
 
-                    // auto-refresh if stale and not already refreshing
+                    // recompute when the prediction is old (the TLE itself is refreshed every 2 h)
                     if (isStale && !approachIsRefreshing) {
                         approachIsRefreshing = true;
-                        // call refreshTLE which will re-run prediction if successful
-                        if (typeof predictor.refreshTLE === 'function') {
-                            predictor.refreshTLE().then((ok) => {
-                                approachIsRefreshing = false;
-                                // trigger immediate update after refresh
-                                try { updateApproachInfo(); } catch (e) { /* ignore */ }
-                            }).catch(() => { approachIsRefreshing = false; });
-                        } else if (typeof predictor.fetchAndPredict === 'function') {
-                            predictor.fetchAndPredict().then(() => { approachIsRefreshing = false; try { updateApproachInfo(); } catch (e) {} }).catch(() => { approachIsRefreshing = false; });
-                        } else {
-                            approachIsRefreshing = false;
-                        }
+                        predictor.fetchAndPredict()
+                            .catch(() => {})
+                            .finally(() => { approachIsRefreshing = false; });
                     }
                 } catch (err) {
                     console.warn('Error updating approach info:', err);
@@ -440,20 +467,6 @@ export default function(p) {
             approachInfoIntervalId = setInterval(updateApproachInfo, 1000);
             // initial update
             updateApproachInfo();
-            // if there's no data yet, trigger an initial prediction/fetch so the countdown appears
-            try {
-                const detailsNow = predictor.getClosestApproachDetailsAsDate ? predictor.getClosestApproachDetailsAsDate() : predictor.getClosestApproachDetails();
-                if (!detailsNow) {
-                    if (approachInfoDiv) approachInfoDiv.textContent = 'Calculating upcoming approach...';
-                    if (typeof predictor.refreshTLE === 'function') {
-                        approachIsRefreshing = true;
-                        predictor.refreshTLE().then(() => { approachIsRefreshing = false; try { updateApproachInfo(); } catch (e) {} }).catch(() => { approachIsRefreshing = false; });
-                    } else if (typeof predictor.fetchAndPredict === 'function') {
-                        approachIsRefreshing = true;
-                        predictor.fetchAndPredict().then(() => { approachIsRefreshing = false; try { updateApproachInfo(); } catch (e) {} }).catch(() => { approachIsRefreshing = false; });
-                    }
-                }
-            } catch (e) { /* ignore */ }
         } catch (e) {
             console.warn('Could not start approach info updater:', e);
         }
@@ -469,7 +482,8 @@ export default function(p) {
                 internalPredictedPath = pathPoints.map(pt => ({
                     lat: pt.lat,
                     lon: pt.lng,
-                    timeStamp: pt.time
+                    time: pt.time,
+                    timeMs: pt.timeMs
                 }));
                 predictedPath.update(internalPredictedPath);
                 cachedPredictedPath3D = null; // Invalidate cache when path updates
@@ -606,6 +620,18 @@ export default function(p) {
         if (showIssHistoricalPath) {
             historicalPath.update(internalIssPathHistory);
             historicalPath.draw(earthSize + issDistanceToEarth, 0, 0, 0);
+            if (computedRecentTrack.length > 1) {
+                computedTrackPath.update(computedRecentTrack);
+                computedTrackPath.draw(earthSize + issDistanceToEarth, 0, 0, 0);
+            }
+        }
+
+        // Live positions arrive through Socket.IO. When the feed is silent the
+        // marker follows the TLE propagation and is labelled as computed.
+        const liveAgeMs = window.issLastLiveMs ? Date.now() - window.issLastLiveMs : Infinity;
+        if (liveAgeMs > LIVE_SILENCE_MS && p.frameCount % 30 === 0) {
+            const pos = predictor.getCurrentPosition();
+            if (pos) window.iss = { latitude: pos.lat, longitude: pos.lon, altitude: pos.alt, timestamp: Date.now(), source: 'tle' };
         }
 
         if (showIssPredictedPath) {
@@ -614,7 +640,7 @@ export default function(p) {
 
 
         if (window.iss && typeof window.iss.latitude === 'number' && typeof window.iss.longitude === 'number') {
-            let addPoint = true;
+            let addPoint = window.iss.source !== 'tle';
             if (internalIssPathHistory.length > 0) {
                 const lastPoint = internalIssPathHistory[internalIssPathHistory.length - 1];
                 if (lastPoint.lat === window.iss.latitude && lastPoint.lon === window.iss.longitude) addPoint = false;
