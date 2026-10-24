@@ -91,6 +91,8 @@ function renderStatus() {
         rows.push(['Position en direct', 'aucune reçue depuis l’ouverture : le marqueur suit la position calculée (TLE)', 'warn']);
     }
 
+    rows.push(['Nuages', 'image sans date de clouds.matteason.co.uk : décor indicatif, pas la météo actuelle', 'warn']);
+
     const colors = { ok: '#198754', warn: '#b58100', bad: '#dc3545', wait: '#6c757d' };
     box.replaceChildren(...rows.map(([k, v, level]) => el('div', { style: 'margin-bottom:4px' },
         el('span', { style: `display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;background:${colors[level]}` }),

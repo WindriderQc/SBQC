@@ -62,6 +62,7 @@ export default function(p) {
     const LIVE_SILENCE_MS = 30000; // after this, the marker uses the TLE position
     let computedRecentTrack = [];
     let computedTrackPath;
+    let lastLocationDomUpdateMs = 0;
     window.issDataStatus = window.issDataStatus || { history: { status: 'loading' }, live: { status: 'waiting' }, computedTrack: null };
     let approachInfoIntervalId = null;
     let approachIsRefreshing = false;
@@ -580,8 +581,9 @@ export default function(p) {
         const currentDisplayLat = (typeof window.clientLat === 'number') ? window.clientLat : 46.8139;
         const currentDisplayLon = (typeof window.clientLon === 'number') ? window.clientLon : -71.2080;
 
-        // Update UI with current locations (throttled to avoid excessive DOM updates)
-        if (p.frameCount % 60 === 0) { // Update every 60 frames (~1 second at 60fps)
+        // Update UI with current locations about once per second, whatever the frame rate
+        if (Date.now() - lastLocationDomUpdateMs >= 1000) {
+            lastLocationDomUpdateMs = Date.now();
             try {
                 // Update ISS position
                 if (window.iss && typeof window.iss.latitude === 'number' && typeof window.iss.longitude === 'number') {
@@ -629,7 +631,7 @@ export default function(p) {
         // Live positions arrive through Socket.IO. When the feed is silent the
         // marker follows the TLE propagation and is labelled as computed.
         const liveAgeMs = window.issLastLiveMs ? Date.now() - window.issLastLiveMs : Infinity;
-        if (liveAgeMs > LIVE_SILENCE_MS && p.frameCount % 30 === 0) {
+        if (liveAgeMs > LIVE_SILENCE_MS && (!window.iss || Date.now() - (window.iss.timestamp || 0) >= 1000)) {
             const pos = predictor.getCurrentPosition();
             if (pos) window.iss = { latitude: pos.lat, longitude: pos.lon, altitude: pos.alt, timestamp: Date.now(), source: 'tle' };
         }
