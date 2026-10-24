@@ -62,7 +62,7 @@ const  mongoStore = new MongoDBStore({
 mongoStore.on('error', (error) => console.log('MongoStore Error: ', error) );
 
 const sessionOptions = {
-  name: 'data-api.sid', // Use same session name as DataAPI for session sharing
+  name: process.env.SESS_NAME || 'data-api.sid',
   resave: false, // Changed to false (matches DataAPI best practice)
   saveUninitialized: false,
   secret: SESS_SECRET,
@@ -93,6 +93,7 @@ const options = {
 
 // Databases
 const { connectDb, loadCollections } = require('./scripts/database');
+const publicAgentxService = require('./services/publicAgentxService');
 
 // SBQC uses custom authentication middleware that fetches users from DataAPI
 // (Not nodeTools auth, which expects users in local MongoDB)
@@ -100,19 +101,43 @@ const { connectDb, loadCollections } = require('./scripts/database');
 // Local MongoDB is ONLY used for session storage (shared with DataAPI)
 const auth = require('./scripts/authMiddleware');
 
-(async () => {
-    try {
-        const db = await connectDb(process.env.MONGO_CLOUD, 'SBQC');
-        await loadCollections(db, app);
-    } catch (err) {
-        console.error("Failed to connect to the database or load collections:", err);
-        process.exit(1); // Exit if DB connection fails
-    }
-})();
+if (process.env.NODE_ENV === 'test') {
+    app.locals.collections = {};
+} else {
+    (async () => {
+        try {
+            const db = await connectDb(process.env.MONGO_CLOUD, 'SBQC');
+            await loadCollections(db, app);
+        } catch (err) {
+            console.error("Failed to connect to the database or load collections:", err);
+            if (String(process.env.ALLOW_DB_BOOTSTRAP_FAILURE || '').toLowerCase() === 'true') {
+                app.locals.collections = {};
+                console.warn('Continuing startup because ALLOW_DB_BOOTSTRAP_FAILURE=true.');
+                return;
+            }
+            process.exit(1); // Exit if DB connection fails
+        }
+    })();
+}
 
 
 
 
+
+// Health probes for nginx/docker. Keep these before sessions and legacy routes.
+app.get('/healthz', (_req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.json({ status: 'ok', service: 'sbqc-public' });
+});
+
+app.get('/readyz', (_req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.json({
+    status: 'ready',
+    service: 'sbqc-public',
+    publicAgentx: publicAgentxService.getStatus()
+  });
+});
 
 //Middlewares  & routes
 
@@ -124,8 +149,10 @@ app
   .use(session(sessionOptions))
   .use(auth.attachUser) // Attach user to res.locals from session (fetches from DataAPI)
   .use(express.static(path.resolve(__dirname, 'public') , { maxAge: 1000*60*60 })) // maxAge allow client to cache data for 1h
+  .use('/api/public', require('./routes/publicAgentx.routes'))
   .use('/api',      require('./routes/api.routes')) // New API routes
   .use('/api',      require('./routes/liveCloudMap.routes'))
+  .use('/',         require('./routes/agentx.routes'))
   .use('/',         require('./routes/routes'))
   .use('/checkins', require('./routes/checkins.routes'))
   .use('/meows',    require("./routes/meows.routes"))

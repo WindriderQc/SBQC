@@ -25,6 +25,7 @@ const TIDES_CACHE_DURATION_MS = 6 * 60 * 60 * 1000; // 6 hours
 // --- Database Connection ---
 let dbInstance = null;
 async function getDb() {
+    if (process.env.NODE_ENV === 'test') return null;
     if (dbInstance) return dbInstance;
     if (process.env.MONGO_CLOUD) {
         try {

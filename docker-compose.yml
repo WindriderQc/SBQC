@@ -1,0 +1,22 @@
+services:
+  sbqc-public:
+    build:
+      context: .
+    container_name: sbqc-public
+    restart: unless-stopped
+    env_file:
+      - ${SBQC_ENV_FILE:-.env.example}
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      PUBLIC_ASSET_ROOT: /srv/public-agentx
+    ports:
+      - "127.0.0.1:${SBQC_PUBLIC_PORT:-3001}:3001"
+    volumes:
+      - ${PUBLIC_ASSET_HOST_PATH:-/srv/specialblend/public-agentx}:/srv/public-agentx:ro
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3001/healthz',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s

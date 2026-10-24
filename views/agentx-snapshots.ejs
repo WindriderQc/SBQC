@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('partials/mainHead', { title }) %>
+  <link rel="stylesheet" href="/css/agentx-public.css">
+</head>
+<body>
+<%- include('partials/nav') %>
+
+<main class="agentx-page">
+  <section class="agentx-hero">
+    <div>
+      <p class="agentx-kicker">AgentX public layer</p>
+      <h1>Published Snapshots</h1>
+      <p class="agentx-subtitle">Historical public scoreboard releases.</p>
+    </div>
+    <div class="agentx-meta"><span>Source: <%= publicMeta.source %></span></div>
+  </section>
+
+  <section class="agentx-section">
+    <% if (!snapshots.length) { %>
+      <div class="agentx-empty">No public snapshots have been published yet.</div>
+    <% } else { %>
+      <div class="agentx-card-grid">
+        <% snapshots.forEach((snapshot) => { %>
+          <article class="agentx-card">
+            <h3><%= snapshot.title || snapshot.snapshot_id || snapshot._id || 'Snapshot' %></h3>
+            <p><%= snapshot.published_at || snapshot.generatedAt || snapshot.createdAt || '' %></p>
+            <dl>
+              <div><dt>Models</dt><dd><%= snapshot.modelCount || snapshot.models || 0 %></dd></div>
+              <div><dt>Tests</dt><dd><%= snapshot.testCount || snapshot.tests || 0 %></dd></div>
+              <div><dt>Top</dt><dd><%= snapshot.topModel || snapshot.top_model || '-' %></dd></div>
+            </dl>
+          </article>
+        <% }) %>
+      </div>
+    <% } %>
+  </section>
+</main>
+
+<%- include('partials/footer') %>
+</body>
+</html>

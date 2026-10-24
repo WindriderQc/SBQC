@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('partials/mainHead', { title }) %>
+  <link rel="stylesheet" href="/css/agentx-public.css">
+</head>
+<body>
+<%- include('partials/nav') %>
+
+<main class="agentx-page">
+  <section class="agentx-hero">
+    <div>
+      <p class="agentx-kicker">AgentX public layer</p>
+      <h1>Model Scoreboard</h1>
+      <p class="agentx-subtitle">Published benchmark snapshots from the private AgentX lab. Raw prompts, responses, host URLs, and admin data stay offline.</p>
+    </div>
+    <div class="agentx-meta">
+      <span>Leaderboard: <%= publicMeta.leaderboard.source %></span>
+      <span>Efficiency: <%= publicMeta.efficiency.source %></span>
+    </div>
+  </section>
+
+  <section class="agentx-stats">
+    <article>
+      <span class="label">Models</span>
+      <strong><%= (summary.metrics && summary.metrics.models) || (leaderboard.leaderboard || leaderboard.rows || []).length || 0 %></strong>
+    </article>
+    <article>
+      <span class="label">Tests</span>
+      <strong><%= (summary.metrics && summary.metrics.tests) || (efficiency.meta && efficiency.meta.totalTests) || 0 %></strong>
+    </article>
+    <article>
+      <span class="label">Published</span>
+      <strong><%= summary.generatedAt ? new Date(summary.generatedAt).toLocaleDateString() : 'Pending' %></strong>
+    </article>
+  </section>
+
+  <section class="agentx-section">
+    <div class="section-head">
+      <h2>Leaderboard</h2>
+      <a href="/agentx/snapshots">Snapshots</a>
+    </div>
+    <% const rows = leaderboard.leaderboard || leaderboard.rows || []; %>
+    <% if (rows.length === 0) { %>
+      <div class="agentx-empty">No public leaderboard has been published yet.</div>
+    <% } else { %>
+      <div class="agentx-table-wrap">
+        <table class="agentx-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Model</th>
+              <th>Host</th>
+              <th>Score</th>
+              <th>Coverage</th>
+              <th>Tests</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% rows.slice(0, 25).forEach((row, idx) => { %>
+              <tr>
+                <td><%= idx + 1 %></td>
+                <td>
+                  <% if (row.slug) { %>
+                    <a href="/agentx/models/<%= encodeURIComponent(row.slug) %>"><%= row.model || row.name || row.slug %></a>
+                  <% } else { %>
+                    <%= row.model || row.name || 'unknown' %>
+                  <% } %>
+                </td>
+                <td><%= row.host_slug || row.hostAlias || row.host || 'public' %></td>
+                <td><%= Number(row.generalistScore || row.score || row.composite_score || 0).toFixed(2) %></td>
+                <td><%= row.coverage !== undefined ? Number(row.coverage).toFixed(2) : '-' %></td>
+                <td><%= row.totalTests || row.testCount || 0 %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </section>
+
+  <section class="agentx-section">
+    <div class="section-head">
+      <h2>Efficiency Map</h2>
+      <span><%= (efficiency.entries || []).length %> entries</span>
+    </div>
+    <% const entries = efficiency.entries || []; %>
+    <% if (entries.length === 0) { %>
+      <div class="agentx-empty">No public efficiency snapshot has been published yet.</div>
+    <% } else { %>
+      <div class="agentx-card-grid">
+        <% entries.slice(0, 6).forEach((entry) => { %>
+          <article class="agentx-card">
+            <h3><%= entry.model || entry.name %></h3>
+            <p><%= entry.host_slug || entry.hostAlias || entry.host || 'public' %></p>
+            <dl>
+              <div><dt>Quality</dt><dd><%= Number(entry.avgQuality || 0).toFixed(2) %></dd></div>
+              <div><dt>Tok/s</dt><dd><%= Number(entry.avgTokPerSec || 0).toFixed(1) %></dd></div>
+              <div><dt>Efficiency</dt><dd><%= Number(entry.efficiencyScore || 0).toFixed(2) %></dd></div>
+            </dl>
+          </article>
+        <% }) %>
+      </div>
+    <% } %>
+  </section>
+</main>
+
+<%- include('partials/footer') %>
+</body>
+</html>

@@ -29,19 +29,29 @@ function startServer(app) {
     // Initialize socket.io as it depends on the server instance
     if (process.env.NODE_ENV !== 'test') {
         socketio.init(server);
-        
-        // Initialize MQTT after Socket.IO is ready
-        // This ensures Socket.IO is available when MQTT messages arrive
-        const mqtt = require('../scripts/mqttServer');
-        const esp32 = require('../scripts/esp32');
-        
-        mqtt.initMqtt(
-            'mqtt://specialblend.ca', 
-            esp32.msgHandler, 
-            ['esp32', 'esp32/#', 'sbqc/iss'], 
-            () => socketio.get_io()
-        );
-        esp32.setConnectedValidation(30000, mqtt.getClient());
+
+        const mqttEnabled = String(process.env.MQTT_ENABLED || 'true').toLowerCase() !== 'false';
+        const mqttBrokerUrl = process.env.MQTT_BROKER_URL || process.env.MQTT_SERVER_URL || 'mqtt://specialblend.ca';
+        const mqttTopics = (process.env.MQTT_TOPICS || 'esp32,esp32/#,sbqc/iss')
+            .split(',')
+            .map((topic) => topic.trim())
+            .filter(Boolean);
+
+        if (mqttEnabled && mqttBrokerUrl) {
+            // Initialize MQTT after Socket.IO is ready.
+            const mqtt = require('../scripts/mqttServer');
+            const esp32 = require('../scripts/esp32');
+
+            mqtt.initMqtt(
+                mqttBrokerUrl,
+                esp32.msgHandler,
+                mqttTopics,
+                () => socketio.get_io()
+            );
+            esp32.setConnectedValidation(30000, mqtt.getClient());
+        } else {
+            console.log('MQTT disabled by configuration.');
+        }
     }
 
 

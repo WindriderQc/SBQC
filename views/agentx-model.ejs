@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('partials/mainHead', { title }) %>
+  <link rel="stylesheet" href="/css/agentx-public.css">
+</head>
+<body>
+<%- include('partials/nav') %>
+
+<main class="agentx-page">
+  <% if (!model) { %>
+    <section class="agentx-hero">
+      <div>
+        <p class="agentx-kicker">AgentX public layer</p>
+        <h1>Model not found</h1>
+        <p class="agentx-subtitle">No public model card exists for this slug.</p>
+      </div>
+    </section>
+  <% } else { %>
+    <section class="agentx-hero">
+      <div>
+        <p class="agentx-kicker">Model card</p>
+        <h1><%= model.name || model.model || model.slug %></h1>
+        <p class="agentx-subtitle"><%= model.summary || 'Published public model statistics from AgentX.' %></p>
+      </div>
+      <div class="agentx-meta"><span>Source: <%= publicMeta.source %></span></div>
+    </section>
+
+    <section class="agentx-stats">
+      <article><span class="label">Score</span><strong><%= Number(model.generalistScore || model.score || 0).toFixed(2) %></strong></article>
+      <article><span class="label">Tests</span><strong><%= model.totalTests || model.testCount || 0 %></strong></article>
+      <article><span class="label">Updated</span><strong><%= model.generatedAt ? new Date(model.generatedAt).toLocaleDateString() : 'Pending' %></strong></article>
+    </section>
+
+    <section class="agentx-section">
+      <h2>Public Details</h2>
+      <pre class="agentx-json"><%- JSON.stringify(model, null, 2) %></pre>
+    </section>
+  <% } %>
+</main>
+
+<%- include('partials/footer') %>
+</body>
+</html>

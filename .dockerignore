@@ -1,0 +1,15 @@
+node_modules
+npm-debug.log
+.git
+.github
+.env
+.env.*
+logs
+*.log
+visitCounter.txt
+public/Projects
+public-agentx
+archive
+docs
+test
+.DS_Store

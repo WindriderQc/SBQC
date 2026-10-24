@@ -9,7 +9,7 @@ async function connectToTestDB() {
     }
 
     const testMongoUri = process.env.MONGO_CLOUD.replace('/sbqc', '/test_sbqc');
-    const client = new MongoClient(testMongoUri);
+    const client = new MongoClient(testMongoUri, { serverSelectionTimeoutMS: 1000 });
     connection = await client.connect();
     db = connection.db('test_sbqc');
     return db;
