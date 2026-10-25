@@ -51,3 +51,16 @@ ADM_MAIL =
 ADM_PASS =
 
 
+
+## ISS observer links
+
+A compatible client can open `/iss-detector#passages?observer=v1:12.34,-56.78`
+to use a supplied observer rounded to two decimal places. The browser validates
+the paired coordinates, applies them to both the globe and pass list, and removes
+them from the address with `history.replaceState`. The fragment is not sent in
+HTTP requests or Referer headers; the page does not persist the observer. It is
+initially visible in the link and accessible to page scripts. Unsupported or
+invalid values show an explicit default-location notice. The geolocation button
+can replace this observer; a denied request preserves the location already used.
+Only the location is handed off: times are recalculated with this page’s current
+elements, window and browser time zone.
