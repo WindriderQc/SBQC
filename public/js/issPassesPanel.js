@@ -3,6 +3,7 @@
 
 import * as predictor from './issOrbitPredictor.js';
 import { computePasses } from './issPasses.js';
+import { consumeObserverLink } from './issObserverLink.js';
 
 const DEFAULT_PLACE = { lat: 46.8139, lon: -71.2080, label: 'Québec (position par défaut)' };
 const RECOMPUTE_MS = 10 * 60 * 1000;
@@ -188,14 +189,21 @@ function wireLocationButton() {
             btn.disabled = false;
             btn.textContent = 'Utiliser ma position';
             const msg = document.getElementById('default-location-msg');
-            if (msg) { msg.style.display = 'block'; msg.textContent = `Position refusée ou indisponible (${err.message}) : calcul pour Québec.`; }
+            if (msg) { msg.style.display = 'block'; msg.textContent = `Position refusée ou indisponible (${err.message}) : calcul conservé pour ${observer.label}.`; }
         }, { enableHighAccuracy: false, timeout: 15000, maximumAge: 10 * 60 * 1000 });
     });
 }
 
 export function initIssPanels() {
-    window.clientLat = observer.lat;
-    window.clientLon = observer.lon;
+    const linked = consumeObserverLink();
+    if (linked.status === 'valid') setObserver(linked.lat, linked.lon, linked.label);
+    else {
+        setObserver(observer.lat, observer.lon, observer.label);
+        if (linked.status === 'invalid') {
+            const msg = document.getElementById('default-location-msg');
+            if (msg) { msg.style.display = 'block'; msg.textContent = 'Lieu du lien invalide : calcul pour Québec (position par défaut).'; }
+        }
+    }
     wireLocationButton();
     renderStatus();
     setInterval(renderStatus, 5000);
